@@ -1,0 +1,39 @@
+/*
+ * Brand palette. Hex values were read from the labels in the supplied design
+ * reference image. They still need confirming against the Figma colour styles.
+ *
+ * Names describe the colour, not its job, because roles (primary, accent, text,
+ * surface) are not decided yet. Use as bg-brand-navy, text-brand-amber,
+ * border-brand-mist, etc.
+ *
+ * `static` emits every token as a CSS variable even when no utility uses it,
+ * so var(--color-brand-*) also works in plain CSS and in animation code.
+ */
+@theme static {
+  --color-brand-amber: #f9a825;
+  --color-brand-green: #338845;
+  /* Not in the brief's palette image. Body text grey in the Figma vision/mission/values section. */
+  --color-brand-graphite: #474747;
+  /* Not in the brief's palette image. News cards (Figma "What's New At LPS"): the text panel and the card background. */
+  --color-brand-paper: #fbfbfb;
+  --color-brand-cloud: #f6f6f6;
+  /* Not in the brief's palette image. Light grey of the "The courage to find" heading (Figma). */
+  --color-brand-ghost: #e8e8e8;
+  /* Not in the brief's palette image. Used for the "Lead" highlight in the footer heading (Figma). */
+  --color-brand-green-light: #4da44b;
+  --color-brand-navy: #061939;
+  --color-brand-blue: #123b7a;
+  --color-brand-blue-mid: #2f538b;
+  /* Not in the brief's palette image. End colour of the CTA band gradient (Figma, from #123b7a to this). */
+  --color-brand-blue-darker: #0a295e;
+  /* Not in the brief's palette image. Darker blue of some pills in the Figma "LPS 360 Framework" diagram. */
+  --color-brand-blue-deep: #0e2f61;
+  /* Not in the brief's palette image. Darkest label blue in the "LPS 360 Framework" diagram (ENTERPRISING). */
+  --color-brand-blue-night: #0b2349;
+  --color-brand-steel: #aab9cf;
+  /* Not in the brief's palette image. Second column of the Figma "Our Learning Journey" section (close to, but not, steel). */
+  --color-brand-steel-dark: #a0b1ca;
+  /* Not in the brief's palette image. Third column of the Figma "Our Learning Journey" section. */
+  --color-brand-slate: #416295;
+  --color-brand-mist: #d0d8e4;
+}

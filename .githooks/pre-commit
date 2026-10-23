@@ -1,0 +1,14 @@
+#!/bin/sh
+# Runs before every commit: lint, formatting, types, the unit tests and the image budget (about 15 seconds). If the formatting check fails, run `npm run format`. The browser checks run in CI (.github/workflows/ci.yml).
+# Switched on by `npm install` (the "prepare" script sets core.hooksPath). Skip once with: git commit --no-verify
+set -e
+echo "pre-commit: lint"
+npm run --silent lint
+echo "pre-commit: formatting"
+npm run --silent format:check
+echo "pre-commit: types"
+npx --no-install tsc --noEmit
+echo "pre-commit: unit tests"
+npm test --silent
+echo "pre-commit: images"
+npm run --silent images:check

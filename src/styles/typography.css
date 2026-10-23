@@ -1,0 +1,92 @@
+/*
+ * Fonts: see src/fonts/index.ts for the next/font/local setup. The
+ * --font-lexend-deca / --font-plus-jakarta-sans variables are injected via
+ * a className on <html> (see layout.tsx).
+ *
+ * Components use the semantic tokens (font-heading / font-body), never the
+ * literal family names, so swapping a font means editing only this file.
+ */
+@theme inline {
+  --font-heading: var(--font-lexend-deca), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-body);
+  /* Accent serif used for one highlighted phrase (the CTA band: "LPS Forward"). The design uses Scaver, which has not been
+     supplied: until it is added (src/fonts/index.ts), this falls back to a system serif. */
+  --font-accent: "Scaver", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+}
+
+/*
+ * Type scale. Desktop sizes come from the project brief's text style table.
+ * Mobile minimums and line heights are NOT in the brief (marked "to confirm
+ * against Figma"), so they are provisional.
+ *
+ * Each size is fluid: it grows linearly from its minimum at a 360px viewport
+ * (22.5rem) to its maximum at 1280px (80rem), and is clamped outside that
+ * range. Formula: clamp(min, intercept + slope*vw, max). Fixed sizes are plain rem.
+ *
+ * Use as text-h1, text-h2, text-h3, text-body-lg, text-body, text-body-sm.
+ * `static` also exposes each as a variable: var(--text-h1).
+ *
+ * Not defined yet: the homepage hero H1 ("Varies", follow Figma).
+ */
+@theme static {
+  /* Subpage hero H1: 32px -> 48px */
+  --text-h1: clamp(2rem, 1.6087rem + 1.7391vw, 3rem);
+  --text-h1--line-height: 1.15;
+
+  /* H2, primary section headings: 28px -> 40px */
+  --text-h2: clamp(1.75rem, 1.4565rem + 1.3043vw, 2.5rem);
+  --text-h2--line-height: 1.2;
+
+  /* H3, smaller headings / cards: 18px -> 20px */
+  --text-h3: clamp(1.125rem, 1.0761rem + 0.2174vw, 1.25rem);
+  --text-h3--line-height: 1.3;
+
+  /* Body large, where shown in the design: 16px -> 18px */
+  --text-body-lg: clamp(1rem, 0.9511rem + 0.2174vw, 1.125rem);
+  --text-body-lg--line-height: 1.6;
+
+  /* Body regular, standard paragraph copy: 16px (fixed) */
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+
+  /* Body small, supporting text and labels: 14px (fixed) */
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.5;
+
+  /*
+   * Fixed pixel sizes of small design details (card text, labels, captions, pills) that the design gives in px and that do not follow
+   * the fluid scale above. Sizes only: no line height attached, set it with leading-*. Use as text-px-14, text-px-18 ...
+   */
+  --text-px-12: 0.75rem;
+  --text-px-14: 0.875rem;
+  --text-px-16: 1rem;
+  --text-px-17: 1.0625rem;
+  --text-px-18: 1.125rem;
+  --text-px-20: 1.25rem;
+
+  /*
+   * Homepage hero text (Figma node 6282:929). Desktop sizes are from the design; the mobile
+   * minimums are provisional. Line height 1.2 and letter spacing -1% apply to all of them.
+   * The first slide uses 72 / 28 / 64, the other two use 80 / 32 / 72.
+   */
+  --text-hero-80: clamp(2.75rem, 1.8696rem + 3.913vw, 5rem);
+  --text-hero-80--line-height: 1.2;
+  --text-hero-80--letter-spacing: -0.01em;
+
+  --text-hero-72: clamp(2.5rem, 1.7174rem + 3.4783vw, 4.5rem);
+  --text-hero-72--line-height: 1.2;
+  --text-hero-72--letter-spacing: -0.01em;
+
+  --text-hero-64: clamp(2.25rem, 1.5652rem + 3.0435vw, 4rem);
+  --text-hero-64--line-height: 1.2;
+  --text-hero-64--letter-spacing: -0.01em;
+
+  --text-hero-32: clamp(1.25rem, 0.9565rem + 1.3043vw, 2rem);
+  --text-hero-32--line-height: 1.2;
+  --text-hero-32--letter-spacing: -0.01em;
+
+  --text-hero-28: clamp(1.125rem, 0.8804rem + 1.087vw, 1.75rem);
+  --text-hero-28--line-height: 1.2;
+  --text-hero-28--letter-spacing: -0.01em;
+}

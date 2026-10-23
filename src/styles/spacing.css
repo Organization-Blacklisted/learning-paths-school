@@ -1,0 +1,13 @@
+/*
+ * Section spacing. The project brief: "Section-to-section spacing: 200px as a common desktop reference".
+ *
+ * --spacing-section  the gap between two sections: 200px on desktop, scaling down to 80px on small
+ *                    screens (360px to 1280px viewport, same range as the type scale; the 80px minimum
+ *                    is my assumption). Use as gap-section, pt-section, pb-section, mt-section...
+ *                    The <Section> component uses it above every section and below the last one.
+ *
+ * `static` also exposes it as a CSS variable: var(--spacing-section).
+ */
+@theme static {
+  --spacing-section: clamp(5rem, 2.0652rem + 13.0435vw, 12.5rem);
+}
