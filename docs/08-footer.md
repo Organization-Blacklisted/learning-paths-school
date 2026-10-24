@@ -29,12 +29,13 @@ The Figma file has **only the desktop design**. Tablet and mobile are my interpr
 | Viewport | Layout |
 | --- | --- |
 | below 768px | Everything stacked. Sections separated by horizontal rules. Links in one column. |
-| 768px to 1279px | Heading and description/button side by side. Info sections stacked. Link lists in two columns. |
-| 1280px to 1399px | Same as above, with the CTA row at its fixed desktop widths (528px and 619px). |
-| 1400px and up | Three-column info row (`1fr 548px 1fr`), vertical dividers, top rule. The gap between columns grows from 64px to 146px. |
+| 768px to 1199px | Heading and description/button side by side (two equal columns). Info sections stacked. Link lists in two columns. |
+| 1200px and up | **The desktop design** (owner, 2026-10-24: laptops keep it; it started at 1400px before). CTA row: heading column 528px, text column up to 619px (at 1200px it takes the 568px that are left, the text wraps more). Three-column info row (`1fr 548px 1fr`), vertical dividers, top rule. The gap between columns grows from 40px (at 1200px the side columns are 246px) to 146px. |
 | 1600px and up | The content column is its full 1520px (the standard main container). |
 | 1650px and up | CTA column narrows to the exact Figma width (590px, shifted 13px right). |
 | 1920px | Matches Figma. |
+
+Bottom bar (copyright and the legal links): below 1024px the two lines are stacked and **centred** (owner, 2026-10-24); from 1024px they are on one row, copyright at the left edge and the links at the right edge (as in Figma).
 
 Content column: the standard `Container` (the brief's 1520px main container, no special width) has 20px (mobile) / 40px (md and up) gutters, so the content is exactly 1520px wide at 1600px and wider screens, with 200px margins at 1920px.
 
@@ -48,6 +49,7 @@ Verified in Chrome against the production build, comparing against the Figma met
 - All 18 measured elements (headings, paragraphs, links, buttons, social icons, bottom bar) were within 0px of their Figma position at 1920px (x, y, width, height) when the footer used the Figma 1530px column. With the 1520px container the vertical positions and the 745px height are unchanged, the middle and right columns are unchanged, and the left and right edges are 5px further in (see the deviation above). Re-checked in Chrome: 0 elements off against the updated expected positions, no overflow from 360px to 2560px. The pixel diff vs the Figma screenshot rose from about 2.8% to 4.7% because of that 5px shift.
 - Rules, dividers (including the 30px that rise above the top rule), borders, and the four social icons show no difference in a pixel diff.
 - No horizontal overflow at 360, 390, 768, 1024, 1280, 1399, 1400, 1536, 1610, 1920 and 2560px. No console errors.
+- 2026-10-24 (the 1200px change): measured in Chrome on the production build at 390, 768, 1000, 1100, 1199, 1200, 1250, 1280, 1360, 1399, 1400, 1440, 1649, 1650 and 1920px: the info row is stacked up to 1199px and three columns from 1200px, the CTA row is the desktop row from 1200px, no page overflow, no text sticking out of its column. From 1400px up nothing moved (the gap formula only lost its 64px floor, which only applied below 1400px). The one visible difference at 1200 to about 1290px: the address in the narrow left column wraps after "Pin-".
 
 Not pixel-identical, and why:
 - **Proxima Nova text.** The CTA description, button label, column titles ("Contact info", "Useful links", "Connect"), copyright and legal links are set in **Proxima Nova** in Figma. That font was not supplied, so they use Plus Jakarta Sans. It is wider, so the button is 263px wide instead of 253px, and the description needs a 619px box to stay on two lines. Supply the Proxima Nova files (or confirm Plus Jakarta Sans is acceptable) to close this.

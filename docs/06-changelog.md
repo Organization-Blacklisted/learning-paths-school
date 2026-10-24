@@ -4,6 +4,13 @@ Newest first.
 
 ## 2026-10-24
 
+### Footer: the desktop design from 1200px (was 1400px)
+- **Owner request:** laptops should get the same footer as desktops down to 1200px; it used to change below 1400px (the three info columns stacked), so a 1360px laptop saw the stacked version.
+- `src/components/layouts/Footer/Footer.tsx`: the info row (three columns, dividers, top rule) and the call to action row (heading left, text and button right) now switch at **1200px**. The gap between the columns now starts at 40px instead of 64px (the side columns are 246px at 1200px, enough for the email address); the formula is unchanged from 1400px up. The CTA text column takes the room left of the 528px heading column (up to the 619px Figma width), so it fits at 1200px.
+- Fixed on the way: the two ranges are exclusive (`md:max-[1200px]:` for the tablet classes), because a `min-[1200px]:` class did not reliably override a plain `md:` one, and the width ranges no longer miss 1649px (`max-[1650px]:`).
+- **Bottom bar centred below 1024px (owner request):** the copyright line and the Privacy Policy | Terms & Conditions links are centred when they are stacked (below 1024px); from 1024px they stay on one row, copyright left and links right. Checked at 360, 390, 768, 1000 and 1023px (both lines centred to the pixel, no overflow) and at 1024, 1100, 1440 and 1920px (unchanged).
+- Measured on a production build at 15 widths from 390 to 1920px: no overflow, nothing sticking out of its column, and nothing changed from 1400px up. At 1200 to about 1290px the address wraps after "Pin-" (narrow column). Details in [08-footer.md](08-footer.md).
+
 ### Fifth home section shown (Framework)
 - **Owner request (2026-10-24):** "unhide the 5th section". `HOME_SECTION_LIMIT` in `src/lib/site.ts` went from 4 to 5, so the page now shows 1 the hero, 2 Vision / Mission / Values, 3 The Courage To Find Your Path, 4 Our Learning Journey and **5 the Framework section**. Ecosystem, Alumni, Campus, What's New, the CTA band and the photo marquee stay hidden. Set it to `null` for the whole page.
 - Not pushed to git at the owner's request (local only until they say so). The browser checks still build with `HOME_SECTION_LIMIT=all`, so nothing in them changes.

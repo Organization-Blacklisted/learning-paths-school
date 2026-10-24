@@ -6,10 +6,13 @@ import { footerContent } from "@/data/footer";
 
 // Layout notes (Figma node 6282:795, 1920px frame). The Figma content column is 1530px; the footer uses
 // the standard 1520px main container instead (a 10px difference, accepted), so edges are 5px further in:
-// - Below 1400px the three info columns stack, separated by horizontal rules.
+// - Below 1200px the three info columns stack, separated by horizontal rules.
 //   The Figma file only has the desktop design; tablet/mobile is an interpretation.
-// - From 1400px the info row is a 3-column grid `1fr 548px 1fr` with a gap that
-//   grows to 146px (340 / 548 / 340 at 1520px, 345 / 548 / 345 in Figma; vertical dividers in the gaps).
+// - From 1200px (owner, 2026-10-24: laptops keep the desktop design; it was 1400px) the info row is a 3-column grid
+//   `1fr 548px 1fr` with a gap that grows from 40px to 146px (340 / 548 / 340 at 1520px, 345 / 548 / 345 in Figma;
+//   vertical dividers in the gaps). At 1200px the content is 1120px wide, so the side columns are 246px.
+// - The call to action row on top is also the desktop row (heading left, text and button right) from 1200px; its right column
+//   takes the room that is left of the 528px heading column (up to the 619px Figma width).
 // - Rules are CSS borders (white at 16% opacity), not the exported line SVGs,
 //   because they have to stretch with the layout.
 
@@ -17,26 +20,27 @@ const linkClass = "hover:underline underline-offset-4 focus-visible:outline-2 fo
 
 function FooterColumn({ title, children, className = "" }: { title: string; children: ReactNode; className?: string }) {
   return (
-    <div className={`relative border-t border-white/16 pt-8 min-[1400px]:border-t-0 min-[1400px]:pt-[60px] ${className}`}>
+    <div className={`relative border-t border-white/16 pt-8 min-[1200px]:border-t-0 min-[1200px]:pt-[60px] ${className}`}>
       <h3 className="font-body text-body-lg font-bold leading-7">{title}</h3>
       <div className="mt-6">{children}</div>
     </div>
   );
 }
 
-// Vertical divider that sits in the grid gap to the left of a column (>= 1400px only).
+// Vertical divider that sits in the grid gap to the left of a column (>= 1200px only).
 const dividerClass =
-  "min-[1400px]:before:absolute min-[1400px]:before:top-0 min-[1400px]:before:left-[calc(var(--info-gap)_/_-2_-_1px)] min-[1400px]:before:h-[316px] min-[1400px]:before:border-l min-[1400px]:before:border-white/16";
+  "min-[1200px]:before:absolute min-[1200px]:before:top-0 min-[1200px]:before:left-[calc(var(--info-gap)_/_-2_-_1px)] min-[1200px]:before:h-[316px] min-[1200px]:before:border-l min-[1200px]:before:border-white/16";
 
 export default function Footer() {
   const { cta, contact, usefulLinks, connect, legal } = footerContent;
 
   return (
     <footer className="bg-brand-navy text-white">
-      <Container className="flex flex-col gap-12 py-12 md:gap-14 md:py-16 xl:gap-[72px] xl:py-20">
+      {/* The md-only classes stop below 1200px (md:max-[1200px]:) because a min-[1200px]: class does not reliably sort after a plain md: one. */}
+      <Container className="flex flex-col gap-12 py-12 md:max-[1200px]:gap-14 md:max-[1200px]:py-16 min-[1200px]:gap-[72px] min-[1200px]:py-20">
         {/* Call to action */}
-        <div className="flex flex-col gap-8 md:grid md:grid-cols-2 md:items-end md:gap-x-10 xl:flex xl:min-h-[150px] xl:flex-row xl:justify-between">
-          <div className="xl:w-[528px] xl:shrink-0 xl:self-start">
+        <div className="flex flex-col gap-8 md:max-[1200px]:grid md:max-[1200px]:grid-cols-2 md:max-[1200px]:items-end md:max-[1200px]:gap-x-10 min-[1200px]:flex min-[1200px]:min-h-[150px] min-[1200px]:flex-row min-[1200px]:justify-between">
+          <div className="min-[1200px]:w-[528px] min-[1200px]:shrink-0 min-[1200px]:self-start">
             <div className="flex items-start gap-[9px]">
               {/* mt-[11px] centres the rule on the first text line (23px line box), even when the eyebrow wraps. */}
               <span aria-hidden="true" className="mt-[11px] h-px w-[39px] shrink-0 bg-white" />
@@ -49,7 +53,7 @@ export default function Footer() {
             </h2>
           </div>
 
-          <div className="flex flex-col items-start gap-8 xl:max-[1649px]:w-[619px] xl:shrink-0 min-[1650px]:-mr-[13px] min-[1650px]:w-[590px]">
+          <div className="flex flex-col items-start gap-8 min-[1200px]:max-[1650px]:w-[min(619px,calc(100%_-_552px))] min-[1200px]:shrink-0 min-[1650px]:-mr-[13px] min-[1650px]:w-[590px]">
             {/* 619px is the Figma text box (wider than its 590px column). Applied from 1650px so it can't overflow the viewport. */}
             <p className="text-body-lg leading-[26px] text-white/80 min-[1650px]:w-[619px]">{cta.description}</p>
             <Link
@@ -61,9 +65,9 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-8 min-[1400px]:gap-0">
+        <div className="flex flex-col gap-8 min-[1200px]:gap-0">
           {/* Info columns */}
-          <div className="relative flex flex-col gap-8 min-[1400px]:grid min-[1400px]:h-[316px] min-[1400px]:grid-cols-[1fr_548px_1fr] min-[1400px]:gap-x-[var(--info-gap)] min-[1400px]:[--info-gap:clamp(64px,calc(39vw_-_482px),146px)] min-[1400px]:before:absolute min-[1400px]:before:top-[29px] min-[1400px]:before:right-0 min-[1400px]:before:left-px min-[1400px]:before:border-t min-[1400px]:before:border-white/16">
+          <div className="relative flex flex-col gap-8 min-[1200px]:grid min-[1200px]:h-[316px] min-[1200px]:grid-cols-[1fr_548px_1fr] min-[1200px]:gap-x-[var(--info-gap)] min-[1200px]:[--info-gap:clamp(40px,calc(39vw_-_482px),146px)] min-[1200px]:before:absolute min-[1200px]:before:top-[29px] min-[1200px]:before:right-0 min-[1200px]:before:left-px min-[1200px]:before:border-t min-[1200px]:before:border-white/16">
             <FooterColumn title={contact.title}>
               <address className="not-italic">
                 <ul className="flex flex-col gap-3 text-body-lg leading-[1.5]">
@@ -137,7 +141,7 @@ export default function Footer() {
 
           {/* Bottom bar */}
           <div className="border-t border-white/16 pt-5">
-            <div className="flex flex-col gap-3 text-body-lg leading-[26px] text-white/80 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col items-center gap-3 text-center text-body-lg leading-[26px] text-white/80 lg:flex-row lg:justify-between lg:text-left">
               <p>{legal.copyright}</p>
               <nav aria-label="Legal">
                 {legal.links.map((link, index) => (
