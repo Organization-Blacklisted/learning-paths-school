@@ -35,6 +35,10 @@ const DEFAULT_GAP = 153; // px at 1920 wide, between Vision/Mission/Values and C
 const MIN_FIT_SCALE = 0.5;
 
 export default function HorizontalScene({ panels }: HorizontalSceneProps) {
+  // A scene with ONE panel has nothing to pan to (the home page shows only part of its sections for now, see HOME_SECTION_LIMIT, so a scene
+  // can be cut down to its first panel). Then there is no pin and no row: the panel is an ordinary section at its natural size. Without this
+  // it would still be squeezed into a screen-high, clipped stage and scaled down to fit (a phone showed the Ecosystem at 60% of its width).
+  const sideways = panels.length > 1;
   const stageRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const callbacks = useRef(new Set<SceneCallback>());
@@ -53,7 +57,7 @@ export default function HorizontalScene({ panels }: HorizontalSceneProps) {
   useEffect(() => {
     const stage = stageRef.current;
     const track = trackRef.current;
-    if (!stage || !track) return;
+    if (!stage || !track || !sideways) return;
 
     const { gsap, ScrollTrigger } = registerGsap();
 
@@ -184,7 +188,7 @@ export default function HorizontalScene({ panels }: HorizontalSceneProps) {
       ScrollTrigger.removeEventListener("refresh", settle);
       fit(); // clears the scaling (the query no longer applies to a torn-down scene)
     };
-  }, []);
+  }, [sideways]);
 
   const firstWidth = panels[0].contentWidth + GUTTER * 2;
 
@@ -193,18 +197,24 @@ export default function HorizontalScene({ panels }: HorizontalSceneProps) {
       <div className="pt-section last:pb-section">
         <div
           ref={stageRef}
-          className="@container motion-safe:flex motion-safe:h-svh motion-safe:items-center motion-safe:overflow-clip"
+          className={`@container ${sideways ? "motion-safe:flex motion-safe:h-svh motion-safe:items-center motion-safe:overflow-clip" : ""}`}
           style={{ "--first-panel": `${firstWidth}px` } as CSSProperties}
         >
           <div
             ref={trackRef}
-            className="relative flex flex-col gap-section motion-safe:h-full motion-safe:w-max motion-safe:will-change-transform motion-safe:flex-row motion-safe:items-center motion-safe:pl-[max(0px,calc((100cqw-var(--first-panel))/2))]"
+            className={`relative flex flex-col gap-section ${
+              sideways
+                ? "motion-safe:h-full motion-safe:w-max motion-safe:will-change-transform motion-safe:flex-row motion-safe:items-center motion-safe:pl-[max(0px,calc((100cqw-var(--first-panel))/2))]"
+                : ""
+            }`}
           >
             {panels.map((panel) => (
               <div
                 key={panel.id}
                 data-scene-panel
-                className="motion-safe:ml-(--gap-before) motion-safe:w-(--panel-w) motion-safe:shrink-0 motion-safe:first:ml-0"
+                className={
+                  sideways ? "motion-safe:ml-(--gap-before) motion-safe:w-(--panel-w) motion-safe:shrink-0 motion-safe:first:ml-0" : ""
+                }
                 style={
                   {
                     "--panel-w": `min(${panel.contentWidth + GUTTER * 2}px, 100cqw)`,

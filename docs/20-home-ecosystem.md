@@ -21,8 +21,8 @@ Click, or the keyboard as for any tab list: **Left and Right arrows** move and s
 
 - **Entrance, once**, when the section scrolls into view (top at 70% of the screen), about 1.5 s: the pill and heading rise in, the tab bar fades in, the photo is wiped open from the left while it settles from a 1.12 zoom, and the title, text and bullets rise in one after another.
 - **The blue highlight slides.** It is one shape behind the tabs that glides to the clicked tab (position and size; 0.45 s. It is measured in the bar’s own pixels, so it stays exact when the panel is scaled down to fit a short window).
-- **On a tab change** the photo is wiped open again from the left (0.8 s, with a zoom settle) and the title, text and bullets of the chosen tab rise in.
-- **Reduced motion:** no animation, the highlight jumps, everything shown. Without JavaScript everything is shown, and the active tab paints its own blue background (the highlight takes over on the same rectangle one frame after load).
+- **On a tab change** (owner, 2026-10-24; it used to be a wipe from the left) the photo **cross-fades**: the new photo is loaded first (so a slow connection never fades in an empty box; it waits at most 2 s), then it fades in over the old one (0.9 s, opacity only) while it eases from a slight zoom to its normal size (scale 1.08 to 1 over 1.4 s, `power2.out`). The old photo stays fully visible underneath until the fade is done, so there is no blank frame. The title, text and bullets of the chosen tab rise in as before. The photo box is a **stack of layers** (`layers` in `EcosystemSection.tsx`): one normally, two during the fade; only the top one has `data-eco-photo`, the ones under it `data-eco-photo-old`. Several quick clicks just stack more layers and all settle on the last tab. Only `transform` and `opacity` move.
+- **Reduced motion:** no animation, the photo swaps at once, the highlight jumps, everything shown. Without JavaScript everything is shown, and the active tab paints its own blue background (the highlight takes over on the same rectangle one frame after load).
 
 ## Layout and responsive behaviour
 
@@ -49,6 +49,6 @@ Verified in Chrome at 1920px (frame 1520 wide) against the Figma render, using a
 - **Content:** real text and photos for all five tabs since 2026-10-23 (see above). Nothing open: the tab names are the school's (owner decision) and "LPS" in the intro is confirmed.
 - **Figma typo corrected:** the intro says "across a child's journey at **PLS**"; it is written as **LPS** here (confirmed by the owner, 2026-10-23).
 - Alt text of the photo is mine.
-- **Owner feedback (2026-10-22): the photo animation (the wipe that opens from the left) is not good.** Kept as it is for now; the owner will review all home page animations together once the home page is complete. Ideas to try then: a fade with a slight zoom, a slide that follows the tab order, or a vertical reveal.
-- The tab-change wipe plays from the left whatever the direction of the change; a slide direction that follows the tab order would be an easy addition if wanted.
+- **Owner feedback (2026-10-22): the photo animation (the wipe that opens from the left) is not good.** Answered on 2026-10-24 for the **tab change**: it is now the fade with a slight zoom (above). The wipe on the first entrance (when the section scrolls into view) is unchanged; the owner will review all home page animations together once the home page is complete. Other ideas if wanted: a slide that follows the tab order, or a vertical reveal.
+- The cross-fade has no direction; a slide that follows the tab order would be an easy addition if wanted. The other zoom direction (the new photo starting at normal size and drifting in slowly) is a one-line change of the two scale values.
 - Text weight may look heavier in the browser than in the Figma render (see the Proxima Nova note in [08-footer.md](08-footer.md)).

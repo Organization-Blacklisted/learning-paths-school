@@ -738,6 +738,132 @@ for (const [label, width, height] of [
   }
 }
 
+// ---------------------------------------------------------------- 10. The Ecosystem photo CROSS-FADES on a tab change (owner, 2026-10-24; it used to wipe open from the left)
+// The new photo is loaded first, then fades in (about 0.9 s) over the old one while it settles from a slight zoom (1.08 to 1). The old
+// photo stays fully visible underneath until the fade is done (no blank frame); then one layer is left. Reduced motion: an instant swap.
+{
+  /** Clicks tab `n` and records every animation frame for `ms`: the layers' opacity, scale and photo, and the photo box's clip. */
+  const clickAndSample = (page, n, ms) =>
+    page.evaluate(
+      ([sec, n, ms]) =>
+        new Promise((resolve) => {
+          const root = document.querySelector(sec);
+          const frames = [];
+          const t0 = performance.now();
+          root.querySelectorAll("[role=tab]")[n].click();
+          const read = () => {
+            const layers = [...root.querySelectorAll("[data-eco-layer]")];
+            frames.push({
+              t: Math.round(performance.now() - t0),
+              layers: layers.map((l) => ({
+                o: +getComputedStyle(l).opacity,
+                s: +new DOMMatrix(getComputedStyle(l).transform).a.toFixed(3),
+                src: (l.querySelector("img")?.getAttribute("src") ?? "").split("/").pop(),
+                top: l.hasAttribute("data-eco-photo"),
+              })),
+              clip: getComputedStyle(root.querySelector("[data-eco-clip]")).clipPath,
+            });
+            if (performance.now() - t0 < ms) requestAnimationFrame(read);
+            else resolve(frames);
+          };
+          read();
+        }),
+      [ECO, n, ms],
+    );
+
+  for (const [label, reduced] of [
+    ["desktop 1920", false],
+    ["reduced motion", true],
+  ]) {
+    const context = await browser.newContext({
+      viewport: { width: 1920, height: 1200 },
+      reducedMotion: reduced ? "reduce" : "no-preference",
+    });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 160)));
+    page.on("console", (m) => ["error", "warning"].includes(m.type()) && errors.push(m.text().slice(0, 160)));
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.mouse.move(5, 300);
+    await page.mouse.wheel(0, 30);
+    await page.waitForTimeout(3000);
+    await scrollToY(page, (await startOf(page, ECO)) + 4);
+
+    const frames = await clickAndSample(page, 1, 2200);
+    const last = frames[frames.length - 1];
+    if (reduced) {
+      ok(
+        `Ecosystem photo, ${label}: swaps at once (never a second layer, always opaque and at normal size)`,
+        frames.every((f) => f.layers.length === 1 && f.layers[0].o === 1 && f.layers[0].s === 1) && last.layers[0].src.startsWith("sports"),
+        `layers ${[...new Set(frames.map((f) => f.layers.length))]}, shows ${last.layers[0].src}`,
+      );
+    } else {
+      const during = frames.filter((f) => f.layers.length === 2);
+      const top = during.map((f) => f.layers.find((l) => l.top));
+      const under = during.map((f) => f.layers.find((l) => !l.top));
+      ok(
+        `Ecosystem photo, ${label}: the new photo is on top of the old one while it fades in (two layers for about 0.9 s)`,
+        during.length >= 20 &&
+          top[0].src.startsWith("sports") &&
+          under[0].src.startsWith("choir") &&
+          during.at(-1).t > 700 &&
+          during.at(-1).t < 1500,
+        `${during.length} frames, until ${during.at(-1)?.t} ms, top ${top[0]?.src}, under ${under[0]?.src}`,
+      );
+      ok(
+        `Ecosystem photo, ${label}: opacity rises from 0 to 1 and the zoom eases from about 1.08 to 1, both only one way`,
+        top[0].o < 0.2 &&
+          top.at(-1).o > 0.97 &&
+          top.every((l, i) => i === 0 || l.o >= top[i - 1].o - 0.001) &&
+          top[0].s > 1.05 &&
+          top[0].s <= 1.081 &&
+          last.layers[0].s === 1 &&
+          top.every((l, i) => i === 0 || l.s <= top[i - 1].s + 0.001),
+        `opacity ${top[0].o.toFixed(2)} to ${top.at(-1).o.toFixed(2)}, scale ${top[0].s} to ${last.layers[0].s}`,
+      );
+      ok(
+        `Ecosystem photo, ${label}: the old photo stays fully visible underneath the whole time (no blank frame)`,
+        under.every((l) => l.o === 1),
+        `lowest ${Math.min(...under.map((l) => l.o))}`,
+      );
+      ok(
+        `Ecosystem photo, ${label}: afterwards one layer is left, opaque, at normal size, showing the new photo; the box is not wiped`,
+        last.layers.length === 1 &&
+          last.layers[0].top &&
+          last.layers[0].o === 1 &&
+          last.layers[0].s === 1 &&
+          frames.every((f) => /inset\(0/.test(f.clip) && !/100%/.test(f.clip)),
+        `${last.layers.length} layer, ${last.layers[0].src}, ${last.clip}`,
+      );
+      // three quick clicks: the stack settles on the last tab, nothing is left half faded
+      await page.evaluate((sec) => {
+        const t = document.querySelector(sec).querySelectorAll("[role=tab]");
+        t[0].click();
+        setTimeout(() => t[3].click(), 120);
+        setTimeout(() => t[4].click(), 260);
+      }, ECO);
+      await page.waitForTimeout(3200);
+      const end = await page.evaluate((sec) => {
+        const r = document.querySelector(sec);
+        const l = [...r.querySelectorAll("[data-eco-layer]")];
+        return {
+          n: l.length,
+          src: l[0]?.querySelector("img")?.getAttribute("src").split("/").pop(),
+          o: +getComputedStyle(l[0]).opacity,
+          selected: [...r.querySelectorAll("[role=tab]")].findIndex((t) => t.getAttribute("aria-selected") === "true"),
+        };
+      }, ECO);
+      ok(
+        `Ecosystem photo, ${label}: three quick clicks (tabs 1, 4, 5 within 0.3 s) end on the last tab with one fully visible layer`,
+        end.n === 1 && end.src.startsWith("social-impact") && end.o === 1 && end.selected === 4,
+        JSON.stringify(end),
+      );
+    }
+    ok(`Ecosystem photo, ${label}: no console errors or warnings`, errors.length === 0, JSON.stringify(errors.slice(0, 2)));
+    await context.close();
+  }
+}
+
 console.log(fails ? `\n${fails} CHECK(S) FAILED` : "\nALL INTERACTION CHECKS PASSED");
 await browser.close();
 process.exitCode = fails ? 1 : 0;

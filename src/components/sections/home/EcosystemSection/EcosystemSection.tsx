@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Accent from "@/components/ui/Accent";
 import Badge from "@/components/ui/Badge";
 import BodyText from "@/components/ui/BodyText";
@@ -34,8 +34,35 @@ import type { EcosystemSectionProps } from "./EcosystemSection.types";
 // - On entering view, once: the pill and heading rise in, the tab bar fades in, the photo is wiped open from the left while it
 //   settles from a slight zoom, and the text row rises in. About 1.5 s.
 // - The blue highlight of the active tab is one shape that SLIDES from tab to tab (position and width animated, 0.45 s).
-// - On a tab change the photo is wiped open again from the left (0.8 s) and the title, text and bullets rise in one after another.
-// - Reduced motion: nothing animated, the highlight jumps, all shown. Everything is only hidden by JS.
+// - On a tab change the photo CROSS-FADES (owner, 2026-10-24; it was a wipe from the left): the new photo is loaded first, then it fades in
+//   over the old one (0.9 s) while it eases from a slight zoom (1.08) to its normal size (1.4 s), a calm "premium" settle. The old photo stays
+//   under it until the fade is done, so there is never a blank frame. The title, text and bullets rise in one after another.
+// - Reduced motion: nothing animated, the photo swaps at once, the highlight jumps, all shown. Everything is only hidden by JS.
+//
+// THE PHOTO IS A STACK OF LAYERS (see `layers`). Normally one. A tab change adds a layer on top once its photo has loaded (so a slow
+// connection never fades in an empty box); the layers below it are dropped when the fade ends. Several quick clicks just stack more layers.
+// Only the top layer carries `data-eco-photo` (the tests and the entrance animation look for it); the ones below are `data-eco-photo-old`.
+
+// The photo box is a stack of layers: [{ id, tab }, …], the last one on top. Layer 0 is the first photo (the entrance animation plays on it).
+type PhotoLayer = { id: number; tab: number };
+
+// How long to wait for a tab's photo before showing the tab anyway (a very slow connection): it then loads while it fades in.
+const PHOTO_WAIT_MS = 2000;
+
+/** Resolves when the browser has fetched `src` (or failed, or the wait ran out), so the cross-fade starts on a ready image. */
+function preloadPhoto(src: string): Promise<void> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    const timer = window.setTimeout(resolve, PHOTO_WAIT_MS);
+    const done = () => {
+      window.clearTimeout(timer);
+      resolve();
+    };
+    img.onload = done;
+    img.onerror = done;
+    img.src = src;
+  });
+}
 
 export default function EcosystemSection({ content }: EcosystemSectionProps) {
   const { label, badge, titleLead, titleAccent, intro, tabsLabel, tabs } = content;
@@ -47,6 +74,13 @@ export default function EcosystemSection({ content }: EcosystemSectionProps) {
   const animatedFor = useRef(0);
   // The photo is requested once the page has loaded and the browser is idle (see useIdleReady); its box keeps its size.
   const photoReady = useIdleReady(800, rootRef);
+  // The photo layers (see the notes at the top), the id for the next layer, the tab whose photo is on top (or on its way there) and the
+  // GSAP context that owns the fades (kept for the life of the section, so a new fade never cuts the one before it short).
+  const [layers, setLayers] = useState<PhotoLayer[]>([{ id: 0, tab: 0 }]);
+  const nextLayerId = useRef(1);
+  const topTab = useRef(0);
+  const fades = useRef<ReturnType<ReturnType<typeof registerGsap>["gsap"]["context"]> | null>(null);
+  const topLayer = layers[layers.length - 1];
 
   const current = tabs[active];
 
@@ -77,7 +111,64 @@ export default function EcosystemSection({ content }: EcosystemSectionProps) {
     { start: "top 70%" },
   );
 
-  // A tab change: wipe the photo open again and bring the text in. Not on the first render.
+  // A tab change, step 1: get the new photo ready, then put it on the stack as a new top layer. Not on the first render, and not for the tab
+  // that is already on top. With reduced motion the stack is simply replaced (an instant swap).
+  useEffect(() => {
+    if (topTab.current === active) return;
+    let cancelled = false;
+    const show = () => {
+      if (cancelled) return;
+      topTab.current = active;
+      const layer = { id: nextLayerId.current++, tab: active };
+      setLayers((stack) => (prefersReducedMotion() ? [layer] : [...stack, layer]));
+    };
+    // Reduced motion: no fade, so no reason to wait for the photo either (it loads in place like before).
+    if (prefersReducedMotion()) show();
+    else preloadPhoto(tabs[active].photo.src).then(show);
+    return () => {
+      cancelled = true;
+    };
+  }, [active, tabs]);
+
+  // A tab change, step 2 (before the browser paints the new layer): the top layer fades in while it settles from a slight zoom. When it is
+  // fully opaque the layers below it are dropped. The fades live in one GSAP context so a quick second click never snaps the first one.
+  useLayoutEffect(() => {
+    // Layer 0 is the first photo (the entrance animation owns it); with reduced motion the swap already replaced the whole stack.
+    if (topLayer.id === 0 || prefersReducedMotion()) return;
+    const panel = panelRef.current;
+    const el = panel?.querySelector<HTMLElement>(`[data-eco-layer="${topLayer.id}"]`);
+    if (!panel || !el) return;
+    const { gsap } = registerGsap();
+    fades.current ??= gsap.context(() => {}, panel);
+    fades.current.add(() => {
+      gsap.set(el, { willChange: "transform, opacity" });
+      gsap.fromTo(
+        el,
+        { autoAlpha: 0 },
+        {
+          autoAlpha: 1,
+          duration: 0.9,
+          ease: "power1.inOut",
+          onComplete: () => setLayers((stack) => stack.filter((layer) => layer.id >= topLayer.id)),
+        },
+      );
+      gsap.fromTo(
+        el,
+        { scale: 1.08 },
+        { scale: 1, duration: 1.4, ease: "power2.out", onComplete: () => gsap.set(el, { willChange: "auto" }) },
+      );
+    });
+  }, [topLayer.id]);
+
+  // Leaving the page: stop whatever fade is still running.
+  useEffect(
+    () => () => {
+      fades.current?.revert();
+    },
+    [],
+  );
+
+  // A tab change, step 3: the title, text and bullets of the chosen tab rise in. Not on the first render.
   useEffect(() => {
     if (animatedFor.current === active) return;
     animatedFor.current = active;
@@ -86,12 +177,6 @@ export default function EcosystemSection({ content }: EcosystemSectionProps) {
     const { gsap } = registerGsap();
     if (prefersReducedMotion()) return;
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        "[data-eco-clip]",
-        { clipPath: "inset(0 100% 0 0)" },
-        { clipPath: "inset(0 0% 0 0)", duration: 0.8, ease: "power3.inOut" },
-      );
-      gsap.fromTo("[data-eco-photo]", { scale: 1.1 }, { scale: 1, duration: 1.1, ease: "power2.out" });
       gsap.fromTo(
         "[data-eco-row][data-active] [data-eco-text]",
         { autoAlpha: 0, y: 18 },
@@ -133,22 +218,36 @@ export default function EcosystemSection({ content }: EcosystemSectionProps) {
           className="flex w-full flex-col gap-8 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue"
         >
           <div data-eco-clip className="relative aspect-video w-full overflow-hidden sm:aspect-[1520/531]">
-            <div data-eco-photo className="absolute inset-0">
-              <Photo
-                ready={photoReady}
-                src={current.photo.src}
-                alt={current.photo.alt}
-                fill
-                sizes="(min-width: 1600px) 1520px, 100vw"
-                className="object-cover"
-              />
-            </div>
+            {layers.map((layer, index) => {
+              const photo = tabs[layer.tab].photo;
+              return (
+                <div
+                  key={layer.id}
+                  data-eco-layer={layer.id}
+                  {...(index === layers.length - 1 ? { "data-eco-photo": "" } : { "data-eco-photo-old": "", "aria-hidden": true })}
+                  className="absolute inset-0"
+                >
+                  {/* Layer 0 waits for the idle moment like every photo below the first screen; the others are only added once loaded. */}
+                  <Photo
+                    ready={photoReady || layer.id > 0}
+                    src={photo.src}
+                    alt={index === layers.length - 1 ? photo.alt : ""}
+                    fill
+                    sizes="(min-width: 1600px) 1520px, 100vw"
+                    className="object-cover"
+                  />
+                </div>
+              );
+            })}
           </div>
 
           {/* The text of ALL the tabs sits in ONE grid cell and only the active tab's is visible (the others are invisible, inert and hidden
               from screen readers). So the panel is always as tall as the tallest tab: nothing jumps when a tab is chosen, and the sideways
               scene fits that height to the screen once (the tabs' texts differ in length, one is 27px taller than the others). */}
-          <div className="grid w-full">
+          {/* grid-cols-[minmax(0,1fr)]: without it the grid's one column grows to the text row's fixed 648 + 485 + 32px (1165px), so below
+              about 1245px the row stuck out on the right (and was cut off by the scene's clip). Now the column is as wide as the panel and
+              the two text columns shrink and wrap. */}
+          <div className="grid w-full grid-cols-[minmax(0,1fr)]">
             {tabs.map((item, index) => {
               const isActive = index === active;
               return (
