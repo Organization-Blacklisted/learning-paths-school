@@ -1,6 +1,6 @@
 # Payload CMS
 
-Payload 3.91.0 runs **inside this Next.js app** (no separate server), backed by Postgres (Neon, not created yet). Built the same way as the Giada project. Setup status and the build plan are in [02-architecture.md](02-architecture.md#payload--neon-status-and-plan).
+Payload 3.91.0 runs **inside this Next.js app** (no separate server), backed by Postgres (Neon, created 2026-10-24). Built the same way as the Giada project. Setup status and the build plan are in [02-architecture.md](02-architecture.md#payload--neon-status-and-plan).
 
 ## What exists
 
@@ -55,7 +55,21 @@ No Neon project exists, so everything was tested against a **throwaway real Post
 - Access rules, via Payload's own API (6 of 6): the first user becomes an admin even when editor is submitted; the second user defaults to editor; an editor cannot create users; an editor cannot promote themselves; an editor sees only their own record; an admin sees all.
 - In Chrome against the production build (14 of 14): the public home page still renders with header, footer and fonts; `/admin` redirects to "create first user" when there are no users; the tab title is "Create first user - Learning Paths School"; creating the first user through the real form lands on the dashboard; `/api/users/me` reports that user as `admin`; the Users, Media and Account screens render; anonymous `GET /api/users` is 403; anonymous `GET /api/media` is 200; GraphQL answers; an unknown URL returns HTTP 404; no console errors; no server errors in the log.
 
-**Not verified:** anything against Neon, and file uploads (the local `/media` path and the S3 path were not exercised). The Live Preview and drafts features are not set up yet.
+**Not verified in that first round** (Neon and uploads: done on 2026-10-24, see the next section). The Live Preview and drafts features are not set up yet.
+
+## Neon: set up and verified (2026-10-24)
+
+**What exists.** Neon project "Learning Paths School" (AWS US East 1, Postgres 18), branch `production` (default) with a private bucket `lps-media`. `neon.ts` declares the bucket; `neon deploy` applies it. A long-lived branch `dev` (**no expiry**, decided 2026-10-24 because the project is long; `neon.ts` gives the branch named `dev` no ttl and any other new branch 7 days) is for local work, with its own database and a copy-on-write copy of the bucket. `.env.local` (gitignored) holds the variables of the branch that is checked out (`neon checkout <branch>` switches them); right now it is `dev`.
+
+**How the app uses it.** No code change was needed: `payload.config.ts` already reads `DATABASE_URL` (pooled, node-postgres through `@payloadcms/db-postgres`, the driver the Neon skills recommend on Vercel) and the `AWS_*` variables (path-style S3, `disableLocalStorage`). The bucket name `lps-media` in the config matches the one in `neon.ts` (keep both in step). Use `DATABASE_URL_UNPOOLED` for migrations.
+
+**Proof (2026-10-24).** Production build passes with the Neon variables. Against production: Postgres answers through the pooled and the direct URL; the bucket takes a put, get and list and then a delete, and an anonymous GET is refused (HTTP 403). Through the running app on the `dev` branch (all 15 checks passed): Payload created its 9 tables; the first user was created and became an admin; `/api/users/me` read it back; a 900x600 PNG uploaded through `/api/media` landed in the bucket with its 400x400 thumbnail (checked with a separate S3 client, right type and size, no local `/media` copy); an anonymous visitor loaded it through the app's URL with identical bytes; the row was in Postgres; deleting through Payload removed both files from the bucket. The test data was deleted afterwards. `neon.ts` plan and deploy showed no pending changes.
+
+**Not done yet.**
+- **The production branch has no tables (0).** Production never creates them. Before `/admin` works there: `payload migrate:create`, commit the migration files, and run `payload migrate` with `DATABASE_URL` pointing at the direct (unpooled) URL.
+- Vercel variables are not set (see [25-deployment-vercel.md](25-deployment-vercel.md)); `PAYLOAD_SECRET` is local-only and production needs its own.
+- `pg` warns that `sslmode=require` will change meaning in pg 9 (today it already behaves like `verify-full`). Harmless now; adding `sslmode=verify-full` to the connection string removes the warning.
+- Not tried: Payload's admin screens against Neon (only the API), and `attachDatabasePool` from `@vercel/functions` (the Neon skill suggests it on Vercel; Payload owns its pool).
 
 ## Known limitations and gotchas
 

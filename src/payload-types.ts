@@ -124,7 +124,7 @@ export interface UserAuthOperations {
 export interface User {
   id: number;
   /**
-   * Admins can manage other users; Editors can edit site content only.
+   * Admins can manage other users; Editors can edit site content only. The very first account is always saved as an Admin, whatever is selected here.
    */
   role: 'admin' | 'editor';
   updatedAt: string;
@@ -154,6 +154,7 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -280,6 +281,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

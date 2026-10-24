@@ -1,6 +1,6 @@
 # Deployment: GitHub and Vercel
 
-Decided 2026-10-22 (owner): the code lives on **GitHub**, the site is hosted on **Vercel**. Nothing is deployed yet (no repository, no Neon project); this is the plan and the checklist for the first deployment. Items marked **verify** are what I know of Vercel in general and have not been able to check against this project.
+Decided 2026-10-22 (owner): the code lives on **GitHub**, the site is hosted on **Vercel**. Nothing is deployed to Vercel yet (the GitHub repository and the Neon project exist since 2026-10-24); this is the plan and the checklist for the first deployment. Items marked **verify** are what I know of Vercel in general and have not been able to check against this project.
 
 ## How code gets to the site
 
@@ -24,14 +24,14 @@ branch / pull request ──> GitHub Actions CI (lint, types, unit tests, build,
 | `PAYLOAD_SECRET` | required | required | Signs admin logins. Generate: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. A different value per environment. |
 | `DATABASE_URL` | Neon **pooled** connection | a **Neon branch**, not the production database | Needed at runtime by `/admin` and `/api`. The home page does not touch the database (it is static). Previews must not share the live database (Payload changes the schema when it starts in development; see [07-decisions.md](07-decisions.md)). |
 | `DATABASE_URL_UNPOOLED` | optional | optional | For migrations. |
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION` | **required before the admin is used** | required if uploads are tried | **Vercel's file system is read-only and temporary.** Without these, Payload stores uploads in a local `/media` folder, which does not work on Vercel (uploads fail or vanish). The Neon bucket is not created yet (see [02-architecture.md](02-architecture.md)). |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION` | **required before the admin is used** | required if uploads are tried | **Vercel's file system is read-only and temporary.** Without these, Payload stores uploads in a local `/media` folder, which does not work on Vercel (uploads fail or vanish). The bucket `lps-media` (private) exists on the Neon production branch; the values come from `neon deploy` / `neon env pull` (see [10-payload-cms.md](10-payload-cms.md#neon-set-up-and-verified-2026-10-24)). |
 | `REVALIDATE_SECRET` | not used yet | | |
 
 Vercel also provides **system variables** (`VERCEL_ENV`, `VERCEL_URL`, `VERCEL_PROJECT_PRODUCTION_URL`) when "Automatically expose System Environment Variables" is on (the default; **verify**). The site reads them only for the address fallback above.
 
 ## First deployment checklist
 
-1. Create the Neon project and bucket, fill in the variables above for Production and Preview.
+1. The Neon project and bucket exist (2026-10-24). Fill in the variables above for Production and Preview, and **migrate the production database first** (it has no tables: `payload migrate:create`, commit, then `payload migrate` with the direct URL), otherwise `/admin` and `/api` fail.
 2. Import the GitHub repository in Vercel. Check the first build is green (the CI already proves the build works with placeholder values, so a red build here means a missing or wrong variable).
 3. **Run the browser checks against the real preview, not just against CI's own build:**
    `QA_URL=https://<the-preview-address> npm run qa` and `npm run qa:interact` (the suite takes the address from `QA_URL`). This tests what the host actually serves: headers, caching, compression, fonts, the 404.

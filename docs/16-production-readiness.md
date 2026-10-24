@@ -50,12 +50,12 @@ Lighthouse's best-practices score of 82 is only "does not use HTTPS" (the test r
 ## What still needs a decision or an input before launch
 
 **Blocking for the CMS (not for the public home page):**
-- **Neon project and `.env`.** Until `DATABASE_URL` and `PAYLOAD_SECRET` exist, `/admin` and `/api/*` answer 500 in production (they cannot connect). The public pages are unaffected. Details in [10-payload-cms.md](10-payload-cms.md).
+- **Neon project and `.env`.** The Neon project exists since 2026-10-24 and works end to end on a dev branch. Open for production: set `DATABASE_URL`, the storage variables and a production `PAYLOAD_SECRET` in Vercel, and **migrate the production database** (it has no tables). Until then `/admin` and `/api/*` answer 500 in production. The public pages are unaffected. Details in [10-payload-cms.md](10-payload-cms.md#neon-set-up-and-verified-2026-10-24).
 - **`NEXT_PUBLIC_SITE_URL`** must be set to the real address **before the build** (it is read at build time). Without it the canonical, Open Graph and sitemap links point at `http://localhost:3000`. The contact e-mail suggests `learningpaths.in`, but the domain is the owner's to confirm.
 
 **Content and design (owner):**
 - An Open Graph image (1200 x 630, JPG or PNG, not AVIF): without it shared links show no picture.
-- **Launch scope:** only the first five home sections are shown (`HOME_SECTION_LIMIT`, [06-changelog.md](06-changelog.md)); the numbers measured in this document are for the whole page, so the live page is lighter. Re-measure on the host.
+- **Launch scope:** only the first six home sections are shown (`HOME_SECTION_LIMIT`, [06-changelog.md](06-changelog.md)); the numbers measured in this document are for the whole page, so the live page is lighter. Re-measure on the host.
 - **Hosting:** GitHub + Vercel (decided 2026-10-22). Environment variables, the first-deployment checklist and what still has to be verified on Vercel: [25-deployment-vercel.md](25-deployment-vercel.md).
 - All link targets are `#` placeholders (header, footer, CTA buttons, social profiles) until the page list and profile URLs exist.
 - **White text on the brand green `#338845` is 4.42:1** (needs 4.5:1 for 18px regular text): the footer button and the green pills. The closest passing green is about `#2f8141`. A brand-colour decision, left as designed.

@@ -47,7 +47,7 @@ export default buildConfig({
         media: true,
       },
       // Fixed identifier tied 1:1 to the bucket declared in neon.ts (not an env var).
-      // TODO: confirm the name when the Neon bucket is created.
+      // Confirmed 2026-10-24: the Neon bucket `lps-media` (private) exists and is declared in neon.ts.
       bucket: "lps-media",
       config: {
         region: process.env.AWS_REGION,
