@@ -39,7 +39,7 @@ export default function Footer() {
       {/* The md-only classes stop below 1200px (md:max-[1200px]:) because a min-[1200px]: class does not reliably sort after a plain md: one. */}
       <Container className="flex flex-col gap-12 py-12 md:max-[1200px]:gap-14 md:max-[1200px]:py-16 min-[1200px]:gap-[72px] min-[1200px]:py-20">
         {/* Call to action */}
-        <div className="flex flex-col gap-8 md:max-[1200px]:grid md:max-[1200px]:grid-cols-2 md:max-[1200px]:items-end md:max-[1200px]:gap-x-10 min-[1200px]:flex min-[1200px]:min-h-[150px] min-[1200px]:flex-row min-[1200px]:justify-between">
+        <div className="flex flex-col gap-8 md:max-[1200px]:grid md:max-[1200px]:grid-cols-2 md:max-[1200px]:items-end md:max-[1200px]:gap-x-10 min-[1200px]:flex min-[1200px]:min-h-[150px] min-[1200px]:flex-row min-[1200px]:items-end min-[1200px]:justify-between">
           <div className="min-[1200px]:w-[528px] min-[1200px]:shrink-0 min-[1200px]:self-start">
             <div className="flex items-start gap-[9px]">
               {/* mt-[11px] centres the rule on the first text line (23px line box), even when the eyebrow wraps. */}
