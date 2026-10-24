@@ -36,7 +36,7 @@ One style for every file, so nobody argues about it and a pull request shows onl
 
 Written for **GitHub Actions** (the code will be on GitHub, hosted on Vercel: see [25-deployment-vercel.md](25-deployment-vercel.md); there is no repository yet). Two jobs, run in parallel on every push and pull request; a new push cancels the run still going on the same branch:
 
-- **quality** (shown as "Lint, format, types, tests, images"): `npm ci`, `npm run lint`, `npm run format:check`, `tsc --noEmit`, `npm test`, `npm run images:check`.
+- **quality** (shown as "Lint, format, types, tests, images"): `npm ci`, `npm run lint`, `npm run format:check`, `npx next typegen` then `tsc --noEmit`, `npm test`, `npm run images:check`. The `typegen` step is needed because Next generates the global route types (`LayoutProps`, ...) into `.next/types`, which is not in git: on a developer machine they already exist, on a fresh checkout `tsc` fails without it.
 - **browser**: builds the production site and serves it on 3002 (`npm run qa:serve`), then `npm run qa` and `npm run qa:interact` with the Google Chrome that GitHub's Ubuntu runners already have. The build needs no secrets: it gets harmless placeholder values for `NEXT_PUBLIC_SITE_URL`, `PAYLOAD_SECRET` and `DATABASE_URL` (the home page is static; `/admin` and `/api` are not exercised). The Next build cache is kept between runs.
 
 **Not in CI: the screenshot comparison.** Fonts and text rendering differ between operating systems, so a baseline saved on a Windows machine would never match a Linux runner. It stays a local tool around refactors. (If wanted later: a manual workflow that builds the base branch and the new branch on the same runner and compares them.)
@@ -53,7 +53,7 @@ The checks used for the production reviews ([16-production-readiness.md](16-prod
 
 | Command | What it does |
 | --- | --- |
-| `npm run qa:serve` | Builds the production site into `.next-prod` and serves it on port 3002, **without touching `.next`** (the folder of `npm run dev`). `next build` rewrites `tsconfig.json` and `next-env.d.ts` for the other folder, so the script puts them back. `-- --skip-build` serves what is already built. |
+| `npm run qa:serve` | Builds the production site into `.next-prod` and serves it on port 3002, **without touching `.next`** (the folder of `npm run dev`). `next build` rewrites `tsconfig.json` and `next-env.d.ts` for the other folder, so the script puts them back (`next-env.d.ts` is not in git: on a fresh checkout it is deleted again afterwards). `-- --skip-build` serves what is already built. |
 | `npm run qa` | The functional checks (below). Exit code 1 when one fails. |
 | `npm run qa:interact` | Behaviour that screenshots cannot show: the Ecosystem tab bar (click, the sliding highlight, arrow/Home/End keys, the phone and tablet auto-scroll), one-off entrances reaching their end state, and the reduced-motion page (nothing pinned, nothing hidden). |
 | `npm run qa:snapshot:save` | Takes the **baseline**: screenshots of the whole home page. Run it on a build you trust, before a refactor. With `-- --only=390` it refreshes just that width and keeps the others. |

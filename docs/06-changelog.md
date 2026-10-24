@@ -2,6 +2,14 @@
 
 Newest first.
 
+## 2026-10-23
+
+### CI fixed: both jobs of the first run failed on a fresh checkout
+- The first GitHub Actions run (commit `d16d500`) failed in both jobs. Both causes are files that exist on a developer machine but are not in git, so nothing showed locally. Reproduced from a clean clone of the pushed commit.
+- **quality:** `tsc --noEmit` stopped with `Cannot find name 'LayoutProps'`. Next generates that global type into `.next/types`. Fix: the job runs `npx next typegen` before `tsc` (`.github/workflows/ci.yml`).
+- **browser:** `npm run qa:serve` crashed with `ENOENT` copying `next-env.d.ts` (gitignored, so missing on a runner) before the build. Fix: `tests/serve-prod.mjs` backs up and restores only the files that exist, and deletes `next-env.d.ts` again afterwards if it did not exist before.
+- Documented in [24-qa-suite.md](24-qa-suite.md).
+
 ## 2026-10-22
 
 ### Courage heading centred on phones
