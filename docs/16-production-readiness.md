@@ -55,7 +55,7 @@ Lighthouse's best-practices score of 82 is only "does not use HTTPS" (the test r
 
 **Content and design (owner):**
 - An Open Graph image (1200 x 630, JPG or PNG, not AVIF): without it shared links show no picture.
-- **Launch scope:** only the first four home sections are shown (`HOME_SECTION_LIMIT`, [06-changelog.md](06-changelog.md)); the numbers measured in this document are for the whole page, so the live page is lighter. Re-measure on the host.
+- **Launch scope:** only the first five home sections are shown (`HOME_SECTION_LIMIT`, [06-changelog.md](06-changelog.md)); the numbers measured in this document are for the whole page, so the live page is lighter. Re-measure on the host.
 - **Hosting:** GitHub + Vercel (decided 2026-10-22). Environment variables, the first-deployment checklist and what still has to be verified on Vercel: [25-deployment-vercel.md](25-deployment-vercel.md).
 - All link targets are `#` placeholders (header, footer, CTA buttons, social profiles) until the page list and profile URLs exist.
 - **White text on the brand green `#338845` is 4.42:1** (needs 4.5:1 for 18px regular text): the footer button and the green pills. The closest passing green is about `#2f8141`. A brand-colour decision, left as designed.

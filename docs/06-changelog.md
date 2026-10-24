@@ -2,6 +2,12 @@
 
 Newest first.
 
+## 2026-10-24
+
+### Fifth home section shown (Framework)
+- **Owner request (2026-10-24):** "unhide the 5th section". `HOME_SECTION_LIMIT` in `src/lib/site.ts` went from 4 to 5, so the page now shows 1 the hero, 2 Vision / Mission / Values, 3 The Courage To Find Your Path, 4 Our Learning Journey and **5 the Framework section**. Ecosystem, Alumni, Campus, What's New, the CTA band and the photo marquee stay hidden. Set it to `null` for the whole page.
+- Not pushed to git at the owner's request (local only until they say so). The browser checks still build with `HOME_SECTION_LIMIT=all`, so nothing in them changes.
+
 ## 2026-10-23
 
 ### CI fixed: both jobs of the first run failed on a fresh checkout
