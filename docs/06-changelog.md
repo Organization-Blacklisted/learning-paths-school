@@ -2,6 +2,14 @@
 
 Newest first.
 
+## 2026-10-27
+
+### LPS 360 framework: the right-hand pills now spell PIONEER (new design)
+- **Owner request:** follow the new design: the ring spelled P-I-O-N-**R-E-E** going round (the right side ran Enterprising, Ethical, Resilient from the top), it must spell P-I-O-N-**E-E-R**.
+- **Changed (`src/data/home-framework.ts`, data only):** the right side from the top is now **Resilient, Enterprising, Ethical**. Each pill moved to its new place on the ring together with its connector line and dot; each description keeps its own offset from its pill, as in the new screenshot. Wording, colours, pill styling and the phone order (P, I, O, N, Enterprising, Ethical, Resilient) are unchanged.
+- **Known difference from the new screenshot:** it shows the Resilient description on two lines in a wider box that reaches past the diagram's right edge; kept at the old 314px (three lines), and the Enterprising box narrowed from 314 to 296px, so nothing sticks out on a laptop. A wider box can be added if wanted (it needs the stage widened). Details in [15-home-framework.md](15-home-framework.md).
+- **Checked on a production build** at 1920, 1440 and 1100px: the letters spell PIONEER going round the ring, the right side reads Resilient, Enterprising, Ethical from the top, every description sits right under its own pill, nothing overlaps; phone order unchanged; no horizontal page overflow from 1024 to 2560px. The screenshot baseline for these frames is stale anyway (see the earlier notes).
+
 ## 2026-10-24
 
 ### Footer fix: the call to action text and button were 14px too high from 1200px up (local only, not pushed)

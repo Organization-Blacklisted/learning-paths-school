@@ -5,6 +5,11 @@ import type { FrameworkContent } from "@/types/home";
 // Pill, line and dot positions: the Figma group position plus each part's offset inside the group. The right-hand
 // groups (Enterprising, Ethical, Resilient) are mirror images of the left-hand ones: the dot is at the group's left
 // edge, the pill at its right, so the dot and line are on the ring side of the pill, as on the left.
+//
+// ORDER ON THE RING (new design, 2026-10-27): the letters must spell PIONEER going round from the top left: P, I, O down the left side,
+// N at the bottom, then up the right side: E (bottom right, Ethical), E (middle right, Enterprising), R (top right, Resilient). Before,
+// the right side ran Enterprising, Ethical, Resilient from the top, which spelled PIONREE. The array keeps the school's order
+// (P I O N, Enterprising, Ethical, Resilient), which is also the reading order on a phone; only the positions on the ring changed.
 const BASE = "/images/home/framework";
 
 export const homeFramework: FrameworkContent = {
@@ -100,16 +105,19 @@ export const homeFramework: FrameworkContent = {
       label: "ENTERPRISING",
       description: "Resourcefulness and initiatives to develop Agents of Change",
       mirrored: false,
-      pill: { x: 825.6, y: 57, width: 219, height: 55 },
+      // Middle slot of the right side (was the top slot: the order was Enterprising, Ethical, Resilient, which spelled PIONREE).
+      pill: { x: 908.6, y: 254, width: 219, height: 55 },
       tone: "blue",
       labelTone: "night",
       letterX: 28.53,
       letterTop: 13.66,
       labelX: 152,
       labelTop: 16.75,
-      line: { src: `${BASE}/line139.svg`, x: 793.41, y: 84.36, width: 32.347 },
-      dot: { src: `${BASE}/dot225.svg`, x: 789.54, y: 77.96 },
-      text: { x: 878.26, y: 127.06, width: 314.365, align: "left" },
+      line: { src: `${BASE}/line140.svg`, x: 876.53, y: 281.51, width: 32.347 },
+      dot: { src: `${BASE}/dot222.svg`, x: 872.66, y: 275.11 },
+      // The text keeps its own offset from the pill (52.66 right, 70.06 down), as in the new design. The box is narrowed from 314.365 to
+      // 296 so it does not stick out past the diagram's right edge (1228) on a laptop; the text itself is 283px wide.
+      text: { x: 961.26, y: 324.06, width: 296, align: "left" },
     },
     {
       id: "ethical",
@@ -117,16 +125,18 @@ export const homeFramework: FrameworkContent = {
       label: "ETHICAL",
       description: "Promotes Sustainability to inculcate socially responsible citizens",
       mirrored: false,
-      pill: { x: 908.6, y: 254, width: 219, height: 55 },
+      // Bottom slot of the right side (was the middle slot).
+      pill: { x: 828.33, y: 497.16, width: 219.296, height: 54.64 },
       tone: "blue",
       labelTone: "blue",
       letterX: 27.65,
       letterTop: 13.66,
       labelX: 127.04,
       labelTop: 16.75,
-      line: { src: `${BASE}/line140.svg`, x: 876.53, y: 281.51, width: 32.347 },
-      dot: { src: `${BASE}/dot222.svg`, x: 872.66, y: 275.11 },
-      text: { x: 916.9, y: 346.11, width: 311.103, align: "left" },
+      line: { src: `${BASE}/line135.svg`, x: 795.98, y: 524.48, width: 32.347 },
+      dot: { src: `${BASE}/dot226.svg`, x: 792.12, y: 518.07 },
+      // The text keeps its own offset from the pill (8.3 right, 92.11 down), as in the new design.
+      text: { x: 836.63, y: 589.27, width: 311.103, align: "left" },
     },
     {
       id: "resilient",
@@ -134,16 +144,19 @@ export const homeFramework: FrameworkContent = {
       label: "RESILIENT",
       description: "Sports Excellence and Wellness to promote Self-governance, Anti-fragility, and physical fitness.",
       mirrored: false,
-      pill: { x: 828.33, y: 497.16, width: 219.296, height: 54.64 },
+      // Top slot of the right side (was the bottom slot).
+      pill: { x: 825.6, y: 57, width: 219, height: 55 },
       tone: "blue",
       labelTone: "blue",
       letterX: 28.65,
       letterTop: 13.66,
       labelX: 131.51,
       labelTop: 16.75,
-      line: { src: `${BASE}/line135.svg`, x: 795.98, y: 524.48, width: 32.347 },
-      dot: { src: `${BASE}/dot226.svg`, x: 792.12, y: 518.07 },
-      text: { x: 899.22, y: 586.21, width: 314.365, align: "left" },
+      line: { src: `${BASE}/line139.svg`, x: 793.41, y: 84.36, width: 32.347 },
+      dot: { src: `${BASE}/dot225.svg`, x: 789.54, y: 77.96 },
+      // The text keeps its own offset from the pill (70.89 right, 89.05 down), as in the new design. The new design shows it on two
+      // lines in a wider box that reaches past the diagram's right edge; it stays at 314.365 here so nothing sticks out on a laptop.
+      text: { x: 896.49, y: 146.05, width: 314.365, align: "left" },
     },
   ],
 };

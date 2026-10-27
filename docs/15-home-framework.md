@@ -12,13 +12,15 @@ A green pill **The LPS 360 Framework**; the heading **By the end of 15 years at 
 | I Inclusive | left, middle | `#0e2f61` | SEN-SEL-parenting support for every child to know "I AM ENOUGH" |
 | O Open-minded | left, bottom | `#123b7a` | Choice and collaboration to enable Critical Thinking and Decision Making. |
 | N Novel | bottom, centre | `#0e2f61` | STEAM driven innovation, problem-solving, and holistic thinking to drive creative, independent learning. |
-| E Enterprising | right, top | `#123b7a` | Resourcefulness and initiatives to develop Agents of Change |
-| E Ethical | right, middle | `#123b7a` | Promotes Sustainability to inculcate socially responsible citizens |
-| R Resilient | right, bottom | `#123b7a` | Sports Excellence and Wellness to promote Self-governance, Anti-fragility, and physical fitness. |
+| E Enterprising | right, middle | `#123b7a` | Resourcefulness and initiatives to develop Agents of Change |
+| E Ethical | right, bottom | `#123b7a` | Promotes Sustainability to inculcate socially responsible citizens |
+| R Resilient | right, top | `#123b7a` | Sports Excellence and Wellness to promote Self-governance, Anti-fragility, and physical fitness. |
 
 Pill anatomy (Plus Jakarta Sans Bold 20px, -1% spacing): a dark rounded body, a white circle outline with the letter, a white capsule (171.4 x 40.6, soft shadow) that holds the label, and a small white bar joining circle and capsule. **The pills on the left are the right-hand design mirrored** (the letter circle is on the ring side and the white capsule sticks out away from the ring); the text is not mirrored.
 
-Positions in the diagram (Figma px, from its top left): ring 358, 10; photo 431.19, 71.82; LPS 360 581.62, 0; pills P 195.6, 57; I 109.6, 254; O 193.6, 497; N 535.6, 634; E 825.6, 57; E2 908.6, 254; R 828.33, 497.16. All are in `home-framework.ts`.
+Positions in the diagram (Figma px, from its top left): ring 358, 10; photo 431.19, 71.82; LPS 360 581.62, 0; pills P 195.6, 57; I 109.6, 254; O 193.6, 497; N 535.6, 634; right side from the top: **R 825.6, 57; Enterprising 908.6, 254; Ethical 828.33, 497.16** (changed on 2026-10-27, see below). All are in `home-framework.ts`.
+
+**Order on the ring (new design, 2026-10-27).** Going round from the top left the letters must spell **PIONEER**: P, I, O down the left, N at the bottom, then up the right side E (Ethical, bottom right), E (Enterprising, middle right), R (Resilient, top right). Before, the right side ran Enterprising, Ethical, Resilient from the top, which spelled PIONREE. Only the positions changed: each right-hand pill keeps its wording, colours and its description's offset from the pill (Resilient 70.89 right and 89.05 down, Enterprising 52.66 and 70.06, Ethical 8.3 and 92.11); the connector line and dot belong to the position on the ring. The order of the items in the data (and so the reading order on a phone) is still P, I, O, N, Enterprising, Ethical, Resilient. In the new design the Resilient description is on two lines in a box that reaches past the diagram's right edge; here it stays at 314px (three lines) and the Enterprising box was narrowed to 296px so nothing sticks out past the page on a laptop (checked from 1024 to 2560px: no horizontal overflow).
 
 **Careful with the right-hand groups.** The design context gives each right-hand group's left edge, but the group is the mirror image of a left-hand one: the dot is at the group's left edge, the pill at its right. The first build put the dots on the far side of the pills; it was found by comparing with the Figma render and fixed (the Novel group is mirrored the same way: dot at x 621.4, line at 627.0, on the ring's bottom point).
 
