@@ -14,14 +14,14 @@ import type { FrameworkItem } from "@/types/home";
 import type { FrameworkSectionProps } from "./FrameworkSection.types";
 
 // Figma: "Frame 1618876729" (node 6529:1879). A green pill "The LPS 360 Framework", the heading "By the end of 15
-// years at LPS, your child becomes a Pioneer", an intro paragraph, and a diagram (1228 x 773px): a ring with a photo
+// years at LPS, your child becomes a Pioneer", an intro paragraph, and a diagram (1319 x 773px; it was 1228 until the 2026-10-27 design, which widened it for the Resilient text): a ring with a photo
 // of two students in the middle, and seven pills around it that spell PIONEER (Proficient, Inclusive, Open-minded,
 // Novel, Enterprising, Ethical, Resilient), each joined to the ring by a short line and a dot, with a description.
 //
 // It comes after the sideways scene: when the Journey section is centred and the pan ends, the page continues down to this.
 //
 // LAYOUT. From lg (1024px) the diagram is positioned like the design and scales as one piece: `--u` is one Figma
-// pixel (the diagram width / 1228, never more than 1px), and every size and position is `calc(N * var(--u))`, so
+// pixel (the diagram width / 1319, never more than 1px), and every size and position is `calc(N * var(--u))`, so
 // text wraps exactly like the design at any width. Below lg the diagram would be too small to read, so (my
 // interpretation, the design only exists for desktop) it becomes a list: the photo, then each pill with its description.
 //
@@ -98,7 +98,8 @@ export default function FrameworkSection({ content }: FrameworkSectionProps) {
         {/* Header: pill, heading (grey + blue skewed, like "Our Learning Journey"), intro. 16px between them. */}
         <div className="flex w-full max-w-[1150px] flex-col items-center gap-4">
           <Badge data-fw-head>{badge}</Badge>
-          <SectionTitle data-fw-head className="pt-px text-center tracking-[-0.01em] text-balance xl:whitespace-nowrap">
+          {/* `capitalize`: the Figma heading is set in Title Case ("By The End Of 15 Years At LPS, Your Child Becomes A Pioneer"); the text itself stays as written. */}
+          <SectionTitle data-fw-head className="pt-px text-center tracking-[-0.01em] text-balance capitalize xl:whitespace-nowrap">
             {titleLead} <Accent className="-ml-[0.068em] mr-[0.15em] -translate-y-px">{titleAccent}</Accent>
           </SectionTitle>
           <BodyText data-fw-head className="max-w-[842px] text-center whitespace-pre-wrap text-brand-graphite">
@@ -106,8 +107,8 @@ export default function FrameworkSection({ content }: FrameworkSectionProps) {
           </BodyText>
         </div>
 
-        {/* The diagram. --u: one Figma pixel (1px below lg, where it is a list). Stage 1228 x 773 from lg up. */}
-        <div className="mt-12 flex w-full flex-col items-center gap-6 [--u:1px] lg:relative lg:mt-[60px] lg:mx-auto lg:block lg:w-[min(100%,1228px)] lg:gap-0 lg:[--u:calc(min(100cqw,1228px)/1228)]">
+        {/* The diagram. --u: one Figma pixel (1px below lg, where it is a list). Stage 1319 x 773 from lg up. */}
+        <div className="mt-12 flex w-full flex-col items-center gap-6 [--u:1px] lg:relative lg:mt-[60px] lg:mx-auto lg:block lg:w-[min(100%,1319px)] lg:gap-0 lg:[--u:calc(min(100cqw,1319px)/1319)]">
           <div className="hidden lg:block" style={{ height: u(stage.height) }} aria-hidden="true" />
 
           {/* Ring (decorative) */}

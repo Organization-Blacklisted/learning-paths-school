@@ -4,10 +4,19 @@ Newest first.
 
 ## 2026-10-27
 
+### LPS 360 framework: cross-checked against Figma node 6282:930; the diagram is now 1319px wide (local only, not pushed)
+- **Owner request:** implement/verify against the Figma frame (node `6282:930`, which contains the framework frame `6529:1879`). Read through the Figma connector (design context and metadata) and compared piece by piece.
+- **Already matching:** the left side (P, I, O), the bottom (N), the ring, the photo, the centre label, colours, font sizes and weights, the badge, the intro and the pill anatomy.
+- **Found and fixed:**
+  1. **The diagram is 1319px wide in the new design** (it was 1228): the Resilient description is a **422px** box (two lines) that runs to the diagram's right edge. `stage.width` is now 1319 (data) and the two stage classes in `FrameworkSection.tsx` use 1319. Result: the Resilient text wraps on two lines like the design, nothing sticks out of the page, and the ring sits 39px left of the heading's centre, as in Figma. This replaces the "known difference" below (the narrower boxes I used earlier are gone).
+  2. **The right-hand pills used my slot guesses, not the design's numbers** (the middle slot was 5.4px too far left: pill 908.6 instead of **914.06**; line and dot the same offset; text 961.26 instead of **966.72**; Resilient pill 825.75 x 219.296 x 54.64; Ethical 828.06). All three groups now use the exact Figma numbers (listed in [15-home-framework.md](15-home-framework.md)).
+  3. **The heading is Title Case in Figma** ("By The End Of 15 Years At LPS, Your Child Becomes A Pioneer", CSS `capitalize`); ours was sentence case. Added `capitalize` to the heading (the text itself is unchanged; it is 1179px wide, Figma 1175px, and wraps below 1280px as before).
+- **Verified in a browser:** the ring, the photo, the centre label, the seven pills and the seven descriptions are all within 0.9 Figma px of the Figma numbers at 1920, 1440 and 1280px (1 Figma px = 1, 1 and 0.91 px); no horizontal page overflow; the letters still spell PIONEER round the ring.
+
 ### LPS 360 framework: the right-hand pills now spell PIONEER (new design)
 - **Owner request:** follow the new design: the ring spelled P-I-O-N-**R-E-E** going round (the right side ran Enterprising, Ethical, Resilient from the top), it must spell P-I-O-N-**E-E-R**.
 - **Changed (`src/data/home-framework.ts`, data only):** the right side from the top is now **Resilient, Enterprising, Ethical**. Each pill moved to its new place on the ring together with its connector line and dot; each description keeps its own offset from its pill, as in the new screenshot. Wording, colours, pill styling and the phone order (P, I, O, N, Enterprising, Ethical, Resilient) are unchanged.
-- **Known difference from the new screenshot:** it shows the Resilient description on two lines in a wider box that reaches past the diagram's right edge; kept at the old 314px (three lines), and the Enterprising box narrowed from 314 to 296px, so nothing sticks out on a laptop. A wider box can be added if wanted (it needs the stage widened). Details in [15-home-framework.md](15-home-framework.md).
+- **Known difference from the new screenshot (resolved by the cross-check above):** it shows the Resilient description on two lines in a wider box that reaches past the diagram's old right edge; kept at the old 314px (three lines) at first, and the Enterprising box narrowed from 314 to 296px. Details in [15-home-framework.md](15-home-framework.md).
 - **Checked on a production build** at 1920, 1440 and 1100px: the letters spell PIONEER going round the ring, the right side reads Resilient, Enterprising, Ethical from the top, every description sits right under its own pill, nothing overlaps; phone order unchanged; no horizontal page overflow from 1024 to 2560px. The screenshot baseline for these frames is stale anyway (see the earlier notes).
 
 ## 2026-10-24

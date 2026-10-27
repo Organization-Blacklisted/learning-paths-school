@@ -1,7 +1,8 @@
 import type { FrameworkContent } from "@/types/home";
 
-// Content from the Figma frame "Frame 1618876729" (node 6529:1879), "The LPS 360 Framework". The diagram is 1228 x 773px
-// ("Group 241"); every x / y below is in Figma px from its top left corner. The seven pills spell PIONEER.
+// Content from the Figma frame "Frame 1618876729" (node 6529:1879), "The LPS 360 Framework". The diagram is 1319 x 773px
+// ("Group 241"; it was 1228 wide until the design of 2026-10-27, which widened it so the 422px Resilient description fits);
+// every x / y below is in Figma px from its top left corner. The seven pills spell PIONEER.
 // Pill, line and dot positions: the Figma group position plus each part's offset inside the group. The right-hand
 // groups (Enterprising, Ethical, Resilient) are mirror images of the left-hand ones: the dot is at the group's left
 // edge, the pill at its right, so the dot and line are on the ring side of the pill, as on the left.
@@ -10,6 +11,9 @@ import type { FrameworkContent } from "@/types/home";
 // N at the bottom, then up the right side: E (bottom right, Ethical), E (middle right, Enterprising), R (top right, Resilient). Before,
 // the right side ran Enterprising, Ethical, Resilient from the top, which spelled PIONREE. The array keeps the school's order
 // (P I O N, Enterprising, Ethical, Resilient), which is also the reading order on a phone; only the positions on the ring changed.
+// Every number of the three right-hand groups below was checked against Figma node 6282:930 on 2026-10-27: each group is laid out
+// mirrored (the design context gives its left edge, the pill sits at the group's right edge, the dot at its left edge); the
+// descriptions are not mirrored and sit at the group's left edge plus their own offset.
 const BASE = "/images/home/framework";
 
 export const homeFramework: FrameworkContent = {
@@ -19,7 +23,7 @@ export const homeFramework: FrameworkContent = {
   titleAccent: "your child becomes a Pioneer",
   intro:
     "Seven interconnected outcomes, channelized through one holistic ecosystem  LPS 360 that integrates curriculum, wellbeing, and character across a child’s entire school life.",
-  stage: { width: 1228, height: 773 },
+  stage: { width: 1319, height: 773 },
   ring: { src: `${BASE}/ring.svg`, x: 358, y: 10, width: 525, height: 592 },
   photo: {
     src: `${BASE}/pioneers.avif`,
@@ -105,19 +109,17 @@ export const homeFramework: FrameworkContent = {
       label: "ENTERPRISING",
       description: "Resourcefulness and initiatives to develop Agents of Change",
       mirrored: false,
-      // Middle slot of the right side (was the top slot: the order was Enterprising, Ethical, Resilient, which spelled PIONREE).
-      pill: { x: 908.6, y: 254, width: 219, height: 55 },
+      // Middle slot of the right side (Figma group "Group 246", left edge 878, top 254).
+      pill: { x: 914.06, y: 254, width: 219, height: 55 },
       tone: "blue",
       labelTone: "night",
       letterX: 28.53,
       letterTop: 13.66,
       labelX: 152,
       labelTop: 16.75,
-      line: { src: `${BASE}/line140.svg`, x: 876.53, y: 281.51, width: 32.347 },
-      dot: { src: `${BASE}/dot222.svg`, x: 872.66, y: 275.11 },
-      // The text keeps its own offset from the pill (52.66 right, 70.06 down), as in the new design. The box is narrowed from 314.365 to
-      // 296 so it does not stick out past the diagram's right edge (1228) on a laptop; the text itself is 283px wide.
-      text: { x: 961.26, y: 324.06, width: 296, align: "left" },
+      line: { src: `${BASE}/line140.svg`, x: 881.87, y: 281.36, width: 32.347 },
+      dot: { src: `${BASE}/dot222.svg`, x: 878, y: 274.96 },
+      text: { x: 966.72, y: 324.06, width: 314.365, align: "left" },
     },
     {
       id: "ethical",
@@ -125,18 +127,17 @@ export const homeFramework: FrameworkContent = {
       label: "ETHICAL",
       description: "Promotes Sustainability to inculcate socially responsible citizens",
       mirrored: false,
-      // Bottom slot of the right side (was the middle slot).
-      pill: { x: 828.33, y: 497.16, width: 219.296, height: 54.64 },
+      // Bottom slot of the right side (Figma group "Group 245", left edge 792.12, top 497.16).
+      pill: { x: 828.06, y: 497.16, width: 219, height: 55 },
       tone: "blue",
       labelTone: "blue",
       letterX: 27.65,
       letterTop: 13.66,
       labelX: 127.04,
       labelTop: 16.75,
-      line: { src: `${BASE}/line135.svg`, x: 795.98, y: 524.48, width: 32.347 },
-      dot: { src: `${BASE}/dot226.svg`, x: 792.12, y: 518.07 },
-      // The text keeps its own offset from the pill (8.3 right, 92.11 down), as in the new design.
-      text: { x: 836.63, y: 589.27, width: 311.103, align: "left" },
+      line: { src: `${BASE}/line135.svg`, x: 795.99, y: 524.67, width: 32.347 },
+      dot: { src: `${BASE}/dot226.svg`, x: 792.12, y: 518.27 },
+      text: { x: 836.36, y: 589.27, width: 311.103, align: "left" },
     },
     {
       id: "resilient",
@@ -144,19 +145,18 @@ export const homeFramework: FrameworkContent = {
       label: "RESILIENT",
       description: "Sports Excellence and Wellness to promote Self-governance, Anti-fragility, and physical fitness.",
       mirrored: false,
-      // Top slot of the right side (was the bottom slot).
-      pill: { x: 825.6, y: 57, width: 219, height: 55 },
+      // Top slot of the right side (Figma group "Group 247", left edge 789.54, top 57). Its description is 422px wide (two lines) and
+      // reaches the diagram's right edge, which is why the diagram is 1319px wide.
+      pill: { x: 825.75, y: 57, width: 219.296, height: 54.64 },
       tone: "blue",
       labelTone: "blue",
       letterX: 28.65,
       letterTop: 13.66,
       labelX: 131.51,
       labelTop: 16.75,
-      line: { src: `${BASE}/line139.svg`, x: 793.41, y: 84.36, width: 32.347 },
-      dot: { src: `${BASE}/dot225.svg`, x: 789.54, y: 77.96 },
-      // The text keeps its own offset from the pill (70.89 right, 89.05 down), as in the new design. The new design shows it on two
-      // lines in a wider box that reaches past the diagram's right edge; it stays at 314.365 here so nothing sticks out on a laptop.
-      text: { x: 896.49, y: 146.05, width: 314.365, align: "left" },
+      line: { src: `${BASE}/line139.svg`, x: 793.4, y: 84.32, width: 32.347 },
+      dot: { src: `${BASE}/dot225.svg`, x: 789.54, y: 77.91 },
+      text: { x: 897, y: 146, width: 422, align: "left" },
     },
   ],
 };

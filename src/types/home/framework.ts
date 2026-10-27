@@ -1,4 +1,4 @@
-/** One of the seven PIONEER outcomes around the LPS 360 ring. All positions are Figma px inside the 1228 x 773 diagram. */
+/** One of the seven PIONEER outcomes around the LPS 360 ring. All positions are Figma px inside the 1319 x 773 diagram. */
 export type FrameworkItem = {
   id: string;
   /** The letter in the circle (P, I, O, N, E, E, R). */
