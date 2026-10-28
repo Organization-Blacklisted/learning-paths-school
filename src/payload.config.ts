@@ -15,6 +15,9 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "./lib/site";
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
+// True while `payload migrate` / `migrate:create` run (scripts/vercel-build.mjs sets it): see the database settings below.
+const migrating = process.env.PAYLOAD_MIGRATING === "true";
+
 // Object storage (Neon, S3-compatible) is only switched on once its credentials exist.
 // Until then uploads go to the local, gitignored /media folder. Env var names match
 // what `neon link` / `neon deploy` write (see .env.example).
@@ -39,8 +42,14 @@ export default buildConfig({
   },
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URL,
+      // Migrations (`payload migrate`, run with PAYLOAD_MIGRATING=true: scripts/vercel-build.mjs and docs/26-cms-home-plan.md step H) use
+      // Neon's DIRECT connection: the pooled one (pgbouncer) does not suit schema changes. The site itself uses the pooled one.
+      connectionString: migrating ? process.env.DATABASE_URL_UNPOOLED : process.env.DATABASE_URL,
     },
+    migrationDir: path.resolve(dirname, "migrations"),
+    // In development Payload changes the database schema on its own ("push"). While migrating that must be off, or it would push the schema
+    // instead of running the tracked migration files.
+    ...(migrating ? { push: false } : {}),
   }),
   sharp,
   plugins: [
