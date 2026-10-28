@@ -61,3 +61,4 @@ Verified in Chrome at 1920px, after the animation, against the Figma render (142
 - **Below 1024px is my interpretation** (list layout).
 - **Alt text** of the photo is mine; the ring, lines and dots are decorative.
 - The Figma canvas has more frames below (dotted outlines): next sections.
+- **Sideways scroll below 360px wide (found 2026-10-28, not fixed):** the white label boxes of the diagram stick out of the screen by 5px at 350px wide and by 20px at 320px wide, so the page scrolls sideways a little on very small phones. Seen with a measurement of every element wider than the screen; it is the `absolute bg-white` boxes of this diagram. Not caused by the 2026-10-28 changes (the side margin is 20px below 400px, as before).

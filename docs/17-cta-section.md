@@ -40,5 +40,6 @@ Verified in Chrome at 1920px (band 1520 x 335) against the Figma render:
 - **Scaver is not supplied.** "LPS Forward" uses the font Scaver in Figma (an elegant display serif). It falls back to a system serif through the `font-accent` token (`--font-accent` in `src/styles/typography.css`: Scaver, then Iowan Old Style, Palatino, Georgia). Supply the font files (`.woff2`) and add them in `src/fonts/index.ts`; the token then picks them up with no other change. The widths differ slightly meanwhile (the accent text box is 281px in Figma).
 - **Proxima Nova is not supplied** (the button text, same as the footer, see [08-footer.md](08-footer.md)): Plus Jakarta Sans is used, so the button is 229px wide instead of 219px.
 - **Link target** of the button is `#`. Page-specific wording is passed by each page.
+- The CTA button never wraps or shrinks (`shrink-0 whitespace-nowrap` in `ButtonLink`, 2026-10-28): at 1308px wide it used to break "Explore Admissions" onto two lines.
 - The footer's own "Begin an Admission Enquiry" button still has its own copy of the green look; `ButtonLink variant="primary"` is the same look and the footer can switch to it when next touched.
 - Two CTAs back to back (this band and the footer's big call to action) is the design's decision; worth a look once more pages exist.

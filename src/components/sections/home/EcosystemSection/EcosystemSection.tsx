@@ -19,8 +19,11 @@ import type { EcosystemSectionProps } from "./EcosystemSection.types";
 // (485px). It is the FIRST PANEL of the second sideways scene on the home page (after the LPS 360 Framework): <HorizontalScene> gives
 // it the container and the 200px spacing, and the view pans right from it to the alumni section.
 //
-// HEIGHT. This panel is about 1026px high at 1520px wide. On a screen shorter than that <HorizontalScene> scales it down to fit while the
-// scene is pinned (the design stays whole, just smaller); on a screen 1026px or higher it is shown at the design size.
+// HEIGHT. This panel is about 1026px high at 1520px wide. While the scene is pinned <HorizontalScene> scales it down to fit the window
+// with 32px free above and below (the design stays whole, just smaller); from about 1100px of window height it is shown at the design size.
+// To need less shrinking on laptops the photo is cropped a little on short windows (owner, 2026-10-28): 1520 x 531 from 1120px of window
+// height (the design), 1520 x 440 from 900 to 1119px, 1520 x 400 below 900px. The photo fills its box (object-cover), so only the top and
+// bottom edges are cut. Reduced motion (no pin, no fitting) keeps the design shape.
 //
 // ONLY THE FIRST TAB IS DESIGNED. Tabs 2 to 5 show the same placeholder photo and text until the school provides theirs (see
 // src/data/home-ecosystem.ts). The tabs work: click or the arrow keys (Home and End too) switch the content.
@@ -217,7 +220,11 @@ export default function EcosystemSection({ content }: EcosystemSectionProps) {
           tabIndex={0}
           className="flex w-full flex-col gap-8 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue"
         >
-          <div data-eco-clip className="relative aspect-video w-full overflow-hidden sm:aspect-[1520/531]">
+          {/* The photo is cropped (object-cover) a little on short windows while the scene is pinned, see HEIGHT at the top. Reduced motion: design shape. */}
+          <div
+            data-eco-clip
+            className="relative aspect-video w-full overflow-hidden sm:aspect-[1520/531] motion-safe:sm:[@media(max-height:1119px)]:aspect-[1520/440] motion-safe:sm:[@media(max-height:899px)]:aspect-[1520/400]"
+          >
             {layers.map((layer, index) => {
               const photo = tabs[layer.tab].photo;
               return (
@@ -260,7 +267,7 @@ export default function EcosystemSection({ content }: EcosystemSectionProps) {
                   }`}
                 >
                   <div className="flex w-full flex-col gap-[18px] text-brand-graphite lg:w-[648px]">
-                    <h3 data-eco-text className="font-body text-px-20 leading-[28px] font-semibold">
+                    <h3 data-eco-text className="font-body text-px-20 leading-[1.4] font-semibold">
                       {item.title}
                     </h3>
                     <p data-eco-text className="max-w-[485px] font-body text-body-lg leading-[1.5]">

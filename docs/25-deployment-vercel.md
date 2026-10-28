@@ -1,6 +1,6 @@
 # Deployment: GitHub and Vercel
 
-Decided 2026-10-22 (owner): the code lives on **GitHub**, the site is hosted on **Vercel**. Nothing is deployed to Vercel yet (the GitHub repository and the Neon project exist since 2026-10-24); this is the plan and the checklist for the first deployment. Items marked **verify** are what I know of Vercel in general and have not been able to check against this project.
+Decided 2026-10-22 (owner): the code lives on **GitHub**, the site is hosted on **Vercel**. **Status (2026-10-27):** the site has been deployed on Vercel since 2026-10-24 (team `blacklisted`, project `learning-paths-school`, production from `main`, `learning-paths-school.vercel.app`), the GitHub repository is `Organization-Blacklisted/learning-paths-school`, and the Neon project exists. **Automatic deployments from a `git push` are currently blocked, see "Known issue" below; until it is fixed the site is deployed from a terminal with `npx vercel --prod`.** The rest of this page is the original plan and checklist. Items marked **verify** are what I know of Vercel in general and have not been able to check against this project.
 
 ## How code gets to the site
 
@@ -39,6 +39,38 @@ Vercel also provides **system variables** (`VERCEL_ENV`, `VERCEL_URL`, `VERCEL_P
 5. Run Lighthouse on the live preview (mobile and desktop). The numbers in [16-production-readiness.md](16-production-readiness.md) were measured on a developer machine with an antivirus injecting scripts; the host numbers are the real ones.
 6. Add the custom domain in Vercel (DNS), choose the main address (www or the bare domain) and redirect the other to it, then set `NEXT_PUBLIC_SITE_URL` to it and redeploy.
 7. Open `/admin`, create the first user, upload a test image (it must land in the Neon bucket).
+
+## Known issue (2026-10-27): automatic deployments from `git push` are blocked
+
+**Symptom.** A push reaches GitHub (and the GitHub checks pass) but Vercel refuses it: the commit gets the status `Vercel: failure, Deployment failed.` **one second after the push**, no build runs, no deployment appears in the Deployments list and nothing appears in the project's Activity log. The status link points to Vercel's "team members and roles" documentation (`vercel.com/docs/accounts/team-members-and-roles`).
+
+**Timeline (IST).**
+- 13:09 the PIONEER commit `8eadb6e` was pushed and deployed normally (Ready in about a minute). Vercel's Activity log has, at the same time: "Automatically updated build machine from Basic to Elastic on project learning-paths-school because your team's plan changed."
+- 16:39 `e51519c` (Figma match) was pushed: blocked at once. 16:47 an empty commit `9d5ffdf` was pushed to test whether it was a one-off: blocked again within about 20 seconds. So the block is persistent, not random.
+- GitHub checks (quality job and the browser job) passed for both commits, so the code is not the problem.
+
+**What is known.**
+- Every commit is authored by the GitHub user `Abhay-Blacklisted` (git identity `Abhay-Blacklisted <blacklisted.web16@gmail.com>`), the only contributor of the repository, and the repository is public, under the organisation `Organization-Blacklisted`.
+- The Vercel team is `blacklisted` (Pro). The Vercel member is `dev-blacklisted`. The GitHub account `dev-blacklisted` is **suspended** (the GitHub API answers 404 for it), according to the owner.
+
+**Probable cause (not confirmed: Vercel's side cannot be inspected from here).** After the team's plan changed (about 13:10), Vercel applies its team rule: the author of a commit must be a member of the team (with a seat). The commit author `Abhay-Blacklisted` is not linked to any Vercel member, and the GitHub login that the Vercel member used (`dev-blacklisted`) is suspended.
+
+**Workaround in use.** From the project folder, in a terminal:
+
+```
+cd "C:\Learning Paths School\lps"
+npx vercel --prod
+```
+
+It deploys the current files under the Vercel login, not under the commit author, so the block does not apply. Set up on 2026-10-27: `npx vercel login`, then `npx vercel link` (team `blacklisted`, project `learning-paths-school`, "linked by git"), which creates the local `.vercel` folder (git-ignored). It does not upload `.env.local` or `.neon` (git-ignored), and the build uses the environment variables saved in the Vercel project. Checked after the first run: the live page had the new code. **The CLI appends duplicate lines (`.vercel`, `.env*`) to `.gitignore`: restore it with `git checkout -- .gitignore` (both are already ignored).**
+
+**Ways to get automatic deploys back (decision open, see [07-decisions.md](07-decisions.md)).**
+1. **Link a working GitHub account to the Vercel member (cleanest).** In Vercel: Account Settings, Authentication: first make sure you can sign in without GitHub (add an email login or a passkey), then under Login Connections replace the suspended GitHub login with `Abhay-Blacklisted`. Also check, in GitHub, the organisation's Installed GitHub Apps: Vercel must be installed with access to this repository (if the suspended account installed it, an organisation owner can reconfigure it), and if it still does not connect, disconnect and reconnect the repository in Project Settings, Git. Alternative: add `Abhay-Blacklisted` as a separate team member (takes a paid seat).
+2. **Deploy from GitHub Actions with a Vercel token** (does not depend on the commit author): a workflow that runs `vercel deploy --prod` after a push to `main`. It needs three repository secrets, created by the owner in GitHub (never pasted into a chat): `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (the ids are in `.vercel/repo.json`). Not built yet.
+3. **A Vercel Deploy Hook** (Project Settings, Git, Deploy Hooks): opening its URL builds the latest `main`; the URL is a secret.
+4. **Appeal the suspension** with GitHub Support if it was a mistake. Do not create replacement accounts to get around a suspension.
+
+**To check that it is fixed:** push a small commit (an empty one is enough: `git commit --allow-empty -m "test"`) and look at the commit's statuses on GitHub: `Vercel: success` and a new row in the Deployments list mean it works.
 
 ## What to know
 

@@ -44,6 +44,12 @@ export type ScenePanelBlock = {
 };
 
 /** A pinned scene that pans sideways across its panels while the page scrolls down. */
-export type SceneBlock = { blockType: "scene"; id: string; panels: ScenePanelBlock[] };
+export type SceneBlock = {
+  blockType: "scene";
+  id: string;
+  panels: ScenePanelBlock[];
+  /** Below 640px wide or 500px high the panels are a plain vertical stack, not a pinned sideways scene (see HorizontalSceneProps). */
+  stackOnPhones?: boolean;
+};
 
 export type PageBlock = SectionBlock | SceneBlock;

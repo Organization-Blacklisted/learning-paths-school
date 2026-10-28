@@ -21,7 +21,7 @@ const linkClass = "hover:underline underline-offset-4 focus-visible:outline-2 fo
 function FooterColumn({ title, children, className = "" }: { title: string; children: ReactNode; className?: string }) {
   return (
     <div className={`relative border-t border-white/16 pt-8 min-[1200px]:border-t-0 min-[1200px]:pt-[60px] ${className}`}>
-      <h3 className="font-body text-body-lg font-bold leading-7">{title}</h3>
+      <h3 className="font-body text-body-lg font-bold leading-[1.5556]">{title}</h3>
       <div className="mt-6">{children}</div>
     </div>
   );
@@ -55,10 +55,10 @@ export default function Footer() {
 
           <div className="flex flex-col items-start gap-8 min-[1200px]:max-[1650px]:w-[min(619px,calc(100%_-_552px))] min-[1200px]:shrink-0 min-[1650px]:-mr-[13px] min-[1650px]:w-[590px]">
             {/* 619px is the Figma text box (wider than its 590px column). Applied from 1650px so it can't overflow the viewport. */}
-            <p className="text-body-lg leading-[26px] text-white/80 min-[1650px]:w-[619px]">{cta.description}</p>
+            <p className="text-body-lg leading-[1.4444] text-white/80 min-[1650px]:w-[619px]">{cta.description}</p>
             <Link
               href={cta.buttonHref}
-              className="rounded-[4px] bg-brand-green px-[15px] py-[13px] text-body-lg leading-[26px] text-white capitalize transition-[filter] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="rounded-[4px] bg-brand-green px-[15px] py-[13px] text-body-lg leading-[1.4444] text-white capitalize transition-[filter] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               {cta.buttonLabel}
             </Link>
@@ -141,7 +141,7 @@ export default function Footer() {
 
           {/* Bottom bar */}
           <div className="border-t border-white/16 pt-5">
-            <div className="flex flex-col items-center gap-3 text-center text-body-lg leading-[26px] text-white/80 lg:flex-row lg:justify-between lg:text-left">
+            <div className="flex flex-col items-center gap-3 text-center text-body-lg leading-[1.4444] text-white/80 lg:flex-row lg:justify-between lg:text-left">
               <p>{legal.copyright}</p>
               <nav aria-label="Legal">
                 {legal.links.map((link, index) => (

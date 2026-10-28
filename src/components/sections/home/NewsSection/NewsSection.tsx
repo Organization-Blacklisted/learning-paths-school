@@ -24,8 +24,9 @@ import type { NewsSectionProps } from "./NewsSection.types";
 // the cards become a row you swipe sideways, each 318px (80% of the screen at most), snapping to the card edges.
 //
 // ANIMATION (owner: "as you think will suit it"), once when the section scrolls into view, about 1.4 s: the pill, heading
-// and paragraph rise in; then the cards rise in one after another while each photo settles from a slight zoom (1.15 to 1), the
-// date, title and text of the card follow, and the green arrow draws itself. On hover (or keyboard focus) a card lifts, its
+// and paragraph rise in; then the cards grow up from the bottom one after another (a clip wipe, like the Alumni portraits and the
+// Journey columns) while each photo settles from a slight zoom (1.15 to 1), the date, title and text of the card follow, and the
+// green arrow draws itself. On hover (or keyboard focus) a card lifts, its
 // photo zooms a little, the title turns blue and the arrow slides right and lengthens. Reduced motion: nothing moves, all shown.
 // Everything is only hidden by JS, so without it the section is fully visible.
 
@@ -41,7 +42,7 @@ export default function NewsSection({ content }: NewsSectionProps) {
 
     gsap.set(intros, { autoAlpha: 0, y: 24 });
     cards.forEach((card) => {
-      gsap.set(card, { autoAlpha: 0, y: 60 });
+      gsap.set(card, { clipPath: "inset(100% 0% 0% 0%)" });
       gsap.set(q("[data-news-photo]", card), { scale: 1.15 });
       gsap.set(q("[data-news-text]", card), { autoAlpha: 0, y: 16 });
       gsap.set(q("[data-news-arrow]", card), { scaleX: 0, transformOrigin: "0% 50%" });
@@ -51,10 +52,12 @@ export default function NewsSection({ content }: NewsSectionProps) {
     tl.to(intros, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.1 }, 0);
     cards.forEach((card, i) => {
       const at = 0.25 + i * 0.14;
-      tl.to(card, { autoAlpha: 1, y: 0, duration: 0.7 }, at)
+      // The card grows up from the bottom (a clip wipe, as the Alumni portraits and the Journey columns). The clip is removed when it is
+      // open: a clip would cut off the hover lift and shadow of the card.
+      tl.to(card, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.9, clearProps: "clipPath" }, at)
         .to(q("[data-news-photo]", card), { scale: 1, duration: 1.1 }, at)
-        .to(q("[data-news-text]", card), { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.08 }, at + 0.25)
-        .to(q("[data-news-arrow]", card), { scaleX: 1, duration: 0.5, ease: "power2.inOut" }, at + 0.55);
+        .to(q("[data-news-text]", card), { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.08 }, at + 0.35)
+        .to(q("[data-news-arrow]", card), { scaleX: 1, duration: 0.5, ease: "power2.inOut" }, at + 0.7);
     });
     return tl;
   });
@@ -77,7 +80,7 @@ export default function NewsSection({ content }: NewsSectionProps) {
         </div>
 
         {/* The cards: a row to swipe below xl (the list bleeds to the screen edges), three equal columns from xl */}
-        <ul className="-mx-5 flex snap-x snap-mandatory gap-6 overflow-x-auto px-5 pb-3 [scrollbar-width:none] md:-mx-10 md:px-10 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0 min-[1600px]:flex-1 [&::-webkit-scrollbar]:hidden">
+        <ul className="-mx-gutter flex snap-x snap-mandatory scroll-px-gutter gap-6 overflow-x-auto px-gutter pb-3 [scrollbar-width:none] lg:mx-0 lg:grid lg:grid-cols-3 lg:scroll-px-0 lg:overflow-visible lg:px-0 lg:pb-0 min-[1600px]:flex-1 [&::-webkit-scrollbar]:hidden">
           {items.map((item) => (
             <li key={item.id} data-news-card className="w-[min(318px,80vw)] shrink-0 snap-start lg:w-auto">
               <Link

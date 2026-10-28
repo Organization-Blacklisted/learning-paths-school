@@ -8,6 +8,10 @@ Tools for the site's images. They exist so that adding or replacing a photo is a
 | `check-images.mjs` | Audits `public/images` (format, weight, width). `npm run images:check`. Part of `npm run check`, the pre-commit hook and CI. |
 | `svgo.config.cjs` | The svgo settings used for the site's SVGs. |
 
+## Replacing an image (do not reuse the file name)
+
+`/images` is served with `Cache-Control: public, max-age=604800` (7 days, `next.config.ts`). A new image under the **same name** is not fetched by browsers that already have the old one, for up to a week (hard refresh only fixes it on one computer), and visitors get the same after a deploy. So **when an image is replaced, give the new file a new name** (`logo.svg` became `lps-logo.svg` on 2026-10-28 for this reason) and update the reference.
+
 ## Adding a photo
 
 1. Get the best source you can: the original from the school or the Figma export at 2x. Never start from an already compressed copy.
@@ -56,7 +60,7 @@ All photos AVIF (the Open Graph preview in `public/images/og/` is the one except
 
 ## SVGs
 
-Optimise with `npx svgo@3 --config scripts/svgo.config.cjs input.svg -o output.svg` (path precision 2 decimals; the viewBox and ids are kept). Figma's SVG export of a node can carry the backgrounds of its parent frames: look for stray full-page `<rect>` elements and remove them (that is how the header logo was cleaned, `docs/09-header.md`). Keep the SVG's own `width` and `height` attributes.
+Optimise with `npx svgo@3 --config scripts/svgo.config.cjs input.svg -o output.svg` (path precision 2 decimals; the viewBox and ids are kept; transforms keep 8 decimals, because a logo with an embedded wordmark image is placed by a transform in fractions of its box and rounding it to 2 decimals shifted the wordmark by 1.3px). **After optimising a logo, render the original and the result at 4x and compare them** (the header logo of 2026-10-28 came out at 48.4 dB; a shift shows up as about 15 dB). Figma's SVG export of a node can carry the backgrounds of its parent frames: look for stray full-page `<rect>` elements and remove them (that is how the header logo was cleaned, `docs/09-header.md`). Keep the SVG's own `width` and `height` attributes.
 
 ## Not covered here
 

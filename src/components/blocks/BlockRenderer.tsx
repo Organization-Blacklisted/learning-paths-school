@@ -47,6 +47,7 @@ export default function BlockRenderer({ blocks }: { blocks: PageBlock[] }) {
         block.blockType === "scene" ? (
           <HorizontalScene
             key={block.id}
+            stackOnPhones={block.stackOnPhones}
             panels={block.panels.map(({ id, contentWidth, gapBefore, block: panel }) => ({
               id,
               contentWidth,

@@ -37,13 +37,13 @@ export default function RouteError({ error, retry }: { error: unknown; retry: ()
           <button
             type="button"
             onClick={() => retry()}
-            className="rounded-[4px] bg-white px-[15px] py-[13px] font-body text-body-lg leading-[26px] text-brand-blue transition-colors hover:bg-brand-mist focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="rounded-[4px] bg-white px-[15px] py-[13px] font-body text-body-lg leading-[1.4444] text-brand-blue transition-colors hover:bg-brand-mist focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             Try again
           </button>
           <Link
             href="/"
-            className="rounded-[4px] border border-white/60 px-[15px] py-[13px] font-body text-body-lg leading-[26px] text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="rounded-[4px] border border-white/60 px-[15px] py-[13px] font-body text-body-lg leading-[1.4444] text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             Back to the home page
           </Link>

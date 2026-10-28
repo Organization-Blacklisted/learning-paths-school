@@ -31,7 +31,7 @@ export const SITE_DESCRIPTION =
 export const SHOW_HOME_SECTIONS = true;
 
 /**
- * HOW MANY SECTIONS OF THE HOME PAGE ARE SHOWN (owner: the first three on 2026-10-22, the first four on 2026-10-23, the first five and then six on 2026-10-24). The page is the list in src/data/home-page.ts;
+ * HOW MANY SECTIONS OF THE HOME PAGE ARE SHOWN (owner: the first three on 2026-10-22, the first four on 2026-10-23, the first five and then six on 2026-10-24, and the whole page (null) on 2026-10-28, pushed the same day). The page is the list in src/data/home-page.ts;
  * every block, and every panel of a sideways scene, counts as one section, in page order: 1 hero, 2 vision / mission / values, 3 courage,
  * 4 journey, 5 framework, 6 ecosystem, 7 alumni, 8 campus, 9 news, 10 call to action, 11 photo strip. The sections after the limit are not
  * rendered at all (no images, scripts or animations load for them). The header and the footer always stay.
@@ -39,7 +39,7 @@ export const SHOW_HOME_SECTIONS = true;
  * TO BRING THE WHOLE PAGE BACK set this to null (or build with HOME_SECTION_LIMIT=all). The browser checks (`npm run qa:serve`, and so CI)
  * always build with HOME_SECTION_LIMIT=all, so the sections that are hidden for now stay tested.
  */
-export const HOME_SECTION_LIMIT: number | null = resolveSectionLimit(process.env.HOME_SECTION_LIMIT, 6);
+export const HOME_SECTION_LIMIT: number | null = resolveSectionLimit(process.env.HOME_SECTION_LIMIT, null);
 
 /** "all" means no limit, a whole number means that many sections, anything else (or nothing) means the fallback. Exported for tests. */
 export function resolveSectionLimit(value: string | undefined, fallback: number | null): number | null {

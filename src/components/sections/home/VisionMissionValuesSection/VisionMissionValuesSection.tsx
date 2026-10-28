@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { registerGsap } from "@/lib/gsap";
 import { prefersReducedMotion } from "@/lib/motion";
+import { playOnScroll } from "@/lib/useScrollReveal";
 import type { VisionMissionValuesSectionProps } from "./VisionMissionValuesSection.types";
 
 // Figma: "Frame 1618876728" (node 6507:183), a 715px centred column. A shield with a short line,
@@ -35,6 +36,7 @@ export default function VisionMissionValuesSection({ content }: VisionMissionVal
     if (!column || prefersReducedMotion()) return;
 
     const { gsap, ScrollTrigger } = registerGsap();
+    let stopWatching = () => {};
     const ctx = gsap.context(() => {
       const shieldImg = column.querySelector<HTMLElement>("[data-shield]");
       const blocks = gsap.utils.toArray<HTMLElement>("[data-block]", column);
@@ -48,10 +50,17 @@ export default function VisionMissionValuesSection({ content }: VisionMissionVal
       gsap.set(blocks, { autoAlpha: 0, y: 24, force3D: true, willChange: "transform, opacity" });
       gsap.set(connectors, { scaleY: 0, transformOrigin: "top center", force3D: true, willChange: "transform" });
 
-      // Plays once when the top of the column reaches 75% of the screen height.
+      // Plays when the top of the column reaches 75% of the screen height: in full the first time, then as a quick replay each time the
+      // column comes back into view (see playOnScroll). will-change is put back at the start of every play, because the end of the
+      // previous one cleared it.
       const tl = gsap.timeline({
         paused: true,
         defaults: { ease: "power2.out", force3D: true },
+        onStart: () => {
+          gsap.set(shieldImg, { willChange: "clip-path" });
+          gsap.set(blocks, { willChange: "transform, opacity" });
+          gsap.set(connectors, { willChange: "transform" });
+        },
         onComplete: () => gsap.set([shieldImg, ...blocks, ...connectors], { willChange: "auto" }),
       });
       tl.to(shieldImg, { clipPath: "inset(0 0 0% 0)", duration: 0.9, ease: "power2.inOut" })
@@ -62,17 +71,15 @@ export default function VisionMissionValuesSection({ content }: VisionMissionVal
         .to(blocks[2], { autoAlpha: 1, y: 0, duration: 0.8 }, "-=0.2");
       tl.timeScale(REVEAL_SPEED);
 
-      const trigger = ScrollTrigger.create({
-        trigger: column,
-        start: "top 75%",
-        once: true,
-        onEnter: () => tl.play(),
-      });
-      // Page reloaded below the section: nothing to wait for, show it finished.
-      if (trigger.progress === 1) tl.progress(1);
+      // (A page reloaded below the section needs no special case: the column stays hidden while it is off the screen and plays, quickly,
+      // as soon as it comes back into view from above.)
+      stopWatching = playOnScroll(ScrollTrigger, column, tl, { start: "top 75%" });
     }, column);
 
-    return () => ctx.revert();
+    return () => {
+      stopWatching();
+      ctx.revert();
+    };
   }, []);
 
   return (

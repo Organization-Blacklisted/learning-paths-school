@@ -26,8 +26,14 @@ vi.mock("@/components/sections/home/NewsSection", async () => ({ default: (await
 vi.mock("@/components/sections/shared/CtaSection", async () => ({ default: (await import("./section-stub")).sectionStub("cta") }));
 vi.mock("@/components/sections/shared/MarqueeSection", async () => ({ default: (await import("./section-stub")).sectionStub("marquee") }));
 vi.mock("@/components/layouts/HorizontalScene", () => ({
-  default: ({ panels }: { panels: { id: string; contentWidth: number; gapBefore?: number; content: ReactNode }[] }) => (
-    <div data-scene>
+  default: ({
+    panels,
+    stackOnPhones,
+  }: {
+    panels: { id: string; contentWidth: number; gapBefore?: number; content: ReactNode }[];
+    stackOnPhones?: boolean;
+  }) => (
+    <div data-scene data-stack-on-phones={stackOnPhones ? "true" : "false"}>
       {panels.map((panel) => (
         <div key={panel.id} data-panel={panel.id} data-width={panel.contentWidth} data-gap={panel.gapBefore ?? "default"}>
           {panel.content}
@@ -124,6 +130,20 @@ describe("BlockRenderer", () => {
       ]);
     });
 
+    it("passes `stackOnPhones` on to the scene (off unless the block asks for it)", () => {
+      const stacked: PageBlock = { ...(scene as Extract<PageBlock, { blockType: "scene" }>), stackOnPhones: true };
+      expect(
+        render(<BlockRenderer blocks={[scene]} />)
+          .container.querySelector("[data-scene]")
+          ?.getAttribute("data-stack-on-phones"),
+      ).toBe("false");
+      expect(
+        render(<BlockRenderer blocks={[stacked]} />)
+          .container.querySelector("[data-scene]")
+          ?.getAttribute("data-stack-on-phones"),
+      ).toBe("true");
+    });
+
     it("keeps sections before and after a scene in order, and renders two scenes independently", () => {
       const second: PageBlock = {
         blockType: "scene",
@@ -169,6 +189,11 @@ describe("the home page (src/data/home-page.ts)", () => {
     const scenes = homePage.filter((block) => block.blockType === "scene");
     const ids = scenes.flatMap((block) => [block.id, ...block.panels.map((panel) => panel.id)]);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("stacks the Ecosystem and Alumni scene on phones (pinned, the tall Ecosystem would be shrunk and narrowed), and no other scene", () => {
+    const stacked = homePage.flatMap((block) => (block.blockType === "scene" && block.stackOnPhones ? [block.id] : []));
+    expect(stacked).toEqual(["ecosystem-alumni"]);
   });
 
   it("gives every scene at least two panels (a one-panel scene would pin the page for nothing)", () => {

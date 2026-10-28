@@ -59,7 +59,7 @@ The checks used for the production reviews ([16-production-readiness.md](16-prod
 | `npm run qa:snapshot:save` | Takes the **baseline**: screenshots of the whole home page. Run it on a build you trust, before a refactor. With `-- --only=390` it refreshes just that width and keeps the others. |
 | `npm run qa:snapshot` | Takes the screenshots again and compares them with the baseline. Differences are written to `.qa/diff/` (red = different). |
 
-`npm run qa:serve` always builds with `HOME_SECTION_LIMIT=all`: while some home sections are hidden on the live site (`src/lib/site.ts`), the checks and the screenshots still cover the WHOLE page. To test the shipping configuration instead, build without that variable (for example `NEXT_DIST_DIR=.next-prod npx next build`, then `next start -p 3002`) and run a scroll check; the checks that expect every section (tabs, three pinned scenes, ...) are written for the whole page.
+`npm run qa:serve` always builds with `HOME_SECTION_LIMIT=all` (since 2026-10-28 the live site shows the whole page too, but the variable keeps the checks independent of any limit set later in `src/lib/site.ts`); the checks and the screenshots still cover the WHOLE page. To test the shipping configuration instead, build without that variable (for example `NEXT_DIST_DIR=.next-prod npx next build`, then `next start -p 3002`) and run a scroll check; the checks that expect every section (tabs, three pinned scenes, ...) are written for the whole page.
 
 URL: `QA_URL` (default `http://localhost:3002`). Set it to test a deployed address, e.g. a Vercel preview: `QA_URL=https://… npm run qa`. The screenshots live in `.qa/` (git-ignored).
 

@@ -6,6 +6,8 @@ import type { ComponentPropsWithoutRef } from "react";
 //   "primary": green, white text (the footer's "Begin an Admission Enquiry")
 //   "light":   white, graphite text and a green external-link icon (the CTA band's "Explore Admissions")
 // The footer still has its own copy of the primary look; switch it to this component when the footer is next touched.
+// The label never wraps and the button never shrinks in a flex row (owner, 2026-10-28: "Explore Admissions" broke onto two lines at 1308px
+// wide, where the CTA band's row gets tight): a button is as wide as its label, the text beside it gives way.
 // All extra props (className, data attributes, aria-*) go to the <a>.
 
 type ButtonLinkProps = ComponentPropsWithoutRef<typeof Link> & { variant?: "primary" | "light" };
@@ -18,7 +20,7 @@ const VARIANTS = {
 export default function ButtonLink({ variant = "primary", className = "", children, ...rest }: ButtonLinkProps) {
   return (
     <Link
-      className={`inline-flex items-center rounded-[4px] px-[15px] py-[13px] font-body text-body-lg leading-[26px] capitalize focus-visible:outline-2 focus-visible:outline-offset-2 ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex shrink-0 items-center rounded-[4px] px-[15px] py-[13px] font-body text-body-lg leading-[1.4444] whitespace-nowrap capitalize focus-visible:outline-2 focus-visible:outline-offset-2 ${VARIANTS[variant]} ${className}`}
       {...rest}
     >
       {children}

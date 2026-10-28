@@ -190,7 +190,7 @@ export default function TabBar({ label, tabs, active, onChange, idPrefix, panelI
               tabIndex={selected ? 0 : -1}
               onClick={() => select(index)}
               onKeyDown={(event) => onKeyDown(event, index)}
-              className={`relative z-10 shrink-0 rounded-[8px] px-4 py-4 font-body text-px-14 leading-5 font-semibold sm:px-[25px] sm:text-px-16 lg:max-[1599px]:px-4 whitespace-nowrap capitalize transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue min-[1600px]:w-[calc(var(--tab-w)-6.4px)] ${
+              className={`relative z-10 shrink-0 rounded-[8px] px-4 py-4 font-body text-px-14 leading-[1.4286] font-semibold sm:px-[25px] sm:text-px-16 sm:leading-[1.25] lg:max-[1599px]:px-4 whitespace-nowrap capitalize transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue min-[1600px]:w-[calc(var(--tab-w)-6.4px)] ${
                 selected ? "text-white/97" : "text-brand-blue hover:bg-brand-mist/60"
               } ${selected && !indicatorReady ? "bg-brand-blue" : ""}`}
               style={item.width ? ({ "--tab-w": `${item.width}px` } as CSSProperties) : undefined}

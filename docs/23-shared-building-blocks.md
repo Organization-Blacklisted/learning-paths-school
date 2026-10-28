@@ -11,7 +11,7 @@ After the home page was complete, the code was reviewed for repetition. Everythi
 | `useIdleReady` + `{ready && <Image unoptimized loading="eager" draggable={false} …>}` (20 times) | **`<Photo ready={…} …>`**, `src/components/ui/Photo` | all photos below the first screen |
 | The h2 classes (nearly identical in six sections) and the blue slanted word (`skewX(-8deg) scaleY(0.99)`) | **`<SectionTitle>`** and **`<Accent>`**, `src/components/ui/` | News, Alumni, Campus, Framework, Ecosystem, Journey |
 | The large body paragraph (`font-body text-body-lg leading-[1.5]`) | **`<BodyText>`**, `src/components/ui/BodyText` (colour, width and alignment go in `className`) | the same sections |
-| Arbitrary font sizes (`text-[14px]`, `text-[18px]`, …) | tokens **`text-px-12/14/16/17/18/20`** in `src/styles/typography.css` (size only, no line height) | cards, labels, captions, pills |
+| Arbitrary font sizes (`text-[14px]`, `text-[18px]`, …) | tokens **`text-px-12/14/16/17/18/20`** in `src/styles/typography.css` (fluid clamps since 2026-10-28, the name is the design size from 1280px up; size only, no line height) | cards, labels, captions, pills |
 | The tab bar with its sliding highlight, phone auto-scroll and keyboard handling (inside the Ecosystem section) | **`<TabBar>`**, `src/components/ui/TabBar` | Ecosystem (any page can use it) |
 | The "play only while on screen" video with a pause button (inside Campus) | **`useViewportVideo(enabled)`**, `src/lib/useViewportVideo.ts` | Campus |
 | The scroll parallax (inside Campus) | **`useParallax(rootRef, selector, percent)`**, `src/lib/useParallax.ts` | Campus |

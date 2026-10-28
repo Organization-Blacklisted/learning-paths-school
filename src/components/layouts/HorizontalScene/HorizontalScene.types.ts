@@ -18,4 +18,9 @@ export type HorizontalScenePanel = {
 
 export type HorizontalSceneProps = {
   panels: HorizontalScenePanel[];
+  /**
+   * Below 640px wide or 500px high (a phone, upright or on its side) the panels are an ordinary vertical stack: no pin, no scaling, no pan. On a bigger screen the scene works as usual.
+   * For a scene whose first panel is too tall for a phone screen (the Ecosystem): pinned, it would have to be shrunk and narrowed.
+   */
+  stackOnPhones?: boolean;
 };

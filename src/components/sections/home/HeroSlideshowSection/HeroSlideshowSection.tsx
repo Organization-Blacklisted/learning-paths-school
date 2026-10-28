@@ -180,6 +180,7 @@ export default function HeroSlideshowSection({ content }: HeroSlideshowSectionPr
   return (
     <section
       ref={rootRef}
+      data-header-overlay=""
       aria-roledescription="carousel"
       aria-label={label}
       className="relative h-svh min-h-[600px] overflow-hidden bg-brand-navy"

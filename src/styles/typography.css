@@ -22,9 +22,12 @@
  *
  * Each size is fluid: it grows linearly from its minimum at a 360px viewport
  * (22.5rem) to its maximum at 1280px (80rem), and is clamped outside that
- * range. Formula: clamp(min, intercept + slope*vw, max). Fixed sizes are plain rem.
+ * range. Formula: clamp(min, intercept + slope*vw, max). NO font size on the site is a fixed number (owner rule, 2026-10-28): every
+ * size is a clamp, so a new size is added as a clamp too (src/styles/typography.test.ts fails on a fixed font size or line height).
+ * The minimum of the small sizes is the design size minus 1px (12 to 11, 14 to 13, 16 to 15, 17 to 16) and of the 18 and 20px sizes
+ * minus 2px (the same as body-lg and h3). From 1280px up every size is exactly the design size.
  *
- * Use as text-h1, text-h2, text-h3, text-body-lg, text-body, text-body-sm.
+ * Use as text-h1, text-h2, text-h3, text-body-lg, text-body, text-body-sm (and text-px-* below, text-hero-* further down).
  * `static` also exposes each as a variable: var(--text-h1).
  *
  * Not defined yet: the homepage hero H1 ("Varies", follow Figma).
@@ -46,24 +49,26 @@
   --text-body-lg: clamp(1rem, 0.9511rem + 0.2174vw, 1.125rem);
   --text-body-lg--line-height: 1.6;
 
-  /* Body regular, standard paragraph copy: 16px (fixed) */
-  --text-body: 1rem;
+  /* Body regular, standard paragraph copy: 15px -> 16px */
+  --text-body: clamp(0.9375rem, 0.913rem + 0.1087vw, 1rem);
   --text-body--line-height: 1.6;
 
-  /* Body small, supporting text and labels: 14px (fixed) */
-  --text-body-sm: 0.875rem;
+  /* Body small, supporting text and labels: 13px -> 14px */
+  --text-body-sm: clamp(0.8125rem, 0.788rem + 0.1087vw, 0.875rem);
   --text-body-sm--line-height: 1.5;
 
   /*
-   * Fixed pixel sizes of small design details (card text, labels, captions, pills) that the design gives in px and that do not follow
-   * the fluid scale above. Sizes only: no line height attached, set it with leading-*. Use as text-px-14, text-px-18 ...
+   * Small design details (card text, labels, captions, pills) that the design gives in px at 1920px and that do not follow the h1/h2/h3
+   * scale above. The NAME is the size at 1280px and up (the design size); below that the size is fluid down to the minimum written
+   * here. Sizes only: no line height attached, set it with leading-* as a ratio (a px line height would not follow the size).
+   * Use as text-px-14, text-px-18 ...  (px-18 is the same as body-lg and px-20 the same as h3.)
    */
-  --text-px-12: 0.75rem;
-  --text-px-14: 0.875rem;
-  --text-px-16: 1rem;
-  --text-px-17: 1.0625rem;
-  --text-px-18: 1.125rem;
-  --text-px-20: 1.25rem;
+  --text-px-12: clamp(0.6875rem, 0.663rem + 0.1087vw, 0.75rem); /* 11px -> 12px */
+  --text-px-14: clamp(0.8125rem, 0.788rem + 0.1087vw, 0.875rem); /* 13px -> 14px */
+  --text-px-16: clamp(0.9375rem, 0.913rem + 0.1087vw, 1rem); /* 15px -> 16px */
+  --text-px-17: clamp(1rem, 0.9755rem + 0.1087vw, 1.0625rem); /* 16px -> 17px */
+  --text-px-18: clamp(1rem, 0.9511rem + 0.2174vw, 1.125rem); /* 16px -> 18px */
+  --text-px-20: clamp(1.125rem, 1.0761rem + 0.2174vw, 1.25rem); /* 18px -> 20px */
 
   /*
    * Homepage hero text (Figma node 6282:929). Desktop sizes are from the design; the mobile

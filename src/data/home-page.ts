@@ -35,6 +35,9 @@ export const homePageAll: PageBlock[] = [
   {
     blockType: "scene",
     id: "ecosystem-alumni",
+    // On a phone the Ecosystem (one tall column) would have to be shrunk to about 75% to fit the pinned screen, leaving empty bands at the
+    // sides (owner, 2026-10-28): there the two sections are an ordinary stack.
+    stackOnPhones: true,
     panels: [
       { id: "ecosystem", contentWidth: 1520, block: { blockType: "ecosystem", content: homeEcosystem } },
       { id: "alumni", contentWidth: 1520, gapBefore: 200, block: { blockType: "alumni", content: homeAlumni } },

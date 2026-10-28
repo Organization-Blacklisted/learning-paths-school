@@ -17,9 +17,11 @@ import type { AlumniSectionProps } from "./AlumniSection.types";
 // It is the SECOND PANEL of the second sideways scene on the home page: the owner placed it to the right of "The Ecosystem Behind
 // LPS 360" on the canvas, so after the Ecosystem section the view pans right to this (see <HorizontalScene> on the home page).
 //
-// LAYOUT. From 1600px (the container is then the full 1520px): the design, text left and the two portraits right. Below 1600px (my
-// interpretation, only desktop exists in Figma) the text goes above and the two portraits sit side by side underneath, at
-// their own aspect ratio, shrinking with the screen.
+// LAYOUT. From 1600px (the container is then at least 1440px wide): the design at its exact sizes, text left (633px) and the two
+// portraits right (428px each). From 1024px to 1599px (owner, 2026-10-28: "till 1024px don't break it in columns"; my interpretation, only
+// desktop exists in Figma) it is still ONE ROW: the text block and the two portraits shrink together, in proportion to their design widths
+// (633 : 428 : 428), and the portraits keep their aspect ratio. Below 1024px the text goes above and the two portraits sit side by side
+// underneath, at their own aspect ratio, shrinking with the screen.
 //
 // ANIMATION (nothing specified in Figma; mine). In the sideways scene it is driven by the pan: the pill, heading and paragraphs rise in
 // as the text block enters from the right, then each portrait is opened from the bottom with a slight zoom settle and its name and
@@ -76,13 +78,18 @@ export default function AlumniSection({ content }: AlumniSectionProps) {
 
   return (
     <section ref={rootRef} aria-label={label}>
-      <div className="flex flex-col gap-10 min-[1600px]:flex-row min-[1600px]:items-center min-[1600px]:gap-[15px]">
-        {/* Text: pill, two-line heading, two paragraphs */}
-        <div className="flex w-full flex-col gap-[27px] min-[1600px]:w-[633px] min-[1600px]:shrink-0">
+      <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-[15px]">
+        {/* Text: pill, two-line heading, two paragraphs. From lg: 633px at the design size, shrinking with the portraits below 1600px. */}
+        <div className="flex w-full flex-col gap-[27px] lg:w-[633px] lg:min-w-0 lg:shrink min-[1600px]:shrink-0">
           <div className="flex flex-col items-start gap-[17px]">
             <Badge data-alumni-head>{badge}</Badge>
             {/* Grey "Their" and "Long After They Leave" (Lexend Regular), the blue slanted "Paths Continue" (Lexend Medium) */}
-            <SectionTitle data-alumni-head className="tracking-normal min-[1600px]:whitespace-nowrap">
+            {/* From lg the column is only 381px wide at 1024px, and "Long After They Leave" (about 11 times the font size) needs a little less than the
+                global h2 size to stay on one line down to 1024px; at 1280px and up this is the normal 40px. */}
+            <SectionTitle
+              data-alumni-head
+              className="tracking-normal lg:text-[length:clamp(1.75rem,3.3vw,2.5rem)] min-[1600px]:whitespace-nowrap"
+            >
               {titleStart} <Accent className="-ml-[0.118em] tracking-[-0.01em]">{titleAccent}</Accent>
               <br />
               {titleSecondLine}
@@ -96,12 +103,12 @@ export default function AlumniSection({ content }: AlumniSectionProps) {
         </div>
 
         {/* The two alumni, 16px apart */}
-        <ul className="grid w-full grid-cols-2 gap-3 sm:gap-4 min-[1600px]:flex min-[1600px]:w-auto min-[1600px]:shrink-0">
+        <ul className="grid w-full grid-cols-2 gap-3 sm:gap-4 lg:flex lg:w-auto lg:min-w-0 lg:shrink min-[1600px]:shrink-0">
           {people.map((person) => (
             <li
               key={person.id}
               data-alumni-card
-              className="flex min-w-0 flex-col items-center gap-[20.751px] min-[1600px]:min-h-[461px] min-[1600px]:w-[428px]"
+              className="flex min-w-0 flex-col items-center gap-[20.751px] lg:w-[428px] lg:shrink min-[1600px]:min-h-[461px]"
             >
               {/* Portrait: 428 x 385.18 at the design size; the clip wipes it open, the inner box zooms, the image fills it */}
               <div data-alumni-clip className="relative aspect-[428/385.18] w-full overflow-hidden">
@@ -111,7 +118,7 @@ export default function AlumniSection({ content }: AlumniSectionProps) {
                     src={person.photo.src}
                     alt={person.photo.alt}
                     fill
-                    sizes="(min-width: 1600px) 428px, 50vw"
+                    sizes="(min-width: 1600px) 428px, (min-width: 1024px) 30vw, 50vw"
                     className="object-cover"
                   />
                 </div>

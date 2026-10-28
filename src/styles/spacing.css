@@ -6,8 +6,16 @@
  *                    is my assumption). Use as gap-section, pt-section, pb-section, mt-section...
  *                    The <Section> component uses it above every section and below the last one.
  *
- * `static` also exposes it as a CSS variable: var(--spacing-section).
+ * --spacing-gutter   the space between the screen edge and the content column (LOCAL TRIAL, 2026-10-28, not pushed): 5% of the screen width,
+ *                    never less than 20px and never more than 80px. So 20px on phones (400px and below), about 51px at 1024, 64px at 1280,
+ *                    68px at 1366, 72px at 1440, and 80px from 1600 up. It used to be a flat 20px (below 768px) and 40px (768px and up).
+ *                    <Container> uses it as padding and in its max width (content + 2 gutters), the sideways scenes use it in their panel
+ *                    widths, and the News carousel bleeds out by exactly one gutter. Use as px-gutter, -mx-gutter, var(--spacing-gutter).
+ *                    At 1920px nothing changes: the content is 1520px and the margins 200px.
+ *
+ * `static` also exposes them as CSS variables: var(--spacing-section), var(--spacing-gutter).
  */
 @theme static {
   --spacing-section: clamp(5rem, 2.0652rem + 13.0435vw, 12.5rem);
+  --spacing-gutter: clamp(1.25rem, 5vw, 5rem);
 }

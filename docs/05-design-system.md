@@ -71,7 +71,7 @@ Next.js preloads **every** font file declared in `src/fonts/index.ts` on every p
 
 ### Type scale (fluid)
 
-Source: the "Text style / Desktop size" table in the project brief. Defined in `src/styles/typography.css`. Each size scales smoothly with the viewport using `clamp()`, growing linearly from its minimum at a **360px** viewport to its maximum at **1280px**, and staying fixed outside that range.
+Source: the "Text style / Desktop size" table in the project brief. Defined in `src/styles/typography.css`. Each size scales smoothly with the viewport using `clamp()`, growing linearly from its minimum at a **360px** viewport to its maximum at **1280px**, and staying at those values outside that range. **No font size on the site is a fixed number (owner rule, 2026-10-28):** `text-body`, `text-body-sm` and the `text-px-*` sizes below are clamps too, and `src/styles/typography.test.ts` fails if a token is not a clamp or if a component uses `text-[17px]`, an inline numeric `fontSize` or a px line height (`leading-[26px]`, `leading-5`); line heights are ratios.
 
 | Brief text style | Tailwind class | Desktop (brief) | Mobile min (assumed) | `clamp()` value | Line height (assumed) |
 | --- | --- | --- | --- | --- | --- |
@@ -79,16 +79,16 @@ Source: the "Text style / Desktop size" table in the project brief. Defined in `
 | H2, primary section headings | `text-h2` | 40px | 28px | `clamp(1.75rem, 1.4565rem + 1.3043vw, 2.5rem)` | 1.2 |
 | H3, smaller headings / cards | `text-h3` | 20px | 18px | `clamp(1.125rem, 1.0761rem + 0.2174vw, 1.25rem)` | 1.3 |
 | Body large | `text-body-lg` | 18px | 16px | `clamp(1rem, 0.9511rem + 0.2174vw, 1.125rem)` | 1.6 |
-| Body regular | `text-body` | 16px | 16px (fixed) | `1rem` | 1.6 |
-| Body small, supporting text and labels | `text-body-sm` | 14px | 14px (fixed) | `0.875rem` | 1.5 |
+| Body regular | `text-body` | 16px | 15px | `clamp(0.9375rem, 0.913rem + 0.1087vw, 1rem)` | 1.6 |
+| Body small, supporting text and labels | `text-body-sm` | 14px | 13px | `clamp(0.8125rem, 0.788rem + 0.1087vw, 0.875rem)` | 1.5 |
 | Homepage hero H1 | not defined | "Varies" | | | |
 
 Resolved sizes, measured in Chrome against the production build:
 
 | Viewport | h1 | h2 | h3 | body-lg | body | body-sm |
 | --- | --- | --- | --- | --- | --- | --- |
-| 360px | 32.0 | 28.0 | 18.0 | 16.0 | 16 | 14 |
-| 768px | 39.1 | 33.3 | 18.9 | 16.9 | 16 | 14 |
+| 360px | 32.0 | 28.0 | 18.0 | 16.0 | 15.0 | 13.0 |
+| 768px | 39.1 | 33.3 | 18.9 | 16.9 | 15.4 | 13.4 |
 | 1280px | 48.0 | 40.0 | 20.0 | 18.0 | 16 | 14 |
 | 1920px | 48.0 | 40.0 | 20.0 | 18.0 | 16 | 14 |
 
@@ -129,7 +129,7 @@ Two values from the project brief ("Main content container: 1520 px for most sec
 
 (The Figma footer is 1530px wide. It uses `main` instead, a 10px difference accepted by the owner.)
 
-The container adds side gutters of 20px (mobile) and 40px (md and up) around the content, so the content area is exactly the chosen width once the screen is wide enough, and shrinks with the screen below that.
+The container adds side gutters around the content. **LOCAL TRIAL (2026-10-28, not pushed): the gutter is the fluid token `--spacing-gutter` = 5% of the screen width, never below 20px and never above 80px** (about 51px at 1024, 64px at 1280, 68px at 1366, 72px at 1440, 80px from 1600 up); it used to be a flat 20px (below 768px) and 40px (768px and up). The content area is exactly the chosen width (1520px for the main container) from 1680px up and shrinks with the screen below that; at 1920px the margins are still 200px. See [06-changelog.md](06-changelog.md).
 
 ### Section spacing
 
@@ -171,4 +171,4 @@ Verified in Chrome: the container content is 1520px at 1920px; the token is 200p
 | `RotatingWord` | `components/ui/RotatingWord` | one word of a line that swaps by itself (crossfade + 10% slide, 0.5 s), like boltonschool.org; built for the Courage heading's `"rotate"` option (not the one in use now) |
 | `TabBar` | `components/ui/TabBar` | accessible tab bar with a sliding highlight, phone auto-scroll, arrow/Home/End keys |
 
-Fixed pixel type sizes of small details: `text-px-12`, `-14`, `-16`, `-17`, `-18`, `-20` (size only; set the line height with `leading-*`). See [23-shared-building-blocks.md](23-shared-building-blocks.md).
+Type sizes of small details: `text-px-12`, `-14`, `-16`, `-17`, `-18`, `-20`: **fluid since 2026-10-28** (the number is the size from 1280px up, the design size; 360px minimum is 11, 13, 15, 16, 16 and 18px; size only, set the line height with a ratio `leading-[1.5]`, not px). See [23-shared-building-blocks.md](23-shared-building-blocks.md).

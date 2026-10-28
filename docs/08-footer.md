@@ -37,7 +37,7 @@ The Figma file has **only the desktop design**. Tablet and mobile are my interpr
 
 Bottom bar (copyright and the legal links): below 1024px the two lines are stacked and **centred** (owner, 2026-10-24); from 1024px they are on one row, copyright at the left edge and the links at the right edge (as in Figma).
 
-Content column: the standard `Container` (the brief's 1520px main container, no special width) has 20px (mobile) / 40px (md and up) gutters, so the content is exactly 1520px wide at 1600px and wider screens, with 200px margins at 1920px.
+Content column: the standard `Container` (the brief's 1520px main container, no special width) has the fluid side gutter `--spacing-gutter` (5% of the screen width, 20px to 80px; a local trial since 2026-10-28, it was 20px / 40px), so the content is exactly 1520px wide from 1680px up, with 200px margins at 1920px. Below 1680px the footer content is narrower than before (1296px at 1440, 1152px at 1280, 1080px at 1200: the three info columns still fit, with 226px side columns at 1200).
 
 **Deviation from Figma, accepted by the owner:** the Figma footer column is 1530px (195px margins). Using the shared 1520px container instead moves the left and right edges 5px further in at 1920px (left items at x=200 instead of 195, legal links ending at 1720 instead of 1725; the CTA right column shifts 5px left too). The middle and right columns are unchanged (x=686 and x=1380), because the side columns shrink by 5px each (340 / 548 / 340 instead of 345 / 548 / 345). All vertical positions and the 745px height are unchanged.
 
