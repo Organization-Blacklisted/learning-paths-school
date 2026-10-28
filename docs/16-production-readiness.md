@@ -50,7 +50,7 @@ Lighthouse's best-practices score of 82 is only "does not use HTTPS" (the test r
 ## What still needs a decision or an input before launch
 
 **Blocking for the CMS (not for the public home page):**
-- **Neon project and `.env`.** The Neon project exists since 2026-10-24 and works end to end on a dev branch. Open for production: set `DATABASE_URL`, the storage variables and a production `PAYLOAD_SECRET` in Vercel, and **migrate the production database** (it has no tables). Until then `/admin` and `/api/*` answer 500 in production. The public pages are unaffected. Details in [10-payload-cms.md](10-payload-cms.md#neon-set-up-and-verified-2026-10-24).
+- **Neon project and `.env`.** The Neon project exists since 2026-10-24 and works end to end on a dev branch. **Done 2026-10-28:** the production database is migrated and seeded and the Vercel Production variables are set, so the live `/admin` and `/api/*` work (Preview deployments have no database and still answer 500 there). Details in [10-payload-cms.md](10-payload-cms.md#neon-set-up-and-verified-2026-10-24).
 - **`NEXT_PUBLIC_SITE_URL`** must be set to the real address **before the build** (it is read at build time). Without it the canonical, Open Graph and sitemap links point at `http://localhost:3000`. The contact e-mail suggests `learningpaths.in`, but the domain is the owner's to confirm.
 
 **Content and design (owner):**

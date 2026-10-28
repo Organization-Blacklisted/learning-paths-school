@@ -26,6 +26,8 @@ const useObjectStorage = Boolean(process.env.AWS_ENDPOINT_URL_S3 && process.env.
 export default buildConfig({
   admin: {
     user: Users.slug,
+    // The admin is always dark (owner, 2026-10-28; as the Giada project): no light mode and no theme switch in the account menu.
+    theme: "dark",
     meta: {
       titleSuffix: " - Learning Paths School",
     },

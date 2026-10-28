@@ -31,7 +31,7 @@ Vercel also provides **system variables** (`VERCEL_ENV`, `VERCEL_URL`, `VERCEL_P
 
 ## First deployment checklist
 
-1. The Neon project and bucket exist (2026-10-24). Fill in the variables above for Production and Preview, and **migrate the production database first** (it has no tables: `payload migrate:create`, commit, then `payload migrate` with the direct URL), otherwise `/admin` and `/api` fail.
+1. The Neon project and bucket exist (2026-10-24). **Done 2026-10-28 for Production:** the database variables, a production `PAYLOAD_SECRET` and `REVALIDATE_SECRET` are set in Vercel (Production only, as secrets) and the production database is migrated and seeded; `scripts/vercel-build.mjs` runs `payload migrate` before each production build ([26-cms-home-plan.md](26-cms-home-plan.md#h-go-live-done-2026-10-28-with-the-owners-go)). **Not set: the Preview environment** (previews have no database, so they show the default content and their `/admin` fails; set Preview variables for a separate Neon branch if previews should have a CMS).
 2. Import the GitHub repository in Vercel. Check the first build is green (the CI already proves the build works with placeholder values, so a red build here means a missing or wrong variable).
 3. **Run the browser checks against the real preview, not just against CI's own build:**
    `QA_URL=https://<the-preview-address> npm run qa` and `npm run qa:interact` (the suite takes the address from `QA_URL`). This tests what the host actually serves: headers, caching, compression, fonts, the 404.

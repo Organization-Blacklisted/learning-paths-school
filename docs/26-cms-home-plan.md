@@ -1,6 +1,6 @@
 # Plan: the home page editable in Payload
 
-Status: **steps A to G built and verified on the `dev` database (2026-10-28), local only, not committed; step H (go live) waits for the owner.** Background: [10-payload-cms.md](10-payload-cms.md) (what exists), [02-architecture.md](02-architecture.md#payload--neon-status-and-plan) (the original steps 4 and 5 that this plan fills in), [07-decisions.md](07-decisions.md).
+Status: **all steps A to H done on 2026-10-28: the home page is editable in Payload on the live site** (committed and deployed; the first admin account was created by the owner). Background: [10-payload-cms.md](10-payload-cms.md) (what exists), [02-architecture.md](02-architecture.md#payload--neon-status-and-plan) (the original steps 4 and 5 that this plan fills in), [07-decisions.md](07-decisions.md).
 
 ## What the owner asked for
 
@@ -68,10 +68,18 @@ Today every photo is a pre-compressed AVIF in `public/images`, served from Verce
 **G. Verify** (done)
 - [x] `npm run check` (16 files, 145 tests); the page must not change: two production builds (database on and off) compared in Chrome: head, all text, 77 images, section heights and document height identical, full-page screenshots differ by at most 1/255 on any channel (the project's `qa:snapshot` suite was NOT run); the admin in Chrome as an admin and as an editor; a draft is not visible to the public; the fallback with the database off.
 
-**H. Go live (needs the owner's go at that moment; touches production)**
-- [ ] `payload migrate:create` from the stable schema, committed; rehearse `payload migrate` on a throwaway Neon branch, then on `production` with `DATABASE_URL_UNPOOLED`.
-- [ ] Vercel variables (`DATABASE_URL`, `PAYLOAD_SECRET` (its own), `AWS_*`, `REVALIDATE_SECRET`); `payload migrate` before `next build`; check the functions' region against Neon (US East 1).
-- [ ] Seed the production Home, then `npx vercel --prod` (only when the owner says to run it).
+**H. Go live** (done 2026-10-28, with the owner's go)
+- [x] `payload migrate:create` from the stable schema (`src/migrations/20261028_111608_initial`: 35 tables, 3 types), committed; rehearsed on a throwaway Neon branch of production (`rehearsal-h`: migrate, seed, row counts checked, branch deleted), then applied to `production`.
+- [x] Vercel variables, Production only, all sensitive: `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION` (from `neon env pull --branch production` into a scratch file, never into `.env.local`), plus a new random `PAYLOAD_SECRET` and `REVALIDATE_SECRET` (generated in the script, never printed or stored). `scripts/vercel-build.mjs` (`vercel-build`) applies pending migrations on production deploys. Functions region against Neon: not checked.
+- [x] Production seeded (`SEED_PRODUCTION=1`, 32 photos and the Home page published), then `npx vercel --prod`.
+- [x] The owner created the first admin on the live `/admin` right after the deploy (the first-user screen is open to anyone until that account exists, so the deploy and the sign-up were done back to back). The live `/admin` now shows the login, and `/admin/create-first-user` redirects to `/admin`.
+
+### How to change the database later
+1. Change a collection or global (and run `npm run generate:types`).
+2. `npm run payload -- migrate:create <name>` (on the dev branch; commit the new files in `src/migrations`).
+3. Deploy: on a production deploy `vercel-build` runs `payload migrate` first, then the build. If the migration fails the deploy fails and the live site stays as it was. Rehearse a risky migration on a throwaway Neon branch first (`neon branches create --name x --parent production`, `neon env pull --branch x --file <ignored file>`, run with `PAYLOAD_MIGRATING=true`).
+- A dev database that was set up by "push" (the default in development) and the migration files describe the same schema now; do not run `payload migrate` against the dev branch without resetting it first.
+- `REVALIDATE_SECRET` is stored as a Vercel secret and cannot be read back: to use `POST /api/revalidate` by hand, set a new one (`npx vercel env add REVALIDATE_SECRET --environment production --sensitive --force`) and redeploy.
 
 **Later:** a Pages collection with blocks for the ordinary pages, when the next page is designed (the section modules become blocks).
 
