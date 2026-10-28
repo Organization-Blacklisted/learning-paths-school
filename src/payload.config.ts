@@ -3,11 +3,14 @@ import { fileURLToPath } from "url";
 import sharp from "sharp";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { postgresAdapter } from "@payloadcms/db-postgres";
+import { seoPlugin } from "@payloadcms/plugin-seo";
 import { s3Storage } from "@payloadcms/storage-s3";
 import { buildConfig } from "payload";
 
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
+import { Home } from "./globals/Home";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "./lib/site";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -28,7 +31,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Media],
-  globals: [],
+  globals: [Home],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {
@@ -41,6 +44,35 @@ export default buildConfig({
   }),
   sharp,
   plugins: [
+    // The SEO tab of the pages (a Global or a collection listed here gets one): title, description and share image with length
+    // counters, a search-result preview and "generate" buttons, plus two fields the plugin lacks. Read by generateMetadata (src/lib/api/seo.ts).
+    seoPlugin({
+      globals: ["home"],
+      uploadsCollection: "media",
+      tabbedUI: true,
+      generateTitle: () => SITE_NAME,
+      generateDescription: () => SITE_DESCRIPTION,
+      generateURL: () => SITE_URL,
+      fields: ({ defaultFields }) => [
+        ...defaultFields,
+        {
+          name: "noIndex",
+          label: "Hide this page from search engines (noindex)",
+          type: "checkbox",
+          defaultValue: false,
+          admin: { description: "Leave off for a normal public page." },
+        },
+        {
+          name: "canonical",
+          label: "Canonical address (optional)",
+          type: "text",
+          admin: {
+            description:
+              "Only if another address is the main one for this page (a full address, https://...). Leave blank: the page's own address is used.",
+          },
+        },
+      ],
+    }),
     s3Storage({
       enabled: useObjectStorage,
       collections: {

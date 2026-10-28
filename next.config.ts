@@ -42,6 +42,13 @@ const nextConfig: NextConfig = {
         source: "/images/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" }],
       },
+      {
+        // Photos uploaded in the CMS are read from the private Neon bucket by Payload's file route (a function). Without a cache header every
+        // visitor would run it for every photo: `s-maxage` lets Vercel's edge keep the file for a week (the browser too, `max-age`). A new
+        // upload gets a new file name (Payload never reuses one), so a changed photo is a new address and the week does no harm.
+        source: "/api/media/file/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, s-maxage=604800, stale-while-revalidate=86400" }],
+      },
     ];
   },
 };

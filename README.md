@@ -37,6 +37,7 @@ All project knowledge lives in [`docs/`](docs/README.md). Start there.
 | [docs/15-home-framework.md](docs/15-home-framework.md) | Home: The LPS 360 Framework (PIONEER diagram): spec, layout, animation, fidelity, open items |
 | [scripts/README.md](scripts/README.md) | Image tools: how to add a photo (`npm run images:optimize`), the image budget (`images:check`), the settings of every photo on the site |
 | [docs/25-deployment-vercel.md](docs/25-deployment-vercel.md) | GitHub + Vercel: how code reaches the site, environment variables per environment, first-deployment checklist, what to verify |
+| [docs/26-cms-home-plan.md](docs/26-cms-home-plan.md) | The plan to make the home page editable in Payload: what Giada does, the decisions, the steps, the risks |
 | [docs/24-qa-suite.md](docs/24-qa-suite.md) | Checks, tests and CI: unit tests (`npm test`), the pre-commit hook, GitHub Actions, the browser checks (`qa`, `qa:interact`) and the screenshot comparison (`qa:snapshot`) |
 | [docs/23-shared-building-blocks.md](docs/23-shared-building-blocks.md) | Shared hooks and components (`useScrollReveal`, `Photo`, `SectionTitle`, `Accent`, `BodyText`, `TabBar`, `BlockRenderer`...) and how to use them |
 | [docs/22-home-campus.md](docs/22-home-campus.md) | Home: campus video box (poster image now): how to add the video later, behaviour, animation, fidelity, open items |

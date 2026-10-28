@@ -7,6 +7,7 @@ Tools for the site's images. They exist so that adding or replacing a photo is a
 | `optimize-image.mjs` | Photo in, AVIF out: crop, resize, encode, and **measure** what the encoding cost. `npm run images:optimize -- <input> --out <file.avif> [options]` |
 | `check-images.mjs` | Audits `public/images` (format, weight, width). `npm run images:check`. Part of `npm run check`, the pre-commit hook and CI. |
 | `svgo.config.cjs` | The svgo settings used for the site's SVGs. |
+| `seed-home.ts` | Puts the current home page and its photos into the CMS (`npm run seed:home`, see [docs/26-cms-home-plan.md](../docs/26-cms-home-plan.md)). Not an image tool. |
 
 ## Replacing an image (do not reuse the file name)
 

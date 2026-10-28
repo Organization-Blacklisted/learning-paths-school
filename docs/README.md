@@ -29,6 +29,7 @@ Single source of truth for the Learning Paths School website.
 23. [Shared building blocks (structure refactor)](23-shared-building-blocks.md)
 24. [Checks, tests and CI](24-qa-suite.md)
 25. [Deployment: GitHub and Vercel](25-deployment-vercel.md)
+26. [Plan: the home page editable in Payload](26-cms-home-plan.md)
 
 ## Rules
 
