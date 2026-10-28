@@ -19,6 +19,10 @@ export default defineConfig({
       // Other branches must not be pointed at production by `npm run dev`: Payload changes the schema on start in development.
       return {};
     }
+    if (branch.name === "preview") {
+      // The database of Vercel's Preview deployments (created 2026-10-28 as a copy of production): long-lived, no ttl.
+      return {};
+    }
     if (!branch.exists) {
       // Any other new branch (a feature or test branch) expires after a week.
       // Run `neon checkout <name>` to create a new branch with these settings
