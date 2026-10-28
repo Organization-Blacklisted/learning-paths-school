@@ -30,6 +30,8 @@ export default buildConfig({
     theme: "dark",
     meta: {
       titleSuffix: " - Learning Paths School",
+      // The school's crest in the admin's browser tab, instead of Payload's logo (the file is made by scripts/make-favicon.mjs).
+      icons: [{ rel: "icon", type: "image/png", url: "/icon.png" }],
     },
     importMap: {
       baseDir: path.resolve(dirname),
