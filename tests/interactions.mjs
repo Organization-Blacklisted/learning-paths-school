@@ -193,7 +193,10 @@ for (const [width, height, label] of [
       console.log(`SKIP  ${name}: selector ${selector} not found`);
       continue;
     }
-    await scrollToY(page, (await startOf(page, selector)) - 150);
+    // Campus: its media box opens BY THE SCROLL (scrubbed, 2026-10-28), and the label comes in at the end, when the box has risen to 40% of
+    // the screen: so for Campus "scrolled to it" means the media box is in the upper part of the screen (the checks of that opening follow below).
+    const target = name === "Campus" ? (await startOf(page, "[data-campus-frame]")) - 250 : (await startOf(page, selector)) - 150;
+    await scrollToY(page, target);
     await page.waitForTimeout(1200);
     const hidden = await page.evaluate(
       (s) =>
@@ -203,6 +206,31 @@ for (const [width, height, label] of [
       selector,
     );
     ok(`${name}: after scrolling to it, nothing is left invisible`, hidden === 0, `${hidden} invisible elements`);
+  }
+
+  // The Campus media box opens with the scroll, in both directions: closed (a smaller rounded window, label hidden) while it is still low on the
+  // screen, completely open and showing its label once it is high, and closed again when scrolling back up.
+  if (await page.evaluate(() => !!document.querySelector("[data-campus-frame]"))) {
+    const frameTop = await startOf(page, "[data-campus-frame]");
+    const vh = 993;
+    const read = () =>
+      page.evaluate(() => {
+        const frame = document.querySelector("[data-campus-frame]");
+        const tag = document.querySelector("[data-campus-tag]");
+        const numbers = (getComputedStyle(frame).clipPath.match(/[\d.]+/g) ?? []).map(Number);
+        return { open: numbers.every((n) => n < 0.5), tag: +getComputedStyle(tag).opacity };
+      });
+    await scrollToY(page, frameTop - 0.88 * vh); // the box's top 88% down the screen: just starting to open
+    const low = await read();
+    await scrollToY(page, frameTop - 250); // the box's top about 25% down: finished
+    const high = await read();
+    await scrollToY(page, frameTop - 0.88 * vh);
+    const back = await read();
+    ok(
+      "Campus media: closed while low on the screen, completely open (label shown) once high, closed again scrolling back (scrubbed by the scroll)",
+      !low.open && low.tag < 0.5 && high.open && high.tag > 0.95 && !back.open && back.tag < 0.5,
+      JSON.stringify({ low, high, back }),
+    );
   }
   await page.close();
 }
@@ -469,11 +497,33 @@ for (const [label, width, height] of [
       }),
     );
   const found = await scenes();
+  // Below 640px wide (or 500px high) the Ecosystem and Alumni scene is an ordinary vertical stack, not pinned (`stackOnPhones`, owner 2026-10-28):
+  // there the page has the hero's pin and ONE sideways scene (2 pins); from 640px it has the hero's pin and two scenes (3 pins).
+  const pins = width >= 640 && height >= 500 ? 3 : 2;
   ok(
-    `${label}: the page has the hero's pin and two sideways scenes (3 pins), each stage exactly one screen high`,
-    (await page.evaluate(() => document.querySelectorAll(".pin-spacer").length)) === 3 && found.every((x) => x.stage === height),
+    `${label}: the page has the hero's pin and ${pins - 1} sideways scene${pins === 3 ? "s" : ""} (${pins} pins), each stage exactly one screen high`,
+    (await page.evaluate(() => document.querySelectorAll(".pin-spacer").length)) === pins && found.every((x) => x.stage === height),
     JSON.stringify(found),
   );
+  if (pins === 2) {
+    // the second scene is a plain stack: not inside a pin, Alumni under Ecosystem, nothing wider than the screen
+    const stack = await page.evaluate(() => {
+      const eco = document.querySelector('section[aria-label="The ecosystem behind LPS 360"]');
+      const alumni = document.querySelector('section[aria-label^="Alumni"]');
+      const a = eco.getBoundingClientRect();
+      const b = alumni.getBoundingClientRect();
+      return {
+        pinned: Boolean(eco.closest(".pin-spacer") || alumni.closest(".pin-spacer")),
+        underneath: b.top + scrollY >= a.bottom + scrollY - 5,
+        fits: a.width <= innerWidth + 1 && b.width <= innerWidth + 1,
+      };
+    });
+    ok(
+      `${label}: Ecosystem and Alumni are an ordinary stack (not pinned, one under the other, within the screen)`,
+      !stack.pinned && stack.underneath && stack.fits,
+      JSON.stringify(stack),
+    );
+  }
 
   // scene 1 (vision, courage, journey): at its start the Vision panel is centred; the Courage heading is typed at the end of the first pan
   await scrollToY(page, found[0].top + 2);
