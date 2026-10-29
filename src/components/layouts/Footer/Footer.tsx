@@ -27,7 +27,9 @@ function FooterColumn({ title, children, className = "" }: { title: string; chil
   );
 }
 
-// Vertical divider that sits in the grid gap to the left of a column (>= 1200px only).
+// Vertical divider that sits in the grid gap to the left of a column (>= 1200px only). It hangs from the horizontal rule above the info row (the
+// rule is the grid's own `before`, 1px above the grid top) down to the bottom bar's rule: Figma, updated 2026-10-29. It used to start 29px above
+// the rule, because the rule was drawn 29px below the top of the grid.
 const dividerClass =
   "min-[1200px]:before:absolute min-[1200px]:before:top-0 min-[1200px]:before:left-[calc(var(--info-gap)_/_-2_-_1px)] min-[1200px]:before:h-[316px] min-[1200px]:before:border-l min-[1200px]:before:border-white/16";
 
@@ -67,7 +69,7 @@ export default function Footer() {
 
         <div className="flex flex-col gap-8 min-[1200px]:gap-0">
           {/* Info columns */}
-          <div className="relative flex flex-col gap-8 min-[1200px]:grid min-[1200px]:h-[316px] min-[1200px]:grid-cols-[1fr_548px_1fr] min-[1200px]:gap-x-[var(--info-gap)] min-[1200px]:[--info-gap:clamp(40px,calc(39vw_-_482px),146px)] min-[1200px]:before:absolute min-[1200px]:before:top-[29px] min-[1200px]:before:right-0 min-[1200px]:before:left-px min-[1200px]:before:border-t min-[1200px]:before:border-white/16">
+          <div className="relative flex flex-col gap-8 min-[1200px]:grid min-[1200px]:h-[316px] min-[1200px]:grid-cols-[1fr_548px_1fr] min-[1200px]:gap-x-[var(--info-gap)] min-[1200px]:[--info-gap:clamp(40px,calc(39vw_-_482px),146px)] min-[1200px]:before:absolute min-[1200px]:before:-top-px min-[1200px]:before:right-0 min-[1200px]:before:left-px min-[1200px]:before:border-t min-[1200px]:before:border-white/16">
             <FooterColumn title={contact.title}>
               <address className="not-italic">
                 <ul className="flex flex-col gap-3 text-body-lg leading-[1.5]">

@@ -2,6 +2,15 @@
 
 Newest first.
 
+## 2026-10-29
+
+### Footer borders match the corrected Figma
+- **Owner request:** "Figma had a bug and now the footer borders are updated: fix ours, push and deploy." Two screenshots showed the vertical dividers of the footer's info row sticking out ABOVE the horizontal rule on our site (red arrows), and starting exactly at the rule in the corrected Figma.
+- **Cause:** from 1200px the horizontal rule was drawn 29px below the top of the info grid (`before:top-[29px]`) while the vertical dividers start at the top of the grid, so they stood 29px above the rule: the old Figma bug, reproduced faithfully.
+- **Fix (`Footer.tsx`, one class):** the rule moves to the top of the grid (`before:-top-px`); the dividers, the text and everything else stay where they were. The dividers now hang from the rule down to the bottom bar's rule.
+- **Measured** against a render of the corrected Figma node (`6282:795`, 1920px): rule directly above the dividers, dividers 316 rows tall from one row below the rule to the bottom rule, button-to-rule gap 71px (was 101px, Figma 71px); the same geometry at 1440 and 1200px. **Checked** on a clean production build with the CI environment: `npm run qa` 25 of 25 and `npm run qa:interact` 59 of 59 pass. Details: [08-footer.md](08-footer.md).
+- Noticed on the way: the dev server on port 3000 is currently the Giada project, not LPS; I used my own port 3002 and the live site for the "before" measurement and touched nothing on 3000.
+
 ## 2026-10-28
 
 ### The school's favicon (LOCAL, not pushed yet)
