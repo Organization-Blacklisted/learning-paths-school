@@ -18,10 +18,12 @@ import type { NewsSectionProps } from "./NewsSection.types";
 // text panel on top (303px: date in green, title, up to five lines of text, a green arrow) and a 203px photo below. It sits above
 // the CTA band on the home page.
 //
-// LAYOUT. From 1600px (the container is then the full 1520px): the design, intro left and three equal cards in the 994px column (the Figma
-// cards are 318, 318 and 310px wide; equal widths of 315px are used, the 8px difference looks like a slip in the design). Below 1600px (my
-// interpretation, only desktop exists in Figma) the intro goes above and the three cards sit in a row of equal columns from 1024px; below 1024px
-// the cards become a row you swipe sideways, each 318px (80% of the screen at most), snapping to the card edges.
+// LAYOUT. From 1200px (owner, 2026-10-29: it was 1600px) the design: intro left, the three cards in one row on the right. The intro column is
+// fluid (320px at 1200px growing to the designed 502px at 1599px), the cards share the rest (229px at 1200px, 315px as designed from 1680px).
+// Narrow cards: the title takes at most two lines and the excerpt four (five from 1680px) so the text never reaches the arrow, and between 1200
+// and 1329px the heading wraps onto two lines. From 1024 to 1199px (my interpretation, only desktop exists in Figma) the intro goes above and
+// the three cards sit in a row of equal columns; below 1024px the cards become a row you swipe sideways, each 318px (80% of the screen at most),
+// snapping to the card edges. (The Figma cards are 318, 318 and 310px wide; equal widths of 315px are used, the 8px difference looks like a slip.)
 //
 // ANIMATION (owner: "as you think will suit it"), once when the section scrolls into view, about 1.4 s: the pill, heading
 // and paragraph rise in; then the cards grow up from the bottom one after another (a clip wipe, like the Alumni portraits and the
@@ -64,14 +66,17 @@ export default function NewsSection({ content }: NewsSectionProps) {
 
   return (
     <Section label={label}>
-      <div ref={rootRef} className="flex flex-col gap-10 min-[1600px]:flex-row min-[1600px]:items-center min-[1600px]:gap-6">
+      <div ref={rootRef} className="flex flex-col gap-10 min-[1200px]:flex-row min-[1200px]:items-center min-[1200px]:gap-6">
         {/* Intro: 502px wide, vertically centred against the cards */}
-        <div className="flex w-full flex-col gap-[27px] min-[1600px]:w-[502px] min-[1600px]:shrink-0">
+        <div className="flex w-full flex-col gap-[27px] min-[1200px]:w-[clamp(320px,calc(45.5vw_-_226px),502px)] min-[1200px]:shrink-0">
           <div className="flex flex-col items-start gap-[17px]">
             <Badge data-news-intro>{badge}</Badge>
             {/* Grey "What's New" (Lexend Regular) and the blue slanted "At LPS" (Lexend Medium), like "Our Learning Journey" */}
-            <SectionTitle data-news-intro className="tracking-normal whitespace-nowrap capitalize">
-              {titleLead} <Accent className="-ml-[0.118em] tracking-[-0.01em]">{titleAccent}</Accent>
+            <SectionTitle
+              data-news-intro
+              className="tracking-normal whitespace-nowrap capitalize min-[1200px]:max-[1329px]:whitespace-normal"
+            >
+              {titleLead} <Accent className="-ml-[0.118em] tracking-[-0.01em] min-[1200px]:max-[1329px]:ml-0">{titleAccent}</Accent>
             </SectionTitle>
           </div>
           <BodyText data-news-intro className="max-w-[471px] text-brand-graphite">
@@ -80,7 +85,7 @@ export default function NewsSection({ content }: NewsSectionProps) {
         </div>
 
         {/* The cards: a row to swipe below xl (the list bleeds to the screen edges), three equal columns from xl */}
-        <ul className="-mx-gutter flex snap-x snap-mandatory scroll-px-gutter gap-6 overflow-x-auto px-gutter pb-3 [scrollbar-width:none] lg:mx-0 lg:grid lg:grid-cols-3 lg:scroll-px-0 lg:overflow-visible lg:px-0 lg:pb-0 min-[1600px]:flex-1 [&::-webkit-scrollbar]:hidden">
+        <ul className="-mx-gutter flex snap-x snap-mandatory scroll-px-gutter gap-6 overflow-x-auto px-gutter pb-3 [scrollbar-width:none] lg:mx-0 lg:grid lg:grid-cols-3 lg:scroll-px-0 lg:overflow-visible lg:px-0 lg:pb-0 min-[1200px]:min-w-0 min-[1200px]:flex-1 [&::-webkit-scrollbar]:hidden">
           {items.map((item) => (
             <li key={item.id} data-news-card className="w-[min(318px,80vw)] shrink-0 snap-start lg:w-auto">
               <Link
@@ -95,13 +100,13 @@ export default function NewsSection({ content }: NewsSectionProps) {
                   </p>
                   <h3
                     data-news-text
-                    className="mt-3 font-body text-px-18 leading-[normal] font-semibold text-brand-navy transition-colors duration-300 group-hover:text-brand-blue"
+                    className="mt-3 line-clamp-2 font-body text-px-18 leading-[normal] font-semibold text-brand-navy transition-colors duration-300 group-hover:text-brand-blue"
                   >
                     {item.title}
                   </h3>
                   <p
                     data-news-text
-                    className="mt-4 line-clamp-5 w-full max-w-[261px] font-body text-px-18 leading-[1.5] font-light text-brand-navy/80"
+                    className="mt-4 line-clamp-4 w-full min-[1680px]:line-clamp-5 max-w-[261px] font-body text-px-18 leading-[1.5] font-light text-brand-navy/80"
                   >
                     {item.excerpt}
                   </p>

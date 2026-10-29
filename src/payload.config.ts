@@ -28,6 +28,13 @@ export default buildConfig({
     user: Users.slug,
     // The admin is always dark (owner, 2026-10-28; as the Giada project): no light mode and no theme switch in the account menu.
     theme: "dark",
+    components: {
+      // The school's logo above the login form and its crest in the navigation, instead of Payload's (src/components/admin).
+      graphics: {
+        Logo: "@/components/admin/Logo#Logo",
+        Icon: "@/components/admin/Icon#Icon",
+      },
+    },
     meta: {
       titleSuffix: " - Learning Paths School",
       // The school's crest in the admin's browser tab, instead of Payload's logo (the file is made by scripts/make-favicon.mjs).
