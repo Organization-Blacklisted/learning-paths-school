@@ -750,8 +750,8 @@ for (const [label, width, height] of [
     for (let index = 0; index < 5; index++) {
       await page.locator(`${ECO} [role=tab]`).nth(index).click({ force: true });
       await page.waitForTimeout(1500);
-      rows.push(
-        await page.evaluate((s) => {
+      const readRow = () =>
+        page.evaluate((s) => {
           const sec = document.querySelector(s);
           const active = sec.querySelector("[data-eco-row][data-active]");
           const photo = sec.querySelector("[data-eco-photo] img");
@@ -769,8 +769,14 @@ for (const [label, width, height] of [
             lastBulletBottomVsStage: Math.round(lastBullet.bottom - stage.bottom),
             bullets: bullets.length,
           };
-        }, ECO),
-      );
+        }, ECO);
+      // a photo that comes from the CMS media storage can take longer to arrive than one from the site's own files: look again before judging
+      let row = await readRow();
+      if (!row.photo?.includes(expected[index][1])) {
+        await page.waitForTimeout(3500);
+        row = await readRow();
+      }
+      rows.push(row);
     }
     const titlesAndPhotos = rows.every((r, i) => r.title.startsWith(expected[i][0]) && r.photo.includes(expected[i][1]));
     const sameHeight = new Set(rows.map((r) => r.panelHeight)).size === 1;
@@ -844,7 +850,7 @@ for (const [label, width, height] of [
     if (reduced) {
       ok(
         `Ecosystem photo, ${label}: swaps at once (never a second layer, always opaque and at normal size)`,
-        frames.every((f) => f.layers.length === 1 && f.layers[0].o === 1 && f.layers[0].s === 1) && last.layers[0].src.startsWith("sports"),
+        frames.every((f) => f.layers.length === 1 && f.layers[0].o === 1 && f.layers[0].s === 1) && last.layers[0].src.includes("sports"),
         `layers ${[...new Set(frames.map((f) => f.layers.length))]}, shows ${last.layers[0].src}`,
       );
     } else {
@@ -854,8 +860,8 @@ for (const [label, width, height] of [
       ok(
         `Ecosystem photo, ${label}: the new photo is on top of the old one while it fades in (two layers for about 0.9 s)`,
         during.length >= 20 &&
-          top[0].src.startsWith("sports") &&
-          under[0].src.startsWith("choir") &&
+          top[0].src.includes("sports") &&
+          under[0].src.includes("choir") &&
           during.at(-1).t > 700 &&
           during.at(-1).t < 1500,
         `${during.length} frames, until ${during.at(-1)?.t} ms, top ${top[0]?.src}, under ${under[0]?.src}`,
@@ -905,7 +911,7 @@ for (const [label, width, height] of [
       }, ECO);
       ok(
         `Ecosystem photo, ${label}: three quick clicks (tabs 1, 4, 5 within 0.3 s) end on the last tab with one fully visible layer`,
-        end.n === 1 && end.src.startsWith("social-impact") && end.o === 1 && end.selected === 4,
+        end.n === 1 && end.src.includes("social-impact") && end.o === 1 && end.selected === 4,
         JSON.stringify(end),
       );
     }

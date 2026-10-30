@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Container, { CONTAINER_WIDTH } from "@/components/layouts/Container";
 import MegaMenu from "@/components/layouts/MegaMenu";
 import { headerContent } from "@/data/header";
-import { initialHeaderScroll, nextHeaderScroll } from "@/lib/headerVisibility";
+import { initialHeaderScroll, isHomePath, nextHeaderScroll } from "@/lib/headerVisibility";
 import { SHOW_HOME_SECTIONS } from "@/lib/site";
 import type { HeaderProps } from "./Header.types";
 
@@ -37,8 +37,9 @@ const SOLID_BAR_HEIGHT = 74;
 
 export default function Header({ variant }: HeaderProps) {
   const pathname = usePathname();
+  // isHomePath, not pathname === "/": on Vercel the server renders the home page for "/index" (see isHomePath).
   // The transparent header only works over the home hero: with the home sections switched off (SHOW_HOME_SECTIONS) it is solid.
-  const resolved = variant ?? (pathname === "/" && SHOW_HOME_SECTIONS ? "transparent" : "solid");
+  const resolved = variant ?? (isHomePath(pathname) && SHOW_HOME_SECTIONS ? "transparent" : "solid");
   const transparentVariant = resolved === "transparent";
   const { logo, admissions, menu } = headerContent;
 

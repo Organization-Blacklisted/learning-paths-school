@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { DIRECTION_DISTANCE, SHOW_NEAR_TOP, initialHeaderScroll, nextHeaderScroll, type HeaderScrollState } from "@/lib/headerVisibility";
+import {
+  DIRECTION_DISTANCE,
+  SHOW_NEAR_TOP,
+  initialHeaderScroll,
+  isHomePath,
+  nextHeaderScroll,
+  type HeaderScrollState,
+} from "@/lib/headerVisibility";
 
 /** Applies a series of scroll positions one after another and returns the state after each. */
 const run = (positions: number[], from: HeaderScrollState = initialHeaderScroll(0)) => {
@@ -67,5 +74,20 @@ describe("nextHeaderScroll", () => {
     const hiddenAt800 = run([300, 500, 800]).at(-1)!;
     expect(hiddenAt800.hidden).toBe(true);
     expect(nextHeaderScroll(hiddenAt800, SHOW_NEAR_TOP - 10).hidden).toBe(false);
+  });
+});
+
+describe("isHomePath", () => {
+  it("is true for the home page as the browser names it (/) and as Vercel’s prerender names it (/index)", () => {
+    expect(isHomePath("/")).toBe(true);
+    expect(isHomePath("/index")).toBe(true);
+  });
+
+  it("is false for any other page, and when there is no path", () => {
+    expect(isHomePath("/admissions")).toBe(false);
+    expect(isHomePath("/index/other")).toBe(false);
+    expect(isHomePath("/indexes")).toBe(false);
+    expect(isHomePath("")).toBe(false);
+    expect(isHomePath(null)).toBe(false);
   });
 });

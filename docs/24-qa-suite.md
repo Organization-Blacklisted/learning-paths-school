@@ -61,7 +61,7 @@ The checks used for the production reviews ([16-production-readiness.md](16-prod
 
 `npm run qa:serve` always builds with `HOME_SECTION_LIMIT=all` (since 2026-10-28 the live site shows the whole page too, but the variable keeps the checks independent of any limit set later in `src/lib/site.ts`); the checks and the screenshots still cover the WHOLE page. To test the shipping configuration instead, build without that variable (for example `NEXT_DIST_DIR=.next-prod npx next build`, then `next start -p 3002`) and run a scroll check; the checks that expect every section (tabs, three pinned scenes, ...) are written for the whole page.
 
-URL: `QA_URL` (default `http://localhost:3002`). Set it to test a deployed address, e.g. a Vercel preview: `QA_URL=https://â€¦ npm run qa`. The screenshots live in `.qa/` (git-ignored).
+URL: `QA_URL` (default `http://localhost:3002`). **Do not run the suites repeatedly against the production address:** after a few hundred automated requests Vercel's firewall answers that address with a "Vercel Security Checkpoint" page (403) and the checks start to fail for no reason in the site (found 2026-10-30). Use a local build or a preview deployment. The Ecosystem checks accept photos served from the CMS media library (names like `home-ecosystem-choir.avif`, with a `?dpl=` query) as well as the site's own files. Set it to test a deployed address, e.g. a Vercel preview: `QA_URL=https://â€¦ npm run qa`. The screenshots live in `.qa/` (git-ignored).
 
 ## `npm run qa`: functional checks
 

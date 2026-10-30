@@ -35,3 +35,12 @@ export function nextHeaderScroll(state: HeaderScrollState, y: number): HeaderScr
   if (!goingDown && anchorY - y >= DIRECTION_DISTANCE) hidden = false;
   return { lastY: y, anchorY, goingDown, hidden };
 }
+
+/**
+ * Is this the home page? `usePathname()` answers "/" in the browser, but on Vercel the prerendered (ISR) HTML of the home page is made for the
+ * path "/index" (found 2026-10-30: the page's RSC payload says canonical parts ["", "index"]), so on the server the same page reports "/index".
+ * Comparing with "/" only made the server draw the SOLID header (a blue bar in the page flow, which pushed the hero down 74px) while the browser
+ * expected the transparent one; React does not repair a mismatch of attributes while hydrating, so the wrong header stayed until the first
+ * change of its state.
+ */
+export const isHomePath = (pathname: string | null): boolean => pathname === "/" || pathname === "/index";

@@ -121,5 +121,8 @@ Previews have their own CMS: the Neon branch `preview` (a long-lived copy of `pr
 
 ## Open items
 
+- **SEO values (found in the final test, 2026-10-30):** the SEO tab shows 0/3 checks passing: title 21 characters (wants 50 to 60), description 202 characters (wants 100 to 150), no share image. Content for the owner to decide; the editors can change all three in the SEO tab.
+- **`npm audit`:** 22 findings in the Payload dependency tree, see the changelog of 2026-10-30; waits for a Payload release.
+- **A new editor gets no email** when an admin adds them (no email adapter, see [07-decisions.md](07-decisions.md)): the admin passes on the address and the password.
 - Neon API key (minted by `neon init`) still to be revoked or kept: see [07-decisions.md](07-decisions.md).
 - Whether a published change may go live without a second pair of eyes (Giada: yes; drafts are available if the school wants a review step later).

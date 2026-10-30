@@ -17,6 +17,8 @@ Payload 3.91.0 runs **inside this Next.js app** (no separate server), backed by 
 | Types | `src/payload-types.ts` | Generated. Do not edit. |
 | Env template | `.env.example` | Names only. Real values go in `.env` (gitignored). |
 
+**SEO plugin and `generateURL`:** `generateURL` is deliberately NOT set (2026-10-30). With it, the SEO tab's search-result preview posts the whole form state to the server and the state of the lists with a custom `RowLabel` is not serializable, which logged "Converting circular structure to JSON" in the browser on every visit of the Home screen. Without it the preview works and shows "https://…" as the address. If it is ever needed, the row titles or the plugin must be fixed first.
+
 **The home page is in the CMS since 2026-10-28** (local, not yet on production): the `home` Global, the SEO plugin, AVIF conversion of uploads, the mapper and the seed. See [26-cms-home-plan.md](26-cms-home-plan.md) for the design, the todo and what was learned. Other pages are added as they are designed.
 
 ## Scripts

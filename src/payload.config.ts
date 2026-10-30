@@ -10,7 +10,7 @@ import { buildConfig } from "payload";
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
 import { Home } from "./globals/Home";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "./lib/site";
+import { SITE_DESCRIPTION, SITE_NAME } from "./lib/site";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -72,7 +72,9 @@ export default buildConfig({
       tabbedUI: true,
       generateTitle: () => SITE_NAME,
       generateDescription: () => SITE_DESCRIPTION,
-      generateURL: () => SITE_URL,
+      // No generateURL on purpose: with it, the SEO tab’s search-result preview posts the whole form state to the server, and the state of the
+      // lists that have a custom RowLabel is not serializable (a "Converting circular structure to JSON" error in the browser console on every
+      // visit of the Home screen, found in the final test 2026-10-30). Without it the preview only leaves out the address line.
       fields: ({ defaultFields }) => [
         ...defaultFields,
         {
