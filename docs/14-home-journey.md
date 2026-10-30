@@ -65,3 +65,7 @@ Verified in Chrome at 1920 x 993, at the end of the pan (section centred), again
 - **Alt texts are mine.**
 - **md and phone layouts** (2 x 2 and 1 column) are my interpretation. Link or button targets: none in the design.
 - The Figma canvas has more frames below and to the right (dotted outlines): next sections.
+
+## Phone: the tall panel and the lag report (2026-10-30)
+
+On a phone the four columns stack, so the panel is 2408px tall (at 390px wide). `HorizontalScene` does not shrink it (`data-tall`): after the sideways pan the pinned scene moves the track up by the extra height (about 1564px of scrolling) with a scrubbed `y`. The owner reported lag there on a real phone. The emulated measurements are smooth, so the suspect is that script-driven vertical movement while the browser scrolls natively. An opt-in test, `?scroll=normalize`, is in `SmoothScroll.tsx` (see the changelog of 2026-10-30). Open: the result on a real phone, and whether to stop pinning the tall part on phones.

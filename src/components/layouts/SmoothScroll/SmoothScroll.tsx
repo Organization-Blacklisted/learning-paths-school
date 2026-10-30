@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { registerGsap } from "@/lib/gsap";
 import { prefersReducedMotion } from "@/lib/motion";
 import { refreshOnRealResize } from "@/lib/resize";
-import { setLenis } from "@/lib/scroll";
+import { setLenis, setNormalizer } from "@/lib/scroll";
 
 // Smooth (eased) scrolling for mouse wheels, driven by GSAP's ticker so ScrollTrigger stays in step with it.
 // Touch devices keep their native scrolling (Lenis does not take it over by default). Off entirely with
@@ -29,6 +29,15 @@ export default function SmoothScroll() {
       };
     }
 
+    // EXPERIMENT (owner reported lag on a real phone in the Journey section, 2026-10-30): with `?scroll=normalize` in the address, a touch
+    // screen is scrolled by GSAP instead of by the browser (ScrollTrigger.normalizeScroll), the usual cure for pinned scenes whose content is
+    // moved by script while the finger scrolls. Off unless asked for; nothing changes for visitors. See docs/14-home-journey.md.
+    const normalize =
+      ScrollTrigger.isTouch > 0 && new URLSearchParams(window.location.search).get("scroll") === "normalize"
+        ? ScrollTrigger.normalizeScroll({ allowNestedScroll: true, type: "touch" })
+        : undefined;
+    if (normalize) setNormalizer(normalize);
+
     const lenis = new Lenis({ autoRaf: false, duration: 1.15 });
     setLenis(lenis);
     const onTick = (time: number) => lenis.raf(time * 1000);
@@ -40,6 +49,10 @@ export default function SmoothScroll() {
       window.removeEventListener("load", refresh);
       stopWatchingResize();
       gsap.ticker.remove(onTick);
+      if (normalize) {
+        setNormalizer(null);
+        ScrollTrigger.normalizeScroll(false);
+      }
       lenis.destroy();
       setLenis(null);
     };

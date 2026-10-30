@@ -17,6 +17,14 @@ export function scrollToY(y: number, seconds: number) {
   window.scrollTo({ top: y, behavior: seconds > 0 ? "smooth" : "auto" });
 }
 
+// The touch scroll normalizer (GSAP, see SmoothScroll.tsx), when it is on: it moves the page itself on a touch screen, so it must be paused while
+// a menu is open (overflow: hidden does not stop a scroll made by script).
+let normalizer: { enable: () => unknown; disable: () => unknown } | null = null;
+
+export function setNormalizer(instance: { enable: () => unknown; disable: () => unknown } | null) {
+  normalizer = instance;
+}
+
 let locks = 0;
 
 /**
@@ -28,6 +36,7 @@ export function lockScroll(): () => void {
   locks += 1;
   if (locks === 1) {
     lenis?.stop();
+    normalizer?.disable();
     document.documentElement.style.overflow = "hidden";
   }
   let released = false;
@@ -37,6 +46,7 @@ export function lockScroll(): () => void {
     locks -= 1;
     if (locks === 0) {
       lenis?.start();
+      normalizer?.enable();
       document.documentElement.style.overflow = "";
     }
   };

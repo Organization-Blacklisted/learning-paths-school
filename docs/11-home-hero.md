@@ -65,7 +65,7 @@ New fluid tokens in `src/styles/typography.css`: `text-hero-80`, `-72`, `-64`, `
 
 ## Layout
 
-Full viewport height (`100svh`, minimum 600px), image covers. Text and dots sit on the 1740px content column (90px margins at 1920px), anchored to the bottom: text 58.2px (slide 1) or 49.3px (slides 2 and 3) up, dots 50px. Below 768px the text sits higher (96px) and the dots lower (32px) so they never overlap.
+Full viewport height (`100lvh` for the section and `100svh` for the box with the text and dots, see "Height on a phone" below; minimum 600px), image covers. Text and dots sit on the 1740px content column (90px margins at 1920px), anchored to the bottom: text 58.2px (slide 1) or 49.3px (slides 2 and 3) up, dots 50px. Below 768px the text sits higher (96px) and the dots lower (32px) so they never overlap.
 
 ## Fidelity
 
@@ -87,3 +87,7 @@ Verified in Chrome against the production build (and a smoke test on the running
 - **Scroll distance** is one screen per slide. This is a feel setting (`end` in the ScrollTrigger); the owner or team may want it shorter or longer. Snapping to whole slides when scrolling stops is not done (Lenis and ScrollTrigger snapping conflict; it can be added with Lenis snapping).
 - The rest of the homepage is not built.
 - Figma also contains a "Component 3" next to "Component 2". It was not used.
+
+## Height on a phone (2026-10-30)
+
+The hero section is `h-lvh` (the large viewport) and the text and dots sit in an `h-svh` box at the top. A phone's toolbar slides away when the visitor starts to scroll; with a section only as tall as the small viewport the pinned hero left a white strip at the bottom (seen on an iPhone). The photos fill the large height; the text and dots stay above the toolbar while it shows. Desktop: both are 100vh, no change.

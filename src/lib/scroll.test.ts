@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type Lenis from "lenis";
-import { lockScroll, setLenis } from "./scroll";
+import { lockScroll, setLenis, setNormalizer } from "./scroll";
 
 describe("lockScroll", () => {
   afterEach(() => {
     setLenis(null);
+    setNormalizer(null);
     document.documentElement.style.overflow = "";
   });
 
@@ -32,5 +33,15 @@ describe("lockScroll", () => {
     expect(document.documentElement.style.overflow).toBe("hidden");
     second();
     expect(document.documentElement.style.overflow).toBe("");
+  });
+
+  it("pauses the touch scroll normalizer while locked and starts it again when released", () => {
+    const normalizer = { enable: vi.fn(), disable: vi.fn() };
+    setNormalizer(normalizer);
+    const unlock = lockScroll();
+    expect(normalizer.disable).toHaveBeenCalledTimes(1);
+    expect(normalizer.enable).not.toHaveBeenCalled();
+    unlock();
+    expect(normalizer.enable).toHaveBeenCalledTimes(1);
   });
 });

@@ -183,7 +183,10 @@ export default function HeroSlideshowSection({ content }: HeroSlideshowSectionPr
       data-header-overlay=""
       aria-roledescription="carousel"
       aria-label={label}
-      className="relative h-svh min-h-[600px] overflow-hidden bg-brand-navy"
+      // h-lvh, not h-svh: on a phone the browser’s toolbar slides away when the visitor starts to scroll and the screen grows to the LARGE viewport; a hero
+      // only as tall as the small one left a white strip at the bottom of the pinned hero (iPhone, 2026-10-30). The photos fill the large height; the text and
+      // the dots stay in a box of the small height (below), so they are not hidden behind the toolbar when it is showing. On a desktop both are 100vh.
+      className="relative h-lvh min-h-[600px] overflow-hidden bg-brand-navy"
     >
       {/* Image track: slides side by side, moved sideways by the scroll progress */}
       <div ref={trackRef} className="absolute inset-0 flex h-full" style={{ width: `${count * 100}%` }}>
@@ -219,7 +222,7 @@ export default function HeroSlideshowSection({ content }: HeroSlideshowSectionPr
       </div>
 
       {/* Text and pagination, on the 1740px content column (90px margins at 1920px) */}
-      <div className="pointer-events-none absolute inset-0">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-svh min-h-[600px]">
         <Container contentWidth={CONTAINER_WIDTH.wide} className="h-full">
           {/* Positioned wrapper inside the Container, so left/right/bottom are measured from the content edges, not the gutters */}
           <div className="relative h-full">
