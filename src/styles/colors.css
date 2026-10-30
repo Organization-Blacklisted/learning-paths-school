@@ -36,4 +36,8 @@
   /* Not in the brief's palette image. Third column of the Figma "Our Learning Journey" section. */
   --color-brand-slate: #416295;
   --color-brand-mist: #d0d8e4;
+  /* Not in the brief's palette image. The main items of the Figma mega menu ("About Us", "Admissions", ...): a little darker than graphite. */
+  --color-brand-charcoal: #444444;
+  /* Not in the brief's palette image. The thin vertical divider between the two lists of the Figma mega menu. */
+  --color-brand-silver: #d1d1d1;
 }

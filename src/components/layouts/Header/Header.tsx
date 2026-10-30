@@ -3,8 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Container, { CONTAINER_WIDTH } from "@/components/layouts/Container";
+import MegaMenu from "@/components/layouts/MegaMenu";
 import { headerContent } from "@/data/header";
 import { initialHeaderScroll, nextHeaderScroll } from "@/lib/headerVisibility";
 import { SHOW_HOME_SECTIONS } from "@/lib/site";
@@ -26,7 +27,9 @@ import type { HeaderProps } from "./Header.types";
 //    content width (and the menu icon cross-fades), not a jump.
 //
 // The logo (353px wide, about 52px tall) is taller than the solid row (45px) and is centred on it, as in Figma.
-// The menu button has no action yet: the off-canvas menu is not designed.
+// The menu button opens the mega menu (src/components/layouts/MegaMenu, owner 2026-10-29): a full-screen panel that comes in from the right. The menu is
+// rendered NEXT TO the <header>, not inside it: the header slides away with a transform when the visitor scrolls down, and a fixed element inside a
+// transformed one is placed against that element, not against the screen.
 
 const linkClass = "hover:underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
 // Once the bottom of the hero is above this line (the height of the solid bar) the header is no longer over the hero.
@@ -43,6 +46,11 @@ export default function Header({ variant }: HeaderProps) {
   // Is the header (when it is the transparent variant) over the hero? True at the top of the page.
   const [overHero, setOverHero] = useState(true);
   const scrollState = useRef(initialHeaderScroll());
+  const [menuOpen, setMenuOpen] = useState(false);
+  // The pointer or the focus is on the menu button: the menu's photo can be requested before it is opened.
+  const [menuWarm, setMenuWarm] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   useEffect(() => {
     scrollState.current = initialHeaderScroll(window.scrollY);
@@ -78,56 +86,66 @@ export default function Header({ variant }: HeaderProps) {
   const morph = "transition-[padding,max-width,height] duration-300 ease-out motion-reduce:transition-none";
 
   return (
-    <header
-      data-variant={resolved}
-      data-look={solidLook ? "solid" : "transparent"}
-      data-hidden={hidden ? "" : undefined}
-      onFocus={showOnFocus}
-      className={`${transparentVariant ? "fixed inset-x-0 top-0" : "sticky top-0"} z-50 transition-[translate,background-color] duration-300 ease-out motion-reduce:transition-none ${
-        hidden ? "-translate-y-full" : "translate-y-0"
-      } ${solidLook ? "bg-brand-blue" : "bg-transparent"}`}
-    >
-      <Container
-        contentWidth={solidLook ? CONTAINER_WIDTH.main : CONTAINER_WIDTH.wide}
-        className={`${morph} ${solidLook ? "pt-[14px] pb-[15px]" : "pt-6 pb-0 md:pt-10"}`}
+    <>
+      <header
+        data-variant={resolved}
+        data-look={solidLook ? "solid" : "transparent"}
+        data-hidden={hidden ? "" : undefined}
+        onFocus={showOnFocus}
+        className={`${transparentVariant ? "fixed inset-x-0 top-0" : "sticky top-0"} z-50 transition-[translate,background-color] duration-300 ease-out motion-reduce:transition-none ${
+          hidden ? "-translate-y-full" : "translate-y-0"
+        } ${solidLook ? "bg-brand-blue" : "bg-transparent"}`}
       >
-        <div className={`flex items-center justify-between ${morph} ${solidLook ? "h-[45px]" : "h-11 md:h-[60px]"}`}>
-          <Link
-            href="/"
-            aria-label={logo.homeLabel}
-            className="shrink-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-          >
-            <Image src={logo.src} alt="" width={logo.width} height={logo.height} priority className="h-auto w-[259px] md:w-[353px]" />
-          </Link>
-
-          <div className="flex items-center gap-8">
-            <Link href={admissions.href} className={`hidden text-body-lg leading-[normal] text-white capitalize sm:block ${linkClass}`}>
-              {admissions.label}
-            </Link>
-            <button
-              type="button"
-              aria-label={menu.openLabel}
-              className="relative size-[37px] shrink-0 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        <Container
+          contentWidth={solidLook ? CONTAINER_WIDTH.main : CONTAINER_WIDTH.wide}
+          className={`${morph} ${solidLook ? "pt-[14px] pb-[15px]" : "pt-6 pb-0 md:pt-10"}`}
+        >
+          <div className={`flex items-center justify-between ${morph} ${solidLook ? "h-[45px]" : "h-11 md:h-[60px]"}`}>
+            <Link
+              href="/"
+              aria-label={logo.homeLabel}
+              className="shrink-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
             >
-              {/* Both icons are always there, one on top of the other: the one that is not wanted is transparent. Cross-fades with the look. */}
-              <Image
-                src="/images/header/menu-light.svg"
-                alt=""
-                width={37}
-                height={37}
-                className={`absolute inset-0 transition-opacity duration-300 motion-reduce:transition-none ${solidLook ? "opacity-0" : "opacity-100"}`}
-              />
-              <Image
-                src="/images/header/menu-green.svg"
-                alt=""
-                width={37}
-                height={37}
-                className={`absolute inset-0 transition-opacity duration-300 motion-reduce:transition-none ${solidLook ? "opacity-100" : "opacity-0"}`}
-              />
-            </button>
+              <Image src={logo.src} alt="" width={logo.width} height={logo.height} priority className="h-auto w-[259px] md:w-[353px]" />
+            </Link>
+
+            <div className="flex items-center gap-8">
+              <Link href={admissions.href} className={`hidden text-body-lg leading-[normal] text-white capitalize sm:block ${linkClass}`}>
+                {admissions.label}
+              </Link>
+              <button
+                ref={menuButtonRef}
+                type="button"
+                aria-label={menu.openLabel}
+                aria-haspopup="dialog"
+                aria-expanded={menuOpen}
+                aria-controls="site-menu"
+                onClick={() => setMenuOpen(true)}
+                onPointerEnter={() => setMenuWarm(true)}
+                onFocus={() => setMenuWarm(true)}
+                className="relative size-[37px] shrink-0 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                {/* Both icons are always there, one on top of the other: the one that is not wanted is transparent. Cross-fades with the look. */}
+                <Image
+                  src="/images/header/menu-light.svg"
+                  alt=""
+                  width={37}
+                  height={37}
+                  className={`absolute inset-0 transition-opacity duration-300 motion-reduce:transition-none ${solidLook ? "opacity-0" : "opacity-100"}`}
+                />
+                <Image
+                  src="/images/header/menu-green.svg"
+                  alt=""
+                  width={37}
+                  height={37}
+                  className={`absolute inset-0 transition-opacity duration-300 motion-reduce:transition-none ${solidLook ? "opacity-100" : "opacity-0"}`}
+                />
+              </button>
+            </div>
           </div>
-        </div>
-      </Container>
-    </header>
+        </Container>
+      </header>
+      <MegaMenu id="site-menu" open={menuOpen} onClose={closeMenu} returnFocusRef={menuButtonRef} warm={menuWarm} />
+    </>
   );
 }

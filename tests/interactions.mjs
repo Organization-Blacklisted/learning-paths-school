@@ -914,6 +914,355 @@ for (const [label, width, height] of [
   }
 }
 
+// ---------------------------------------------------------------- 10. The mega menu (owner, 2026-10-29): the header's menu button opens a full-screen panel from the right
+{
+  const MENU = "#site-menu";
+  const openMenu = async (page) => {
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.waitForTimeout(2700);
+  };
+  const dialogBox = (page) =>
+    page.evaluate((sel) => {
+      const d = document.querySelector(sel);
+      const r = d.getBoundingClientRect();
+      return { left: Math.round(r.left), top: Math.round(r.top), width: Math.round(r.width), height: Math.round(r.height), inert: d.inert };
+    }, MENU);
+  const chosenLinks = (page) =>
+    page.evaluate((sel) => {
+      const d = document.querySelector(sel);
+      return [...d.querySelectorAll("[data-menu-sub]")].filter((a) => !a.closest("[inert]")).map((a) => a.textContent.trim());
+    }, MENU);
+
+  // desktop, the Figma design size: it comes in from the right, covers the screen, the photo and the white panel
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => ["error", "warning"].includes(m.type()) && errors.push(m.text().slice(0, 140)));
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(3000);
+
+    const closed = await dialogBox(page);
+    const button = page.getByRole("button", { name: "Open menu" });
+    ok(
+      "menu (1920): closed, it waits off screen to the right, not reachable (inert), and the button says it is closed",
+      closed.left >= 1920 && closed.inert && (await button.getAttribute("aria-expanded")) === "false",
+      JSON.stringify(closed),
+    );
+
+    await openMenu(page);
+    const opened = await dialogBox(page);
+    const info = await page.evaluate((sel) => {
+      const d = document.querySelector(sel);
+      const box = (el) => {
+        const r = el.getBoundingClientRect();
+        return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)];
+      };
+      const photo = d.querySelector("img[src*='menu-crest']");
+      const parents = [...d.querySelectorAll("[data-menu-parent]")];
+      const close = d.querySelector("[data-menu-close]");
+      return {
+        photoLoaded: !!photo && photo.complete && photo.naturalWidth > 0,
+        photoBox: photo ? box(photo.parentElement) : null,
+        parents: parents.length,
+        firstOpen: parents[0].getAttribute("aria-expanded"),
+        close: box(close),
+        focus: document.activeElement?.getAttribute("aria-label"),
+        buttonExpanded: document.querySelector("header button[aria-controls]").getAttribute("aria-expanded"),
+        overflowX: document.documentElement.scrollWidth - innerWidth,
+      };
+    }, MENU);
+    ok(
+      "menu (1920): open, it covers the whole screen (1920 x 993 from the top left) and the menu button says it is open",
+      opened.left === 0 &&
+        opened.top === 0 &&
+        opened.width === 1920 &&
+        opened.height === 993 &&
+        !opened.inert &&
+        info.buttonExpanded === "true",
+      JSON.stringify({ opened, expanded: info.buttonExpanded }),
+    );
+    ok(
+      "menu (1920): the photo fills the left half (960px), loaded, and the white panel is the right half",
+      info.photoLoaded && info.photoBox && info.photoBox[0] === 0 && info.photoBox[2] === 960 && info.photoBox[3] === 993,
+      JSON.stringify({ loaded: info.photoLoaded, box: info.photoBox }),
+    );
+    ok(
+      "menu (1920): the close button is the round 56px button at the Figma place (x 1784, y 50) and has the focus",
+      Math.abs(info.close[0] - 1784) <= 1 &&
+        Math.abs(info.close[1] - 50) <= 1 &&
+        info.close[2] === 56 &&
+        info.close[3] === 56 &&
+        info.focus === "Close menu",
+      JSON.stringify({ close: info.close, focus: info.focus }),
+    );
+    const links = await chosenLinks(page);
+    ok(
+      "menu (1920): eight main items, About Us is chosen and shows its eight links",
+      info.parents === 8 &&
+        info.firstOpen === "true" &&
+        links.length === 8 &&
+        links[0] === "Welcome to LPS" &&
+        links[7] === "Information Desk",
+      JSON.stringify({ parents: info.parents, links }),
+    );
+
+    // the page behind cannot be scrolled
+    const y0 = await page.evaluate(() => Math.round(scrollY));
+    await page.mouse.move(400, 500);
+    await page.mouse.wheel(0, 900);
+    await page.waitForTimeout(900);
+    const y1 = await page.evaluate(() => Math.round(scrollY));
+    ok("menu (1920): the page behind the open menu does not scroll", y0 === y1, y0 + " to " + y1);
+
+    // choosing another main item swaps the links
+    await page.locator("[data-menu-parent]", { hasText: "Admissions" }).click();
+    await page.waitForTimeout(700);
+    const swapped = await chosenLinks(page);
+    const firstListHidden = await page.evaluate(() => {
+      const first = document.querySelector("[data-menu-parent]").getAttribute("aria-controls");
+      const el = document.getElementById(first);
+      return { inert: el.inert, opacity: +getComputedStyle(el).opacity };
+    });
+    ok(
+      "menu (1920): clicking Admissions shows ITS links (the About Us links go away, not reachable)",
+      swapped.includes("Why LPS") && !swapped.includes("Partnerships") && firstListHidden.inert && firstListHidden.opacity === 0,
+      JSON.stringify({ swapped, firstListHidden }),
+    );
+
+    // a mouse over an item chooses it, with no click
+    await page.locator("[data-menu-parent]", { hasText: "Alumni" }).hover();
+    await page.waitForTimeout(700);
+    ok("menu (1920): pointing at Alumni with the mouse shows its links", (await chosenLinks(page)).includes("Alumni Guidance"), "");
+
+    // the links of a main item are revealed one after another EVERY time it is chosen (hover), not just swapped
+    {
+      const listOpacity = (name) =>
+        page.evaluate((label) => {
+          const btn = [...document.querySelectorAll("[data-menu-parent]")].find((b) => b.textContent.trim() === label);
+          return [...document.getElementById(btn.getAttribute("aria-controls")).querySelectorAll("li")].map(
+            (li) => +getComputedStyle(li).opacity,
+          );
+        }, name);
+      await page.locator("[data-menu-parent]", { hasText: "Secondary" }).hover();
+      await page.waitForTimeout(150);
+      const early = await listOpacity("Secondary");
+      await page.waitForTimeout(2000);
+      const late = await listOpacity("Secondary");
+      ok(
+        "menu (1920): hovering a main item reveals its links one after another (the last is still hidden at 150 ms, the first is ahead of it, all are visible at the end)",
+        early.length >= 6 && early.at(-1) < 0.2 && early[0] > early.at(-1) && late.every((o) => o > 0.99),
+        JSON.stringify({ early, late }),
+      );
+    }
+
+    // the keyboard stays inside: many Tab presses, the focus is always in the menu
+    let escaped = 0;
+    for (let i = 0; i < 40; i++) {
+      await page.keyboard.press("Tab");
+      const inside = await page.evaluate((sel) => document.querySelector(sel).contains(document.activeElement), MENU);
+      if (!inside) escaped++;
+    }
+    ok("menu (1920): 40 Tab presses never leave the open menu", escaped === 0, escaped + " outside");
+
+    // Escape closes it, the focus goes back to the menu button, the page scrolls again
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(1100);
+    const after = await page.evaluate((sel) => {
+      const d = document.querySelector(sel);
+      const r = d.getBoundingClientRect();
+      return {
+        left: Math.round(r.left),
+        inert: d.inert,
+        focus: document.activeElement?.getAttribute("aria-label"),
+        overflow: document.documentElement.style.overflow,
+        expanded: document.querySelector("header button[aria-controls]").getAttribute("aria-expanded"),
+      };
+    }, MENU);
+    ok(
+      "menu (1920): Escape slides it away to the right, the focus is back on the menu button, the page can scroll again",
+      after.left >= 1920 && after.inert && after.focus === "Open menu" && after.overflow !== "hidden" && after.expanded === "false",
+      JSON.stringify(after),
+    );
+
+    // opened again, it starts at About Us again; a click on a link closes it
+    await openMenu(page);
+    ok("menu (1920): opened again, it starts at About Us", (await chosenLinks(page))[0] === "Welcome to LPS", "");
+    await page.locator("[data-menu-sub]", { hasText: "Partnerships" }).first().click();
+    await page.waitForTimeout(1100);
+    ok("menu (1920): a click on a link closes it", (await dialogBox(page)).left >= 1920, "");
+    ok("menu (1920): no console errors or warnings", errors.length === 0, JSON.stringify(errors.slice(0, 2)));
+    await context.close();
+  }
+
+  // reduced motion: the menu simply appears (no sliding)
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 }, reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.waitForTimeout(150);
+    const box = await dialogBox(page);
+    ok(
+      "menu with reduced motion: it is in place 150 ms after the click (nothing slides)",
+      box.left === 0 && !box.inert,
+      JSON.stringify(box),
+    );
+    await context.close();
+  }
+
+  // laptops: the whole menu fits without scrolling (the spacing follows the screen height)
+  for (const [width, height] of [
+    [1366, 768],
+    [1280, 720],
+  ]) {
+    const context = await browser.newContext({ viewport: { width, height } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await openMenu(page);
+    const fit = await page.evaluate((sel) => {
+      const panel = document.querySelector(sel).children[1];
+      const buttons = [...document.querySelector(sel).querySelectorAll("a")]
+        .find((a) => /enquiry/i.test(a.textContent))
+        .getBoundingClientRect();
+      return {
+        scrolls: panel.scrollHeight > panel.clientHeight + 1,
+        buttonsBottom: Math.round(buttons.bottom),
+        overflowX: document.documentElement.scrollWidth - innerWidth,
+      };
+    }, MENU);
+    ok(
+      `menu (${width} x ${height}): everything fits, nothing scrolls, the buttons are on screen`,
+      !fit.scrolls && fit.buttonsBottom <= height && fit.overflowX <= 0,
+      JSON.stringify(fit),
+    );
+    await context.close();
+  }
+
+  // tablet: the same two columns on the white panel, without the photo
+  {
+    const context = await browser.newContext({ viewport: { width: 768, height: 1024 }, hasTouch: true, isMobile: true });
+    const page = await context.newPage();
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await openMenu(page);
+    const tablet = await page.evaluate((sel) => {
+      const d = document.querySelector(sel);
+      const parents = [...d.querySelectorAll("[data-menu-parent]")];
+      const firstSub = [...d.querySelectorAll("[data-menu-sub]")].find((a) => !a.closest("[inert]"));
+      return {
+        photo: !!d.querySelector("img[src*='menu-crest']"),
+        columns: firstSub.getBoundingClientRect().left > parents[0].getBoundingClientRect().right,
+        overflowX: document.documentElement.scrollWidth - innerWidth,
+        width: Math.round(d.getBoundingClientRect().width),
+      };
+    }, MENU);
+    ok(
+      "menu (768, tablet): full screen, the lists side by side, no photo is downloaded, no sideways overflow",
+      !tablet.photo && tablet.columns && tablet.overflowX <= 0 && tablet.width === 768,
+      JSON.stringify(tablet),
+    );
+    await context.close();
+  }
+
+  // phone: the main items stacked, tapping one opens its links under it (an accordion)
+  {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => ["error", "warning"].includes(m.type()) && errors.push(m.text().slice(0, 140)));
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await openMenu(page);
+    const start = await page.evaluate((sel) => {
+      const d = document.querySelector(sel);
+      const parents = [...d.querySelectorAll("[data-menu-parent]")];
+      const tops = parents.map((p) => Math.round(p.getBoundingClientRect().top));
+      return {
+        allClosed: parents.every((p) => p.getAttribute("aria-expanded") === "false"),
+        stacked: tops.every((t, i) => i === 0 || t > tops[i - 1]),
+        desktopPhoto: !!d.querySelector("img[src*='menu-crest.avif']"),
+        banner: (() => {
+          const img = d.querySelector("img[src*='menu-crest-wide']");
+          const r = img?.getBoundingClientRect();
+          return r ? { top: Math.round(r.top), width: Math.round(r.width), height: Math.round(r.height) } : null;
+        })(),
+        linkRows: new Set([...d.querySelectorAll("ul")[0].querySelectorAll("a")].map((a) => Math.round(a.getBoundingClientRect().top)))
+          .size,
+        closeOnBanner: (() => {
+          const c = d.querySelector("[data-menu-close]").getBoundingClientRect();
+          const b = d.querySelector("img[src*='menu-crest-wide']")?.getBoundingClientRect();
+          return !!b && c.top >= b.top && c.bottom <= b.bottom && c.right <= b.right && c.left >= b.left;
+        })(),
+        overflowX: document.documentElement.scrollWidth - innerWidth,
+      };
+    }, MENU);
+    ok(
+      "menu (390, phone): the main items are stacked and all closed at first, no sideways overflow",
+      start.allClosed && start.stacked && start.overflowX <= 0,
+      JSON.stringify(start),
+    );
+    ok(
+      "menu (390, phone): the crest photo (the wide cut, not the desktop one) is across the top with the close button on it, and Parent Login and Contact us share one row",
+      !start.desktopPhoto &&
+        start.banner &&
+        start.banner.width > 300 &&
+        start.banner.height > 120 &&
+        start.closeOnBanner &&
+        start.linkRows === 1,
+      JSON.stringify(start),
+    );
+    await page.getByRole("button", { name: "Primary", exact: true }).tap();
+    await page.waitForTimeout(700);
+    const tapped = await chosenLinks(page);
+    ok(
+      "menu (390, phone): tapping Primary opens its links under it",
+      tapped.includes("Welcome to LPS Primary") && !tapped.includes("Partnerships"),
+      JSON.stringify(tapped),
+    );
+    await page.getByRole("button", { name: "Primary", exact: true }).tap();
+    await page.waitForTimeout(700);
+    ok("menu (390, phone): tapping it again closes it", (await chosenLinks(page)).length === 0, "");
+    await page.locator("[data-menu-close]").tap();
+    await page.waitForTimeout(1100);
+    ok("menu (390, phone): the close button closes it", (await dialogBox(page)).left >= 390, "");
+    ok("menu (390, phone): no console errors or warnings", errors.length === 0, JSON.stringify(errors.slice(0, 2)));
+    await context.close();
+  }
+
+  // a narrow window with a MOUSE (the browser's responsive mode): the mouse wheel must scroll the menu panel (the smooth scrolling, Lenis, is
+  // stopped while the menu is open and used to swallow the wheel, so the panel could not be scrolled)
+  {
+    const context = await browser.newContext({ viewport: { width: 375, height: 640 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await openMenu(page);
+    await page.getByRole("button", { name: "About Us", exact: true }).click();
+    await page.waitForTimeout(700);
+    const read = () =>
+      page.evaluate((sel) => {
+        const panel = document.querySelector(sel).children[1];
+        return { top: Math.round(panel.scrollTop), room: panel.scrollHeight - panel.clientHeight, pageY: Math.round(scrollY) };
+      }, MENU);
+    const before = await read();
+    await page.mouse.move(180, 360);
+    await page.mouse.wheel(0, 300);
+    await page.waitForTimeout(800);
+    const after = await read();
+    ok(
+      "menu (375 wide, mouse): the mouse wheel scrolls the menu panel, not the page behind it",
+      before.room > 0 && after.top > before.top && after.pageY === before.pageY,
+      JSON.stringify({ before, after }),
+    );
+    await context.close();
+  }
+}
+
 console.log(fails ? `\n${fails} CHECK(S) FAILED` : "\nALL INTERACTION CHECKS PASSED");
 await browser.close();
 process.exitCode = fails ? 1 : 0;

@@ -100,7 +100,7 @@ export const homeFramework: FrameworkContent = {
       labelX: 119.12,
       labelTop: 16.75,
       line: { src: `${BASE}/line138.svg`, x: 627.46, y: 601.65, width: 32.368, vertical: true },
-      dot: { src: `${BASE}/dot224.svg`, x: 621.42, y: 595.25 },
+      dot: { src: `${BASE}/dot221.svg`, x: 621.42, y: 595.25 },
       text: { x: 399.98, y: 719, width: 490.229, align: "center" },
     },
     {
@@ -155,7 +155,7 @@ export const homeFramework: FrameworkContent = {
       labelX: 131.51,
       labelTop: 16.75,
       line: { src: `${BASE}/line139.svg`, x: 793.4, y: 84.32, width: 32.347 },
-      dot: { src: `${BASE}/dot225.svg`, x: 789.54, y: 77.91 },
+      dot: { src: `${BASE}/dot221.svg`, x: 789.54, y: 77.91 },
       text: { x: 897, y: 146, width: 422, align: "left" },
     },
   ],

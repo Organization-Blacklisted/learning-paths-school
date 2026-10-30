@@ -44,7 +44,7 @@ Reduced motion: no animation, everything shown. Without JavaScript everything is
 
 - Loading: the photo is requested after the page has loaded and the browser is idle (`useIdleReady`); its box (`aspect-ratio` on a phone, the Figma size from lg) keeps its space meanwhile.
 - `pioneers.avif`: the ellipse photo (the Figma PNG with transparent corners, 755 x 927, 0.9 MB) as **AVIF quality 95 with alpha**, 170 KB, 47.1 dB on the visible pixels. Served as it is (`unoptimized`).
-- The ring, the letter circle (`circle.svg`), the six lines (`line135.svg` to `line140.svg`) and the seven dots (`dot221.svg` to `dot226.svg`) are the Figma SVGs, **unmodified** (they differ slightly in colour, `#123B7A` or `#0E2F61`), in `public/images/home/framework/`. The lines and dots are only rendered from lg up.
+- The ring, the letter circle (`circle.svg`), the six lines (`line135.svg` to `line140.svg`) and the dots (`dot221.svg`, `dot222.svg`, `dot223.svg`, `dot226.svg`) are the Figma SVGs, **unmodified**, in `public/images/home/framework/`. **Changed 2026-10-30 (owner request):** the Figma export had two darker dots (`dot224.svg`, `#0E2F61`, bottom; `dot225.svg`, `#0B2349`, top right, at Resilient), which looked like a mistake next to the others (`#123B7A`). Those two positions now use `dot221.svg` (the same shape in `#123B7A`) and the two darker files were deleted, so all seven dots are the same colour. The lines and dots are only rendered from lg up.
 
 ## Fidelity
 

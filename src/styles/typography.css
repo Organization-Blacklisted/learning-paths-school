@@ -69,6 +69,7 @@
   --text-px-17: clamp(1rem, 0.9755rem + 0.1087vw, 1.0625rem); /* 16px -> 17px */
   --text-px-18: clamp(1rem, 0.9511rem + 0.2174vw, 1.125rem); /* 16px -> 18px */
   --text-px-20: clamp(1.125rem, 1.0761rem + 0.2174vw, 1.25rem); /* 18px -> 20px */
+  --text-px-30: clamp(1.5rem, 1.3533rem + 0.6522vw, 1.875rem); /* 24px -> 30px (the main items of the mega menu) */
 
   /*
    * Homepage hero text (Figma node 6282:929). Desktop sizes are from the design; the mobile

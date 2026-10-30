@@ -16,3 +16,28 @@ export function scrollToY(y: number, seconds: number) {
   }
   window.scrollTo({ top: y, behavior: seconds > 0 ? "smooth" : "auto" });
 }
+
+let locks = 0;
+
+/**
+ * Stops the page from scrolling (a full-screen menu or dialog is open) and returns the function that lets it scroll again. It stops the
+ * smooth scrolling too (Lenis) and sets `overflow: hidden` on the page for the cases where Lenis is off (touch devices, reduced motion).
+ * Several locks can be open at once: the page scrolls again when the last one is released.
+ */
+export function lockScroll(): () => void {
+  locks += 1;
+  if (locks === 1) {
+    lenis?.stop();
+    document.documentElement.style.overflow = "hidden";
+  }
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    locks -= 1;
+    if (locks === 0) {
+      lenis?.start();
+      document.documentElement.style.overflow = "";
+    }
+  };
+}
