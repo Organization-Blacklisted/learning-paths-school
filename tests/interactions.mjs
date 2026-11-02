@@ -49,6 +49,20 @@ const sceneOf = (page, selector) =>
   }, selector);
 
 const browser = await chromium.launch({ channel: "chrome" });
+// `html { scrollbar-gutter: stable }` (src/app/(frontend)/globals.css) keeps 15px of the page reserved for the scrollbar, even in this browser, which
+// hides its scrollbars: every check below that measures against Figma at exactly 1920px would then see 1905px. So the pages of this browser switch
+// the gutter off; section 14 tests it in a browser with real scrollbars.
+const openContext = browser.newContext.bind(browser);
+browser.newContext = async (...args) => {
+  const context = await openContext(...args);
+  await context.addInitScript(() => {
+    // a constructed stylesheet: nothing is added to the DOM, so React's hydration sees the page it rendered
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync("html { scrollbar-gutter: auto !important; }");
+    document.adoptedStyleSheets = [sheet];
+  });
+  return context;
+};
 
 // ---------------------------------------------------------------- 1. Ecosystem tabs on a desktop screen
 {
@@ -173,7 +187,10 @@ for (const [width, height, label] of [
 
   let bad = 0;
   for (const index of [1, 2, 3, 4, 0, 2]) {
-    await page.locator(`${ECO} [role=tab]`).nth(index).click({ force: true });
+    await page
+      .locator(`${ECO} [role=tab]`)
+      .nth(index)
+      .evaluate((el) => el.click());
     await page.waitForTimeout(900);
     const s = await state();
     // the chosen tab is fully in view, the highlight is on it, and (except for the last tab) a part of the next tab shows
@@ -359,7 +376,9 @@ for (const [width, height, label] of [
   // a phone's address bar (the window height changes WHILE scrolling) must NOT re-measure the pinned scenes; a real resize must
   {
     const { context, page } = await open({ hasTouch: true, isMobile: true }, { width: 390, height: 764 });
-    const hero = () => page.evaluate(() => ({ spacer: Math.round(document.querySelector(".pin-spacer").offsetHeight), h: innerHeight }));
+    // How many times the page was measured again (src/lib/gsap.ts counts it on <html data-measured>); below 1024px nothing but the sideways scenes is
+    // pinned (the hero is a slider there), so the measurements are what shows whether a resize was taken into account.
+    const hero = () => page.evaluate(() => ({ measured: Number(document.documentElement.dataset.measured ?? 0), h: innerHeight }));
     const before = await hero();
     for (let i = 0; i < 4; i++) {
       await page.evaluate(() => window.scrollBy(0, 60));
@@ -370,9 +389,9 @@ for (const [width, height, label] of [
     await page.waitForTimeout(1500);
     const scrolling = await hero();
     ok(
-      "phone: the address bar changing the height while scrolling does not re-measure the pinned hero",
-      scrolling.spacer === before.spacer,
-      `${before.spacer} -> ${scrolling.spacer}`,
+      "phone: the address bar changing the height while scrolling does not re-measure the pinned scenes",
+      scrolling.measured === before.measured,
+      `measured ${before.measured} -> ${scrolling.measured} times`,
     );
     await page.waitForTimeout(1200);
     await page.setViewportSize({ width: 390, height: 844 });
@@ -380,8 +399,8 @@ for (const [width, height, label] of [
     const still = await hero();
     ok(
       "phone: the same height change with the page standing still does re-measure it",
-      still.spacer !== scrolling.spacer && still.h === 844,
-      `${scrolling.spacer} -> ${still.spacer}`,
+      still.measured > scrolling.measured && still.h === 844,
+      `measured ${scrolling.measured} -> ${still.measured} times`,
     );
     await page.evaluate(() => window.scrollBy(0, 40));
     await page.waitForTimeout(60);
@@ -390,8 +409,8 @@ for (const [width, height, label] of [
     const rotated = await hero();
     ok(
       "phone: rotating (the width changes) re-measures it even while scrolling",
-      rotated.h === 390 && rotated.spacer !== still.spacer,
-      `${still.spacer} -> ${rotated.spacer}`,
+      rotated.h === 390 && rotated.measured > still.measured,
+      `measured ${still.measured} -> ${rotated.measured} times`,
     );
     await context.close();
   }
@@ -435,10 +454,16 @@ for (const [width, height, label] of [
     await page.waitForTimeout(2200);
     await scrollToY(page, await startOf(page, ECO));
     const first = await read(page);
-    await page.locator(`${ECO} [role=tab]`).nth(1).click({ force: true });
+    await page
+      .locator(`${ECO} [role=tab]`)
+      .nth(1)
+      .evaluate((el) => el.click());
     await page.waitForTimeout(1200);
     const second = await read(page);
-    await page.locator(`${ECO} [role=tab]`).nth(4).click({ force: true });
+    await page
+      .locator(`${ECO} [role=tab]`)
+      .nth(4)
+      .evaluate((el) => el.click());
     await page.waitForTimeout(1200);
     const last = await read(page);
     ok(
@@ -457,7 +482,10 @@ for (const [width, height, label] of [
     await page.mouse.wheel(0, 30);
     await page.waitForTimeout(2200);
     await scrollToY(page, await startOf(page, ECO));
-    await page.locator(`${ECO} [role=tab]`).nth(1).click({ force: true });
+    await page
+      .locator(`${ECO} [role=tab]`)
+      .nth(1)
+      .evaluate((el) => el.click());
     await page.waitForTimeout(1000);
     const results = [];
     for (const [width, height] of [
@@ -498,7 +526,7 @@ for (const [label, width, height] of [
 
   const scenes = () =>
     page.evaluate(() =>
-      [...document.querySelectorAll(".pin-spacer")].slice(1).map((spacer) => {
+      [...document.querySelectorAll(".pin-spacer")].map((spacer) => {
         const stage = spacer.firstElementChild;
         return {
           top: Math.round(spacer.getBoundingClientRect().top + scrollY),
@@ -510,14 +538,15 @@ for (const [label, width, height] of [
     );
   const found = await scenes();
   // Below 640px wide (or 500px high) the Ecosystem and Alumni scene is an ordinary vertical stack, not pinned (`stackOnPhones`, owner 2026-10-28):
-  // there the page has the hero's pin and ONE sideways scene (2 pins); from 640px it has the hero's pin and two scenes (3 pins).
-  const pins = width >= 640 && height >= 500 ? 3 : 2;
+  // there the page has ONE sideways scene (1 pin); from 640px it has two scenes (2 pins). The hero is NOT pinned below 1024px (it is a swipe slider
+  // there, owner 2026-11-02), so it adds no pin.
+  const pins = width >= 640 && height >= 500 ? 2 : 1;
   ok(
-    `${label}: the page has the hero's pin and ${pins - 1} sideways scene${pins === 3 ? "s" : ""} (${pins} pins), each stage exactly one screen high`,
+    `${label}: the page has ${pins} sideways scene${pins === 2 ? "s" : ""} (${pins} pin${pins === 2 ? "s" : ""}, none for the hero), each stage exactly one screen high`,
     (await page.evaluate(() => document.querySelectorAll(".pin-spacer").length)) === pins && found.every((x) => x.stage === height),
     JSON.stringify(found),
   );
-  if (pins === 2) {
+  if (pins === 1) {
     // the second scene is a plain stack: not inside a pin, Campus under Ecosystem, nothing wider than the screen
     const stack = await page.evaluate(() => {
       const eco = document.querySelector('section[aria-label="The ecosystem behind LPS 360"]');
@@ -588,10 +617,13 @@ for (const [label, width, height] of [
   );
   ok(`${label}: no horizontal overflow anywhere in the scene`, end.overflow <= 0, String(end.overflow));
 
-  // one pixel past the end the pin is released and the page goes on (the Framework section is next)
+  // one pixel past the end the pin is released and the page goes on (the Framework section is next, or the Ecosystem on a phone where the Framework is hidden)
   await scrollToY(page, found[0].top + found[0].length + height);
   const after = await page.evaluate(() => {
-    const framework = document.querySelector('section[aria-label*="LPS 360"], section[aria-label*="Framework" i]');
+    // the first one that is shown: on a phone the LPS 360 Framework is hidden (client, 2026-11-02), so the next section is the Ecosystem
+    const framework = [...document.querySelectorAll('section[aria-label*="LPS 360"], section[aria-label*="Framework" i]')].find(
+      (section) => getComputedStyle(section).display !== "none",
+    );
     const box = framework ? framework.getBoundingClientRect() : null;
     return {
       frameworkTop: box ? Math.round(box.top) : null,
@@ -775,7 +807,10 @@ for (const [label, width, height] of [
     await scrollToY(page, (await startOf(page, ECO)) + (touch ? 200 : 4));
     const rows = [];
     for (let index = 0; index < 5; index++) {
-      await page.locator(`${ECO} [role=tab]`).nth(index).click({ force: true });
+      await page
+        .locator(`${ECO} [role=tab]`)
+        .nth(index)
+        .evaluate((el) => el.click());
       await page.waitForTimeout(1500);
       const readRow = () =>
         page.evaluate((s) => {
@@ -1697,6 +1732,190 @@ for (const [label, width, height] of [
     ok("menu: following it opens the Principal's Welcome page", new URL(page.url()).pathname === "/principals-welcome", page.url());
     await context.close();
   }
+}
+
+// ---------------------------------------------------------------- 13. The hero below 1024px is a normal swipe slider; the LPS 360 Framework is hidden on phones (owner, 2026-11-02)
+// Phones and tablets: the hero is not pinned, a finger drags the slides and they snap, a vertical swipe scrolls the page, the dots and autoplay work,
+// and the scroll-driven scene comes right after it. From 1024px nothing changed (pinned hero). The Framework is display:none below 768px only.
+{
+  const touch = (cdp, type, x, y) =>
+    cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y, id: 1 }] });
+  const swipe = async (cdp, from, to, ms = 220) => {
+    await touch(cdp, "touchStart", from[0], from[1]);
+    for (let i = 1; i <= 12; i++) {
+      await touch(cdp, "touchMove", from[0] + ((to[0] - from[0]) * i) / 12, from[1] + ((to[1] - from[1]) * i) / 12);
+      await new Promise((resolve) => setTimeout(resolve, ms / 12));
+    }
+    await touch(cdp, "touchEnd", to[0], to[1]);
+  };
+  const HERO = 'section[aria-roledescription="carousel"]';
+  const DOTS = `${HERO} button[aria-label^="Go to slide"]`;
+
+  for (const [label, width, height, framework] of [
+    ["phone 390", 390, 844, "none"],
+    ["tablet 768", 768, 1024, "block"],
+    ["tablet landscape 1000", 1000, 700, "block"],
+  ]) {
+    const context = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: true });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    const cdp = await context.newCDPSession(page);
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    const state = () =>
+      page.evaluate(
+        ([hero, dots]) => {
+          const section = document.querySelector(hero);
+          return {
+            slide: [...document.querySelectorAll(dots)].findIndex((d) => d.getAttribute("aria-current") === "true"),
+            x: Math.round(new DOMMatrix(getComputedStyle(section.firstElementChild).transform).m41),
+            scrollY: Math.round(scrollY),
+            pinned: Boolean(section.closest(".pin-spacer")),
+          };
+        },
+        [HERO, DOTS],
+      );
+    const settle = (ms = 1200) => page.waitForTimeout(ms);
+    const toFirst = async () => {
+      await page.evaluate((dots) => document.querySelectorAll(dots)[0].click(), DOTS);
+      await settle(1000);
+    };
+
+    await toFirst();
+    ok(`${label}: the hero is not pinned (it is an ordinary slider)`, !(await state()).pinned);
+
+    await swipe(cdp, [width * 0.8, height * 0.5], [width * 0.2, height * 0.5]);
+    await settle();
+    let now = await state();
+    ok(
+      `${label}: swiping left shows the next slide, which sits exactly on the screen`,
+      now.slide === 1 && now.x === -width,
+      JSON.stringify(now),
+    );
+    await swipe(cdp, [width * 0.2, height * 0.5], [width * 0.8, height * 0.5]);
+    await settle();
+    now = await state();
+    ok(`${label}: swiping right goes back`, now.slide === 0 && now.x === 0, JSON.stringify(now));
+
+    await swipe(cdp, [width * 0.5, height * 0.5], [width * 0.5 - width * 0.08, height * 0.5], 600);
+    await settle();
+    now = await state();
+    ok(`${label}: a short, slow drag springs back to the same slide`, now.slide === 0 && now.x === 0, JSON.stringify(now));
+
+    await swipe(cdp, [width * 0.2, height * 0.5], [width * 0.8, height * 0.5]);
+    await settle(1000);
+    now = await state();
+    ok(`${label}: swiping right on the first slide goes nowhere`, now.slide === 0 && now.x === 0, JSON.stringify(now));
+
+    await swipe(cdp, [width * 0.5, height * 0.75], [width * 0.5, height * 0.2], 300);
+    await settle();
+    now = await state();
+    ok(
+      `${label}: a vertical swipe scrolls the page and does not change the slide`,
+      now.slide === 0 && now.scrollY > 100,
+      JSON.stringify(now),
+    );
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await settle(800);
+
+    await page.evaluate((dots) => document.querySelectorAll(dots)[2].click(), DOTS);
+    await settle();
+    now = await state();
+    ok(`${label}: a dot goes to its slide`, now.slide === 2 && now.x === -2 * width, JSON.stringify(now));
+
+    await toFirst();
+    await page.waitForTimeout(6000);
+    now = await state();
+    ok(`${label}: autoplay moves on by itself`, now.slide !== 0, JSON.stringify(now));
+
+    const fw = await page.evaluate(() => {
+      const section = [...document.querySelectorAll("section")].find((el) =>
+        /LPS 360 framework/i.test(el.getAttribute("aria-label") ?? ""),
+      );
+      return section ? getComputedStyle(section).display : null;
+    });
+    ok(`${label}: the LPS 360 Framework is ${framework === "none" ? "hidden" : "shown"}`, fw === framework, String(fw));
+    ok(`${label}: no page errors`, errors.length === 0, JSON.stringify(errors));
+    await context.close();
+  }
+
+  // a desktop screen: the hero is still the pinned, scroll-controlled one, and the Framework is shown
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    const desktop = await page.evaluate((hero) => {
+      const section = [...document.querySelectorAll("section")].find((el) =>
+        /LPS 360 framework/i.test(el.getAttribute("aria-label") ?? ""),
+      );
+      return {
+        pinned: Boolean(document.querySelector(hero)?.closest(".pin-spacer")),
+        framework: section ? getComputedStyle(section).display : null,
+      };
+    }, HERO);
+    ok(
+      "desktop 1920: the hero is still pinned and the LPS 360 Framework is shown",
+      desktop.pinned && desktop.framework === "block",
+      JSON.stringify(desktop),
+    );
+    await context.close();
+  }
+}
+
+// ---------------------------------------------------------------- 14. The menu does not twitch the page when it opens (owner, 2026-11-02)
+// The menu locks the page's scroll, which removes the page's scrollbar. On a desktop with classic scrollbars the page behind used to jump 7.5px
+// sideways in the first frame and the menu panel changed width by 15px (the whole canvas twitched). The page now reserves the scrollbar's space
+// (scrollbar-gutter: stable), so nothing changes width. This check needs REAL scrollbars, so it has its own browser, and no gutter override.
+{
+  const real = await chromium.launch({ channel: "chrome", ignoreDefaultArgs: ["--hide-scrollbars"] });
+  for (const path of ["/", "/contact-us"]) {
+    const context = await real.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    await page.goto(BASE + path, { waitUntil: "load" });
+    await page.mouse.move(1000, 600);
+    await page.waitForTimeout(3500);
+    const scrollbar = await page.evaluate(() => innerWidth - document.documentElement.clientWidth);
+    const widths = new Set();
+    const headerX = new Set();
+    for (let round = 0; round < 3; round++) {
+      const seen = await page.evaluate(
+        () =>
+          new Promise((resolve) => {
+            const header = document.querySelector("header [class*=px-gutter]") ?? document.querySelector("header");
+            const dialog = document.querySelector('[role="dialog"]');
+            const frames = [];
+            const t0 = performance.now();
+            document.querySelector('button[aria-haspopup="dialog"]').click();
+            let closed = false;
+            const read = () => {
+              const t = performance.now() - t0;
+              frames.push([Math.round(dialog.getBoundingClientRect().width), +header.getBoundingClientRect().left.toFixed(1)]);
+              if (t > 2200 && !closed) {
+                closed = true;
+                document.querySelector("[data-menu-close]").click();
+              }
+              if (t < 3600) requestAnimationFrame(read);
+              else resolve(frames);
+            };
+            read();
+          }),
+      );
+      for (const [w, x] of seen) {
+        widths.add(w);
+        headerX.add(x);
+      }
+      await page.waitForTimeout(1200);
+    }
+    ok(
+      `menu on ${path}: opening and closing it three times never changes the menu's width or moves the page behind it (a classic page scrollbar of ${scrollbar}px is on)`,
+      scrollbar > 0 && widths.size === 1 && headerX.size === 1,
+      JSON.stringify({ scrollbar, widths: [...widths], headerX: [...headerX] }),
+    );
+    await context.close();
+  }
+  await real.close();
 }
 
 console.log(fails ? `\n${fails} CHECK(S) FAILED` : "\nALL INTERACTION CHECKS PASSED");

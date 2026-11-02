@@ -8,6 +8,7 @@ import Badge from "@/components/ui/Badge";
 import BodyText from "@/components/ui/BodyText";
 import Photo from "@/components/ui/Photo";
 import SectionTitle from "@/components/ui/SectionTitle";
+import { FROM_TABLET, MOTION_OK } from "@/lib/motion";
 import { useIdleReady } from "@/lib/useIdleReady";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import type { FrameworkItem } from "@/types/home";
@@ -17,6 +18,10 @@ import type { FrameworkSectionProps } from "./FrameworkSection.types";
 // years at LPS, your child becomes a Pioneer", an intro paragraph, and a diagram (1319 x 773px; it was 1228 until the 2026-10-27 design, which widened it for the Resilient text): a ring with a photo
 // of two students in the middle, and seven pills around it that spell PIONEER (Proficient, Inclusive, Open-minded,
 // Novel, Enterprising, Ethical, Resilient), each joined to the ring by a short line and a dot, with a description.
+//
+// NOT SHOWN ON PHONES (client, 2026-11-02: "the LPS 360 hidden always, on just mobile screens"): below 768px the whole section is `display: none` (`max-md:hidden`,
+// so there is no flash), its entrance animation is not set up and its photo is never requested (useIdleReady only loads a small screen's photos near the
+// viewport, and a hidden element never is). Tablets (768px and up) show it as before.
 //
 // It comes after the sideways scene: when the Journey section is centred and the pan ends, the page continues down to this.
 //
@@ -89,11 +94,12 @@ export default function FrameworkSection({ content }: FrameworkSectionProps) {
 
       return tl;
     },
-    { start: "top 65%" },
+    // No entrance on a phone: the section is not shown there.
+    { start: "top 65%", media: `${MOTION_OK} and ${FROM_TABLET}` },
   );
 
   return (
-    <Section label={label}>
+    <Section label={label} className="max-md:hidden">
       <div ref={rootRef} className="@container flex flex-col items-center">
         {/* Header: pill, heading (grey + blue skewed, like "Our Learning Journey"), intro. 16px between them. */}
         <div className="flex w-full max-w-[1150px] flex-col items-center gap-4">

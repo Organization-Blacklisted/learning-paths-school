@@ -1,5 +1,7 @@
 # Home hero
 
+> **Two modes since 2026-11-03:** from 1024px the pinned, scroll-controlled hero described below; **below 1024px (phones and tablets) a normal swipe slider** (not pinned, drag and snap, autoplay, dots; vertical swipes scroll the page). Details and tests: [06-changelog.md](06-changelog.md).
+
 Homepage hero. Figma: component set "Component 2" (`6253:893`) with three variants (`6253:892`, `6253:891`, `6253:890`), one per slide. The instance used on the page is node `6282:929`. The header inside that frame is the separate [header](09-header.md).
 
 Code: `src/components/sections/home/HeroSlideshowSection/`. Content: `src/data/home-hero.ts`. Types: `src/types/home.ts`. Rendered from `src/app/(frontend)/page.tsx`.

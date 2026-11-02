@@ -9,6 +9,9 @@ export const MOTION_REDUCED = "(prefers-reduced-motion: reduce)";
 export const DESKTOP = "(min-width: 1024px)";
 export const PHONE = "(max-width: 1023px)";
 
+/** A tablet or wider (768px, Tailwind's `md`). Below it is a phone. */
+export const FROM_TABLET = "(min-width: 768px)";
+
 /** Desktop width with motion: the sideways scenes run. */
 export const DESKTOP_MOTION = `${DESKTOP} and ${MOTION_OK}`;
 /** Below desktop width with motion: no sideways pan, so a section plays once when it comes into view. */

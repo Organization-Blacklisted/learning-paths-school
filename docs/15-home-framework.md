@@ -1,5 +1,7 @@
 # Home: The LPS 360 Framework
 
+> **Hidden on phones (below 768px) since 2026-11-03** (client request): `display: none`, no entrance animation set up, its photo never requested. Tablets and desktops show it as before. See [06-changelog.md](06-changelog.md).
+
 Figma: "Frame 1618876729", node `6529:1879`, 1421 x 1075px. Code: `src/components/sections/home/FrameworkSection/`. Content and all positions: `src/data/home-framework.ts`. Types: `src/types/home.ts` (`FrameworkContent`, `FrameworkItem`). Shared green pill: `src/components/ui/Badge/` (also used by [Our Learning Journey](14-home-journey.md)). Rendered from `src/app/(frontend)/page.tsx` **after** the sideways scene: when the pan ends on the Journey section the page continues **down** to this (in the Figma canvas it sits below the Journey frame). It is the fifth home section and uses the standard `Section` (200px above and below).
 
 ## What it is

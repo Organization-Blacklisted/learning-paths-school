@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import Container, { CONTAINER_WIDTH } from "@/components/layouts/Container";
 import { registerGsap } from "@/lib/gsap";
-import { prefersReducedMotion } from "@/lib/motion";
+import { DESKTOP, PHONE, prefersReducedMotion } from "@/lib/motion";
 import { useIdleReady } from "@/lib/useIdleReady";
 import { scrollToY } from "@/lib/scroll";
 import type { HeroSlide } from "@/types/home";
@@ -12,7 +12,14 @@ import type { HeroSlideshowSectionProps } from "./HeroSlideshowSection.types";
 
 // Homepage hero. Figma: component "Component 2" (node 6282:929), three variants.
 //
-// SCROLL-CONTROLLED (like the ESPN feature the owner referenced):
+// TWO MODES (owner, 2026-11-02: "on mobile and tablets the hero needs to work like a normal slider with normal swipes, and below it the scroll-based
+// UI triggers"). From 1024px (DESKTOP) the hero is the pinned, scroll-controlled one described next. Below 1024px (PHONE: phones and tablets) it is
+// an ordinary slider: it is not pinned, a finger (or a mouse) drags the slides sideways and they snap to the nearest one, autoplay changes the slide
+// every few seconds (paused while it is off screen or being touched), and the dots work. Vertical swipes still scroll the page (touch-action: pan-y),
+// so the hero simply scrolls away and the scroll-driven scenes below it take over. Both modes draw the hero with the same function (`render`), so
+// they look the same. Switching between them (a window resized across 1024px) is handled by gsap.matchMedia.
+//
+// SCROLL-CONTROLLED (like the ESPN feature the owner referenced), from 1024px:
 //  - The hero is pinned to the screen. Scrolling moves a "progress" value from slide 1 to slide 3
 //    (one screen of scroll per slide). That one value drives everything: the image track slides, the texts
 //    cross-dissolve and the pagination pill glides. After slide 3 the hero is released and the page moves on.
@@ -100,79 +107,211 @@ export default function HeroSlideshowSection({ content }: HeroSlideshowSectionPr
       }
     };
 
-    // Pin the hero and map one screen of scroll to each slide change.
-    const trigger = reduced
-      ? undefined
-      : ScrollTrigger.create({
-          trigger: root,
-          start: "top top",
-          end: () => `+=${(count - 1) * window.innerHeight}`,
-          pin: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => render(self.progress * (count - 1)),
-          onRefresh: (self) => render(self.progress * (count - 1)),
+    const mm = gsap.matchMedia();
+
+    // From 1024px: the pinned, scroll-controlled hero.
+    mm.add(DESKTOP, () => {
+      // Pin the hero and map one screen of scroll to each slide change.
+      const trigger = reduced
+        ? undefined
+        : ScrollTrigger.create({
+            trigger: root,
+            start: "top top",
+            end: () => `+=${(count - 1) * window.innerHeight}`,
+            pin: true,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => render(self.progress * (count - 1)),
+            onRefresh: (self) => render(self.progress * (count - 1)),
+          });
+      render(trigger ? trigger.progress * (count - 1) : 0);
+
+      const goTo = (index: number) => {
+        if (!trigger) {
+          render(index);
+          return;
+        }
+        scrollToY(trigger.start + (trigger.end - trigger.start) * (index / (count - 1)), transitionSeconds);
+      };
+      goToRef.current = goTo;
+
+      // Autoplay = scrolling to the next slide's position.
+      let userScrolled = window.scrollY > 4; // reloaded half way down the page: do not autoplay
+      let timer: gsap.core.Tween | undefined;
+      let resume: gsap.core.Tween | undefined;
+      const stopTimer = () => {
+        timer?.kill();
+        timer = undefined;
+      };
+      const arm = () => {
+        stopTimer();
+        if (reduced || userScrolled) return;
+        timer = gsap.delayedCall(slideSeconds, () => {
+          // Do not slide to a photo that has not arrived yet (it would be a blank slide): try again a slide-time later.
+          const next = (shown + 1) % count;
+          const nextImage = root.querySelectorAll<HTMLImageElement>("[data-slide-image]")[next];
+          if (nextImage?.complete && nextImage.naturalWidth > 0) goTo(next);
+          arm();
         });
-    render(trigger ? trigger.progress * (count - 1) : 0);
-
-    const goTo = (index: number) => {
-      if (!trigger) {
-        render(index);
-        return;
-      }
-      scrollToY(trigger.start + (trigger.end - trigger.start) * (index / (count - 1)), transitionSeconds);
-    };
-    goToRef.current = goTo;
-
-    // Autoplay = scrolling to the next slide's position.
-    let userScrolled = window.scrollY > 4; // reloaded half way down the page: do not autoplay
-    let timer: gsap.core.Tween | undefined;
-    let resume: gsap.core.Tween | undefined;
-    const stopTimer = () => {
-      timer?.kill();
-      timer = undefined;
-    };
-    const arm = () => {
-      stopTimer();
-      if (reduced || userScrolled) return;
-      timer = gsap.delayedCall(slideSeconds, () => {
-        // Do not slide to a photo that has not arrived yet (it would be a blank slide): try again a slide-time later.
-        const next = (shown + 1) % count;
-        const nextImage = root.querySelectorAll<HTMLImageElement>("[data-slide-image]")[next];
-        if (nextImage?.complete && nextImage.naturalWidth > 0) goTo(next);
-        arm();
-      });
-    };
-    const maybeResume = () => {
-      if (window.scrollY < 2) {
-        userScrolled = false;
-        arm();
-      } else {
+      };
+      const maybeResume = () => {
+        if (window.scrollY < 2) {
+          userScrolled = false;
+          arm();
+        } else {
+          resume = gsap.delayedCall(IDLE_BEFORE_RESUME, maybeResume);
+        }
+      };
+      const onUser = () => {
+        userScrolled = true;
+        stopTimer();
+        resume?.kill();
         resume = gsap.delayedCall(IDLE_BEFORE_RESUME, maybeResume);
-      }
-    };
-    const onUser = () => {
-      userScrolled = true;
-      stopTimer();
-      resume?.kill();
-      resume = gsap.delayedCall(IDLE_BEFORE_RESUME, maybeResume);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (NAV_KEYS.includes(e.key)) onUser();
-    };
-    window.addEventListener("wheel", onUser, { passive: true });
-    window.addEventListener("touchmove", onUser, { passive: true });
-    window.addEventListener("keydown", onKey);
-    armRef.current = arm;
-    arm();
+      };
+      const onKey = (e: KeyboardEvent) => {
+        if (NAV_KEYS.includes(e.key)) onUser();
+      };
+      window.addEventListener("wheel", onUser, { passive: true });
+      window.addEventListener("touchmove", onUser, { passive: true });
+      window.addEventListener("keydown", onKey);
+      armRef.current = arm;
+      arm();
+
+      return () => {
+        stopTimer();
+        resume?.kill();
+        window.removeEventListener("wheel", onUser);
+        window.removeEventListener("touchmove", onUser);
+        window.removeEventListener("keydown", onKey);
+        trigger?.kill();
+      };
+    });
+
+    // Below 1024px: an ordinary slider. Not pinned; a drag moves the slides, they snap to the nearest one; autoplay; the dots.
+    mm.add(PHONE, () => {
+      const state = { p: 0 };
+      render(0);
+      let tween: gsap.core.Tween | undefined;
+      const clamp = (value: number, low = 0, high = count - 1) => Math.min(high, Math.max(low, value));
+      const goTo = (index: number) => {
+        tween?.kill();
+        const target = clamp(index);
+        if (reduced) {
+          state.p = target;
+          render(target);
+          return;
+        }
+        tween = gsap.to(state, { p: target, duration: transitionSeconds, ease: "power2.inOut", onUpdate: () => render(state.p) });
+      };
+      goToRef.current = goTo;
+
+      // Autoplay: every slideSeconds to the next slide (back to the first after the last). Paused while a finger is down and while the hero is
+      // mostly off screen; never with reduced motion.
+      let timer: gsap.core.Tween | undefined;
+      let holding = false;
+      let visible = true;
+      const stopTimer = () => {
+        timer?.kill();
+        timer = undefined;
+      };
+      const arm = () => {
+        stopTimer();
+        if (reduced || holding || !visible) return;
+        timer = gsap.delayedCall(slideSeconds, () => {
+          // Do not slide to a photo that has not arrived yet (a blank slide): try again a slide-time later.
+          const next = (Math.round(state.p) + 1) % count;
+          const nextImage = root.querySelectorAll<HTMLImageElement>("[data-slide-image]")[next];
+          if (nextImage?.complete && nextImage.naturalWidth > 0) goTo(next);
+          arm();
+        });
+      };
+      armRef.current = arm;
+      arm();
+      const seen = new IntersectionObserver(
+        ([entry]) => {
+          visible = entry.isIntersecting;
+          if (visible) arm();
+          else stopTimer();
+        },
+        { threshold: 0.4 },
+      );
+      seen.observe(root);
+
+      // The swipe. A pointer that moves mostly sideways drags the slides (with a little resistance past the first and last); one that moves mostly
+      // up or down is the page scrolling (the browser takes it: touch-action pan-y) and is left alone. On release a quick flick or a drag of more
+      // than a fifth of the width moves one slide, anything less springs back.
+      let pointerId = -1;
+      let mode: "undecided" | "swipe" | "scroll" = "undecided";
+      let startX = 0;
+      let startY = 0;
+      let startP = 0;
+      let lastX = 0;
+      let lastTime = 0;
+      let speed = 0; // px per ms, positive = moving right
+      const onDown = (event: PointerEvent) => {
+        if ((event.target as Element).closest("button")) return;
+        if (event.pointerType === "mouse" && event.button !== 0) return;
+        pointerId = event.pointerId;
+        mode = "undecided";
+        startX = lastX = event.clientX;
+        startY = event.clientY;
+        startP = state.p;
+        lastTime = event.timeStamp;
+        speed = 0;
+        holding = true;
+        tween?.kill();
+        stopTimer();
+      };
+      const onMove = (event: PointerEvent) => {
+        if (event.pointerId !== pointerId) return;
+        const dx = event.clientX - startX;
+        const dy = event.clientY - startY;
+        if (mode === "undecided") {
+          if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
+            mode = "swipe";
+            root.setPointerCapture(pointerId);
+          } else if (Math.abs(dy) > 8) {
+            mode = "scroll";
+          }
+        }
+        if (mode !== "swipe") return;
+        const dt = event.timeStamp - lastTime;
+        if (dt > 0) speed = (event.clientX - lastX) / dt;
+        lastX = event.clientX;
+        lastTime = event.timeStamp;
+        state.p = clamp(startP - dx / root.clientWidth, -0.25, count - 1 + 0.25);
+        render(state.p);
+      };
+      const onUp = (event: PointerEvent) => {
+        if (event.pointerId !== pointerId) return;
+        pointerId = -1;
+        holding = false;
+        if (mode === "swipe") {
+          const moved = state.p - startP; // in slides, positive = towards the next one
+          const direction = Math.abs(speed) > 0.35 ? (speed < 0 ? 1 : -1) : Math.abs(moved) > 0.2 ? Math.sign(moved) : 0;
+          goTo(Math.round(startP) + direction);
+        }
+        mode = "undecided";
+        arm();
+      };
+      root.addEventListener("pointerdown", onDown);
+      root.addEventListener("pointermove", onMove);
+      root.addEventListener("pointerup", onUp);
+      root.addEventListener("pointercancel", onUp);
+
+      return () => {
+        stopTimer();
+        tween?.kill();
+        seen.disconnect();
+        root.removeEventListener("pointerdown", onDown);
+        root.removeEventListener("pointermove", onMove);
+        root.removeEventListener("pointerup", onUp);
+        root.removeEventListener("pointercancel", onUp);
+      };
+    });
 
     return () => {
-      stopTimer();
-      resume?.kill();
-      window.removeEventListener("wheel", onUser);
-      window.removeEventListener("touchmove", onUser);
-      window.removeEventListener("keydown", onKey);
-      trigger?.kill();
+      mm.revert();
       gsap.killTweensOf([track, ...texts, ...dots]);
     };
   }, [count, slideSeconds, transitionSeconds]);
@@ -186,7 +325,7 @@ export default function HeroSlideshowSection({ content }: HeroSlideshowSectionPr
       // h-lvh, not h-svh: on a phone the browser’s toolbar slides away when the visitor starts to scroll and the screen grows to the LARGE viewport; a hero
       // only as tall as the small one left a white strip at the bottom of the pinned hero (iPhone, 2026-10-30). The photos fill the large height; the text and
       // the dots stay in a box of the small height (below), so they are not hidden behind the toolbar when it is showing. On a desktop both are 100vh.
-      className="relative h-lvh min-h-[600px] overflow-hidden bg-brand-navy"
+      className="relative h-lvh min-h-[600px] touch-pan-y overflow-hidden bg-brand-navy lg:touch-auto"
     >
       {/* Image track: slides side by side, moved sideways by the scroll progress */}
       <div ref={trackRef} className="absolute inset-0 flex h-full" style={{ width: `${count * 100}%` }}>
