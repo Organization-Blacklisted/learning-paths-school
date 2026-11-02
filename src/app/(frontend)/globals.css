@@ -32,6 +32,14 @@
   --color-foreground: var(--foreground);
 }
 
+/* The page's scrollbar space is always reserved. The mega menu stops the page from scrolling while it is open, which removes the scrollbar; without a
+   reserved gutter the page behind the menu (everything centred, the header) jumped 7.5px sideways at the first frame of the menu's slide and the menu
+   panel itself changed width by 15px, a twitch of the whole canvas (docs/27-mega-menu.md). With the gutter nothing changes width when the scroll is
+   locked or released. Only classic (non-overlay) scrollbars take space, so a phone or a Mac is not affected; the strip beside the open menu is white. */
+html {
+  scrollbar-gutter: stable;
+}
+
 @layer base {
   body {
     background: var(--background);

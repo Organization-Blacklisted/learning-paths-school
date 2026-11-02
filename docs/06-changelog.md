@@ -2,7 +2,11 @@
 
 Newest first.
 
-## 2026-11-02 (latest): menu shake, second fix
+## 2026-11-02 (latest): menu twitch, the real cause
+
+- **Mega menu: "the whole canvas shakes when you open it again" (owner).** Cause measured on every open: the scroll lock removes the page scrollbar, the page behind the menu jumps 7.5px sideways in the first frame (and the menu panel changes width by 15px). Fix: `html { scrollbar-gutter: stable }` in `globals.css`; the header's x and the menu's width now stay constant over repeated opens and closes. See [27-mega-menu.md](27-mega-menu.md). Not pushed yet.
+
+## 2026-11-02 (earlier): menu shake, second fix
 
 - **Mega menu: the right-hand links still shook "sometimes" after the first fix (owner, on the live site).** Could not be reproduced in an automated Chrome. Most likely cause: items sliding and rising under a resting mouse make the browser send hover events with no mouse movement, which swapped the chosen item and its link list. Hover now chooses an item only if the pointer's screen position really changed in the last 200 ms. Unit tests added, real-Chrome hover checked. See [27-mega-menu.md](27-mega-menu.md). Not proven to be the only cause; not pushed yet.
 
