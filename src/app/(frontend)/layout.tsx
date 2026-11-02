@@ -3,7 +3,7 @@ import Footer from "@/components/layouts/Footer";
 import Header from "@/components/layouts/Header";
 import SmoothScroll from "@/components/layouts/SmoothScroll";
 import { footerContent } from "@/data/footer";
-import { lexendDeca, plusJakartaSans } from "@/fonts";
+import { lexendDeca, plusJakartaItalic, plusJakartaSans } from "@/fonts";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -44,7 +44,7 @@ const organizationJsonLd = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${lexendDeca.variable} ${plusJakartaSans.variable} h-full antialiased`}>
+    <html lang="en" className={`${lexendDeca.variable} ${plusJakartaSans.variable} ${plusJakartaItalic.variable} h-full antialiased`}>
       {/* min-h-dvh, not min-h-full: Lenis makes html height:auto, so a percentage min-height collapsed and a short page left a white gap under the footer. */}
       <body className="flex min-h-dvh flex-col">
         {/* First thing a keyboard user reaches: jumps over the header to the page content. Only visible on focus. */}

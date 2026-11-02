@@ -17,7 +17,7 @@ import type { EcosystemSectionProps } from "./EcosystemSection.types";
 // "Five Foundations That Bring The *Vision To Life*", a 871px paragraph, a tab bar with five tabs (the first, active, is a blue
 // rounded button), a 1520 x 531 photo, and a text row: bold title and paragraph on the left (648px), five bullets on the right
 // (485px). It is the FIRST PANEL of the second sideways scene on the home page (after the LPS 360 Framework): <HorizontalScene> gives
-// it the container and the 200px spacing, and the view pans right from it to the alumni section.
+// it the container and the 200px spacing, and the view pans right from it to the campus video (owner, 2026-11-02: the video and the alumni swapped places).
 //
 // HEIGHT. This panel is about 1026px high at 1520px wide. While the scene is pinned <HorizontalScene> scales it down to fit the window
 // with 32px free above and below (the design stays whole, just smaller); from about 1100px of window height it is shown at the design size.

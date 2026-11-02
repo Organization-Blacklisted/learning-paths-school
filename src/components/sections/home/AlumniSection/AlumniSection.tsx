@@ -1,21 +1,21 @@
 "use client";
 
 import { useRef } from "react";
-import { useSceneTimeline } from "@/components/layouts/HorizontalScene";
 import Accent from "@/components/ui/Accent";
 import Badge from "@/components/ui/Badge";
 import Photo from "@/components/ui/Photo";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { registerGsap } from "@/lib/gsap";
 import { useIdleReady } from "@/lib/useIdleReady";
+import { useScrollReveal } from "@/lib/useScrollReveal";
 import type { AlumniSectionProps } from "./AlumniSection.types";
 
 // Figma: "Frame 1618876383" (node 6282:755), 1520 x 461px, "Their *Paths Continue* Long After They Leave". Left, a 633px block: green
 // pill, two-line heading (the blue slanted "Paths Continue" on the first line), two paragraphs 497px wide. Right, two alumni, each a
 // 428 x 385px portrait with the name (SemiBold 18px) and the university (Light 18px) centred under it, 16px apart.
 //
-// It is the SECOND PANEL of the second sideways scene on the home page: the owner placed it to the right of "The Ecosystem Behind
-// LPS 360" on the canvas, so after the Ecosystem section the view pans right to this (see <HorizontalScene> on the home page).
+// It is an ordinary section on the home page, below the sideways scene of the Ecosystem and the campus video and above What's New (owner,
+// 2026-11-02: the campus video and "Beyond the school gate" swapped places; before that it was the second panel of the Ecosystem scene). The page
+// puts it in a container with the section spacing (BlockRenderer).
 //
 // LAYOUT. From 1600px (the container is then at least 1440px wide): the design at its exact sizes, text left (633px) and the two
 // portraits right (428px each). From 1024px to 1599px (owner, 2026-10-28: "till 1024px don't break it in columns"; my interpretation, only
@@ -23,12 +23,9 @@ import type { AlumniSectionProps } from "./AlumniSection.types";
 // (633 : 428 : 428), and the portraits keep their aspect ratio. Below 1024px the text goes above and the two portraits sit side by side
 // underneath, at their own aspect ratio, shrinking with the screen.
 //
-// ANIMATION (nothing specified in Figma; mine). In the sideways scene it is driven by the pan: the pill, heading and paragraphs rise in
-// as the text block enters from the right, then each portrait is opened from the bottom with a slight zoom settle and its name and
-// university rise in below it. Scrolling back reverses it. Where there is no pan (below 1024px, or reduced motion) it plays once when it
-// comes into view; with reduced motion nothing is animated. Everything is only hidden by JS.
-
-const LAST_END = 0.94; // the scene's last animation ends here (0 to 1 over the whole pan), so the end can be looked at
+// ANIMATION (nothing specified in Figma; mine). When it scrolls into view the pill, heading and paragraphs rise in, then each portrait is opened
+// from the bottom with a slight zoom settle and its name and university rise in below it; it plays again, quicker, when it comes back into view
+// (useScrollReveal). With reduced motion nothing is animated. Everything is only hidden by JS.
 
 export default function AlumniSection({ content }: AlumniSectionProps) {
   const { label, badge, titleStart, titleAccent, titleSecondLine, paragraphs, people } = content;
@@ -36,45 +33,36 @@ export default function AlumniSection({ content }: AlumniSectionProps) {
   // The portraits are requested once the page has loaded and the browser is idle (see useIdleReady); their boxes keep their size.
   const photosReady = useIdleReady(800, rootRef);
 
-  const parts = (root: HTMLElement) => ({
-    heads: Array.from(root.querySelectorAll<HTMLElement>("[data-alumni-head]")),
-    cards: Array.from(root.querySelectorAll<HTMLElement>("[data-alumni-card]")),
-  });
-  const cardParts = (card: HTMLElement) => ({
-    clip: card.querySelector<HTMLElement>("[data-alumni-clip]"),
-    photo: card.querySelector<HTMLElement>("[data-alumni-photo]"),
-    caption: card.querySelector<HTMLElement>("[data-alumni-caption]"),
-  });
+  // Entrance, when the section scrolls into view (and, faster, every time it comes back): the pill, heading and paragraphs rise in, then each
+  // portrait is opened from the bottom with a slight zoom settle and its name and university rise in below it.
+  useScrollReveal(
+    rootRef,
+    ({ gsap, q }) => {
+      const heads = q("[data-alumni-head]");
+      const cards = q("[data-alumni-card]");
+      const timeline = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
 
-  // In the sideways scene: ride the pan.
-  useSceneTimeline((tl, { stageWidth, distance, progressAt }) => {
-    const { gsap } = registerGsap();
-    const root = rootRef.current;
-    if (!root) return;
-    const { heads, cards } = parts(root);
-    // Where each part starts (measured before anything is moved) and how long it takes, as fractions of the pan.
-    const headStarts = heads.map((el) => progressAt(el, 0, stageWidth));
-    const cardStarts = cards.map((el) => progressAt(el, 0, stageWidth));
-    const cardLength = Math.max(0.04, ((cards[0]?.offsetWidth ?? 400) * 0.6) / distance);
-    const headLength = cardLength * 0.8;
-    const place = (start: number, length: number) => Math.min(LAST_END - length, Math.max(0, start));
+      gsap.set(heads, { autoAlpha: 0, y: 24 });
+      timeline.to(heads, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.1 }, 0);
 
-    heads.forEach((el, i) => {
-      gsap.set(el, { autoAlpha: 0, y: 24 });
-      tl.to(el, { autoAlpha: 1, y: 0, duration: headLength, ease: "power2.out" }, place(headStarts[i] + i * 0.004, headLength * 1.1));
-    });
-    cards.forEach((card, i) => {
-      const { clip, photo, caption } = cardParts(card);
-      if (!clip || !photo || !caption) return;
-      gsap.set(clip, { clipPath: "inset(100% 0% 0% 0%)" });
-      gsap.set(photo, { scale: 1.15 });
-      gsap.set(caption, { autoAlpha: 0, y: 20 });
-      const start = place(cardStarts[i], cardLength * 1.3);
-      tl.to(clip, { clipPath: "inset(0% 0% 0% 0%)", duration: cardLength, ease: "power2.out" }, start)
-        .to(photo, { scale: 1, duration: cardLength * 1.2, ease: "power2.out" }, start)
-        .to(caption, { autoAlpha: 1, y: 0, duration: cardLength * 0.8, ease: "power2.out" }, start + cardLength * 0.5);
-    });
-  });
+      cards.forEach((card, i) => {
+        const clip = card.querySelector<HTMLElement>("[data-alumni-clip]");
+        const photo = card.querySelector<HTMLElement>("[data-alumni-photo]");
+        const caption = card.querySelector<HTMLElement>("[data-alumni-caption]");
+        if (!clip || !photo || !caption) return;
+        gsap.set(clip, { clipPath: "inset(100% 0% 0% 0%)" });
+        gsap.set(photo, { scale: 1.15 });
+        gsap.set(caption, { autoAlpha: 0, y: 20 });
+        const start = 0.35 + i * 0.18;
+        timeline
+          .to(clip, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.9, ease: "power3.inOut" }, start)
+          .to(photo, { scale: 1, duration: 1.2 }, start)
+          .to(caption, { autoAlpha: 1, y: 0, duration: 0.5 }, start + 0.5);
+      });
+      return timeline;
+    },
+    { start: "top 75%" },
+  );
 
   return (
     <section ref={rootRef} aria-label={label}>

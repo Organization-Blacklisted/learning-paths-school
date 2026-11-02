@@ -9,7 +9,9 @@ import { buildConfig } from "payload";
 
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
+import { Contact } from "./globals/Contact";
 import { Home } from "./globals/Home";
+import { PrincipalsWelcome } from "./globals/PrincipalsWelcome";
 import { SITE_DESCRIPTION, SITE_NAME } from "./lib/site";
 
 const filename = fileURLToPath(import.meta.url);
@@ -45,7 +47,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Media],
-  globals: [Home],
+  globals: [Home, Contact, PrincipalsWelcome],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {
@@ -67,7 +69,7 @@ export default buildConfig({
     // The SEO tab of the pages (a Global or a collection listed here gets one): title, description and share image with length
     // counters, a search-result preview and "generate" buttons, plus two fields the plugin lacks. Read by generateMetadata (src/lib/api/seo.ts).
     seoPlugin({
-      globals: ["home"],
+      globals: ["home", "contact", "principals-welcome"],
       uploadsCollection: "media",
       tabbedUI: true,
       generateTitle: () => SITE_NAME,

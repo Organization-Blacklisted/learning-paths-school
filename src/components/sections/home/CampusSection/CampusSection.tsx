@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef } from "react";
-import Section from "@/components/layouts/Section";
+import { useSceneTimeline } from "@/components/layouts/HorizontalScene";
 import Accent from "@/components/ui/Accent";
 import Badge from "@/components/ui/Badge";
 import BodyText from "@/components/ui/BodyText";
@@ -25,17 +25,25 @@ import type { CampusSectionProps } from "./CampusSection.types";
 // (it pauses when scrolled away, and does not start with prefers-reduced-motion, where the poster stays). When a video is playing a
 // small pause button appears at the bottom left (WCAG 2.2.2: moving content longer than 5 seconds needs a way to stop it).
 //
-// It sits below the alumni scene on the home page, above What's New. It is a normal <Section>.
+// It is the SECOND PANEL of the sideways scene on the home page (owner, 2026-11-02: the campus video and "Beyond the school gate" swapped
+// places): after "The Ecosystem Behind LPS 360" the view pans right to this (see <HorizontalScene> on the home page), which gives it the
+// container and the 200px spacing, so it has no <Section> of its own. On a phone (and with reduced motion) the scene is an ordinary stack.
 //
-// ANIMATION (nothing in Figma; mine):
-// - Text: the pill, heading and paragraph rise in when the section scrolls into view (timed, replays quickly).
-// - Media opening (owner, 2026-10-28: "more premium"): SCRUBBED by the scroll, not timed. As the box rises from the bottom of the screen
-//   to 40% down it opens from a smaller rounded window to the full square box while the image settles from a 1.16 zoom, and the glass
-//   label comes in at the end. It follows the visitor's hand and runs backwards when scrolling up.
-// - Pointer depth (mouse only): the image drifts a few pixels against the pointer and a soft light follows it.
-// - Parallax: while the section passes through the screen the image drifts up and down inside the box by a few percent (scrubbed by
-//   scroll), which gives the still poster some depth (and the video too).
+// ANIMATION (nothing in Figma; mine). The same things happen in the two layouts, driven differently:
+// - In the sideways scene they ride the pan (like the Alumni section did there): the pill, heading and paragraph rise in as the text enters
+//   from the right, then the media box opens from a smaller rounded window to the full box while the image settles from a 1.16 zoom, and the
+//   glass label comes in at the end. Scrolling back reverses it.
+// - In the stack (below 640px wide or 500px high; the owner's "more premium" opening of 2026-10-28): the text rises in when the section
+//   scrolls into view (timed, replays quickly), and the media opening is SCRUBBED by the scroll: as the box rises from the bottom of the
+//   screen to 40% down it opens, and it runs backwards when scrolling up. Parallax too: while the section passes through the screen the
+//   image drifts up and down inside the box by a few percent (scrubbed), which gives the still poster some depth (and the video too).
+// - Pointer depth (mouse only, both layouts): the image drifts a few pixels against the pointer and a soft light follows it.
 // - Reduced motion (and touch for the pointer part): none of it, everything shown. Everything is only hidden by JS.
+
+/** The layout where the scene is NOT a sideways row (the `stackOnPhones` rule of <HorizontalScene>), with motion allowed. */
+const STACKED_MOTION = `${MOTION_OK} and ((max-width: 639px) or (max-height: 499px))`;
+/** The scene's pan ends its last animation here (0 to 1 over the whole pan), so the end can be looked at. */
+const LAST_END = 0.94;
 
 export default function CampusSection({ content }: CampusSectionProps) {
   const { label, badge, titleStart, titleAccent, titleEnd, intro, media } = content;
@@ -46,23 +54,55 @@ export default function CampusSection({ content }: CampusSectionProps) {
   // The poster is requested once the page has loaded and the browser is idle (see useIdleReady); its box keeps its size.
   const posterReady = useIdleReady(800, rootRef);
 
-  // The text rises in, once per visit (timed).
-  useScrollReveal(rootRef, ({ gsap, q }) => {
-    const heads = q("[data-campus-head]");
-    gsap.set(heads, { autoAlpha: 0, y: 24 });
-    return gsap
-      .timeline({ paused: true, defaults: { ease: "power2.out" } })
-      .to(heads, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.1 }, 0);
+  // In the sideways scene: ride the pan.
+  useSceneTimeline((tl, { stageWidth, distance, progressAt }) => {
+    const { gsap } = registerGsap();
+    const root = rootRef.current;
+    const frame = frameRef.current;
+    if (!root || !frame) return;
+    const heads = Array.from(root.querySelectorAll<HTMLElement>("[data-campus-head]"));
+    const zoom = frame.querySelector<HTMLElement>("[data-campus-zoom]");
+    const tag = frame.querySelector<HTMLElement>("[data-campus-tag]");
+    if (!zoom || !tag) return;
+    // Where each part starts (measured before anything is moved) and how long it takes, as fractions of the pan.
+    const headStarts = heads.map((el) => progressAt(el, 0, stageWidth));
+    const frameStart = progressAt(frame, 0, stageWidth);
+    const length = Math.max(0.04, (frame.offsetWidth * 0.6) / distance);
+    const place = (start: number, span: number) => Math.min(LAST_END - span, Math.max(0, start));
+    heads.forEach((el, i) => {
+      gsap.set(el, { autoAlpha: 0, y: 24 });
+      tl.to(el, { autoAlpha: 1, y: 0, duration: length * 0.8, ease: "power2.out" }, place(headStarts[i] + i * 0.004, length * 0.9));
+    });
+    gsap.set(frame, { clipPath: "inset(9% 11% 9% 11% round 28px)" });
+    gsap.set(zoom, { scale: 1.16 });
+    gsap.set(tag, { autoAlpha: 0, y: 14 });
+    const start = place(frameStart, length * 1.3);
+    tl.to(frame, { clipPath: "inset(0% 0% 0% 0% round 0px)", duration: length, ease: "power2.out" }, start)
+      .to(zoom, { scale: 1, duration: length * 1.2, ease: "power2.out" }, start)
+      .to(tag, { autoAlpha: 1, y: 0, duration: length * 0.4, ease: "power2.out" }, start + length * 0.7);
   });
 
-  // The media is opened BY THE SCROLL (scrubbed, so it follows the visitor's hand and runs backwards going up): from a smaller rounded
-  // window to the full box while the image settles from a zoom, and the label comes in at the end.
+  // In the stack: the text rises in, once per visit (timed).
+  useScrollReveal(
+    rootRef,
+    ({ gsap, q }) => {
+      const heads = q("[data-campus-head]");
+      gsap.set(heads, { autoAlpha: 0, y: 24 });
+      return gsap
+        .timeline({ paused: true, defaults: { ease: "power2.out" } })
+        .to(heads, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.1 }, 0);
+    },
+    { media: STACKED_MOTION },
+  );
+
+  // In the stack: the media is opened BY THE SCROLL (scrubbed, so it follows the visitor's hand and runs backwards going up): from a smaller
+  // rounded window to the full box while the image settles from a zoom, and the label comes in at the end.
   useEffect(() => {
     const frame = frameRef.current;
     if (!frame) return;
     const { gsap } = registerGsap();
     const mm = gsap.matchMedia();
-    mm.add(MOTION_OK, () => {
+    mm.add(STACKED_MOTION, () => {
       const inside = (selector: string) => gsap.utils.toArray<HTMLElement>(selector, frame);
       gsap
         .timeline({
@@ -125,11 +165,11 @@ export default function CampusSection({ content }: CampusSectionProps) {
     return () => mm.revert();
   }, []);
 
-  // Parallax: the image sits 12% taller than its box and drifts from -5% to +5% while the section crosses the screen.
-  useParallax(rootRef, "[data-campus-drift]", 5);
+  // Parallax (in the stack): the image sits 12% taller than its box and drifts from -5% to +5% while the section crosses the screen.
+  useParallax(rootRef, "[data-campus-drift]", 5, STACKED_MOTION);
 
   return (
-    <Section label={label}>
+    <section aria-label={label}>
       <div ref={rootRef} className="flex flex-col items-center gap-10">
         <div className="flex w-full max-w-[818px] flex-col items-center gap-4">
           <Badge data-campus-head>{badge}</Badge>
@@ -211,6 +251,6 @@ export default function CampusSection({ content }: CampusSectionProps) {
           )}
         </div>
       </div>
-    </Section>
+    </section>
   );
 }

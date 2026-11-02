@@ -13,10 +13,12 @@ const MAX_EDGE = 2560;
 const AVIF_QUALITY = 85;
 const CONVERTIBLE = ["image/jpeg", "image/png", "image/webp"];
 
-// Pages that show media read it through this tag (see src/lib/api/home.ts): a changed or deleted photo refreshes them.
+// Pages that show media read it through these tags (see src/lib/api/home.ts and cached-global.ts): a changed or deleted photo refreshes them.
 const revalidateMedia = () => {
   try {
     revalidateTag("home", { expire: 0 });
+    revalidateTag("contact", { expire: 0 });
+    revalidateTag("principals-welcome", { expire: 0 });
   } catch {
     // Not inside a Next request (a script, the seed): nothing to refresh.
   }

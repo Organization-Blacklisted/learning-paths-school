@@ -10,9 +10,6 @@
   --font-heading: var(--font-lexend-deca), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-body);
-  /* Accent serif used for one highlighted phrase (the CTA band: "LPS Forward"). The design uses Scaver, which has not been
-     supplied: until it is added (src/fonts/index.ts), this falls back to a system serif. */
-  --font-accent: "Scaver", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
 }
 
 /*

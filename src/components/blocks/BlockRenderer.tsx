@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import Container from "@/components/layouts/Container";
 import HorizontalScene from "@/components/layouts/HorizontalScene";
 import AlumniSection from "@/components/sections/home/AlumniSection";
 import CampusSection from "@/components/sections/home/CampusSection";
@@ -20,6 +21,18 @@ import type { PageBlock, SectionBlock } from "@/types/page";
 // A new section type is added in one place: its entry in `renderSection` (TypeScript flags a block type that has no renderer).
 // Sideways scenes ("scene" blocks) wrap their panels' sections in <HorizontalScene>.
 
+/**
+ * The Alumni section has no container or spacing of its own (it was a panel of a sideways scene, and the scene gave it both); below the scene it is
+ * an ordinary section and gets the same 1520px container and 200px spacing as the sections that bring their own.
+ */
+function Contained({ children }: { children: ReactNode }) {
+  return (
+    <div className="pt-section last:pb-section">
+      <Container>{children}</Container>
+    </div>
+  );
+}
+
 /** One renderer per section type. `satisfies` makes TypeScript require an entry for every block type. */
 const renderSection = {
   hero: (b) => <HeroSlideshowSection content={b.content} />,
@@ -28,7 +41,11 @@ const renderSection = {
   journey: (b) => <JourneySection content={b.content} />,
   framework: (b) => <FrameworkSection content={b.content} />,
   ecosystem: (b) => <EcosystemSection content={b.content} />,
-  alumni: (b) => <AlumniSection content={b.content} />,
+  alumni: (b) => (
+    <Contained>
+      <AlumniSection content={b.content} />
+    </Contained>
+  ),
   campus: (b) => <CampusSection content={b.content} />,
   news: (b) => <NewsSection content={b.content} />,
   cta: (b) => <CtaSection content={b.content} />,

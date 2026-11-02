@@ -37,6 +37,17 @@ const startOf = (page, selector) =>
     return Math.round(box.top + scrollY);
   }, selector);
 
+/** The pinned sideways scene that holds the section: where its pin starts and how many px of scroll the pan takes (null when it is not in a scene). */
+const sceneOf = (page, selector) =>
+  page.evaluate((s) => {
+    const spacer = document.querySelector(s)?.closest(".pin-spacer");
+    if (!spacer) return null;
+    return {
+      top: Math.round(spacer.getBoundingClientRect().top + scrollY),
+      length: spacer.offsetHeight - spacer.firstElementChild.offsetHeight,
+    };
+  }, selector);
+
 const browser = await chromium.launch({ channel: "chrome" });
 
 // ---------------------------------------------------------------- 1. Ecosystem tabs on a desktop screen
@@ -184,6 +195,7 @@ for (const [width, height, label] of [
   await page.waitForTimeout(1000);
   const sections = {
     Campus: 'section[aria-label="A campus built around possibility"]',
+    Alumni: 'section[aria-label^="Alumni"]',
     News: 'section[aria-label^="What"]',
     CTA: 'section[aria-label="Admissions"]',
   };
@@ -193,9 +205,10 @@ for (const [width, height, label] of [
       console.log(`SKIP  ${name}: selector ${selector} not found`);
       continue;
     }
-    // Campus: its media box opens BY THE SCROLL (scrubbed, 2026-10-28), and the label comes in at the end, when the box has risen to 40% of
-    // the screen: so for Campus "scrolled to it" means the media box is in the upper part of the screen (the checks of that opening follow below).
-    const target = name === "Campus" ? (await startOf(page, "[data-campus-frame]")) - 250 : (await startOf(page, selector)) - 150;
+    // Campus is the second panel of the Ecosystem scene (2026-11-02): its media box opens BY THE PAN and the label comes in at the end, so for
+    // Campus "scrolled to it" means the end of that scene's pan (the checks of that opening follow below).
+    const scene = name === "Campus" ? await sceneOf(page, selector) : null;
+    const target = scene ? scene.top + scene.length : (await startOf(page, selector)) - 150;
     await scrollToY(page, target);
     await page.waitForTimeout(1200);
     const hidden = await page.evaluate(
@@ -208,26 +221,25 @@ for (const [width, height, label] of [
     ok(`${name}: after scrolling to it, nothing is left invisible`, hidden === 0, `${hidden} invisible elements`);
   }
 
-  // The Campus media box opens with the scroll, in both directions: closed (a smaller rounded window, label hidden) while it is still low on the
-  // screen, completely open and showing its label once it is high, and closed again when scrolling back up.
+  // The Campus media box opens with the pan of the Ecosystem scene, in both directions: closed (a smaller rounded window, label hidden) while the
+  // pan has not reached it, completely open and showing its label at the end of the pan, and closed again when scrolling back to the start.
   if (await page.evaluate(() => !!document.querySelector("[data-campus-frame]"))) {
-    const frameTop = await startOf(page, "[data-campus-frame]");
-    const vh = 993;
+    const scene = await sceneOf(page, "[data-campus-frame]");
     const read = () =>
       page.evaluate(() => {
         const frame = document.querySelector("[data-campus-frame]");
         const tag = document.querySelector("[data-campus-tag]");
-        const numbers = (getComputedStyle(frame).clipPath.match(/[\d.]+/g) ?? []).map(Number);
+        const numbers = (getComputedStyle(frame).clipPath.match(/[d.]+/g) ?? []).map(Number);
         return { open: numbers.every((n) => n < 0.5), tag: +getComputedStyle(tag).opacity };
       });
-    await scrollToY(page, frameTop - 0.88 * vh); // the box's top 88% down the screen: just starting to open
+    await scrollToY(page, scene.top + 2); // the pan has only just started: the video is still out of sight to the right
     const low = await read();
-    await scrollToY(page, frameTop - 250); // the box's top about 25% down: finished
+    await scrollToY(page, scene.top + scene.length); // the end of the pan: the video is centred
     const high = await read();
-    await scrollToY(page, frameTop - 0.88 * vh);
+    await scrollToY(page, scene.top + 2);
     const back = await read();
     ok(
-      "Campus media: closed while low on the screen, completely open (label shown) once high, closed again scrolling back (scrubbed by the scroll)",
+      "Campus media: closed while the pan has not reached it, completely open (label shown) at the end of the pan, closed again scrolling back (driven by the scroll)",
       !low.open && low.tag < 0.5 && high.open && high.tag > 0.95 && !back.open && back.tag < 0.5,
       JSON.stringify({ low, high, back }),
     );
@@ -506,24 +518,39 @@ for (const [label, width, height] of [
     JSON.stringify(found),
   );
   if (pins === 2) {
-    // the second scene is a plain stack: not inside a pin, Alumni under Ecosystem, nothing wider than the screen
+    // the second scene is a plain stack: not inside a pin, Campus under Ecosystem, nothing wider than the screen
     const stack = await page.evaluate(() => {
       const eco = document.querySelector('section[aria-label="The ecosystem behind LPS 360"]');
-      const alumni = document.querySelector('section[aria-label^="Alumni"]');
+      const campus = document.querySelector('section[aria-label="A campus built around possibility"]');
       const a = eco.getBoundingClientRect();
-      const b = alumni.getBoundingClientRect();
+      const b = campus.getBoundingClientRect();
       return {
-        pinned: Boolean(eco.closest(".pin-spacer") || alumni.closest(".pin-spacer")),
+        pinned: Boolean(eco.closest(".pin-spacer") || campus.closest(".pin-spacer")),
         underneath: b.top + scrollY >= a.bottom + scrollY - 5,
         fits: a.width <= innerWidth + 1 && b.width <= innerWidth + 1,
       };
     });
     ok(
-      `${label}: Ecosystem and Alumni are an ordinary stack (not pinned, one under the other, within the screen)`,
+      `${label}: Ecosystem and Campus are an ordinary stack (not pinned, one under the other, within the screen)`,
       !stack.pinned && stack.underneath && stack.fits,
       JSON.stringify(stack),
     );
   }
+  // Beyond the school gate is an ordinary section under the scene at every size: not pinned, below the Campus panel
+  const alumniBelow = await page.evaluate(() => {
+    const campus = document.querySelector('section[aria-label="A campus built around possibility"]');
+    const alumni = document.querySelector('section[aria-label^="Alumni"]');
+    return {
+      pinned: Boolean(alumni.closest(".pin-spacer")),
+      below: alumni.getBoundingClientRect().top + scrollY >= campus.getBoundingClientRect().bottom + scrollY - 5,
+      fits: alumni.getBoundingClientRect().width <= innerWidth + 1,
+    };
+  });
+  ok(
+    `${label}: Beyond the school gate is an ordinary section under the scene (not pinned, within the screen)`,
+    !alumniBelow.pinned && alumniBelow.below && alumniBelow.fits,
+    JSON.stringify(alumniBelow),
+  );
 
   // scene 1 (vision, courage, journey): at its start the Vision panel is centred; the Courage heading is typed at the end of the first pan
   await scrollToY(page, found[0].top + 2);
@@ -862,9 +889,11 @@ for (const [label, width, height] of [
         during.length >= 20 &&
           top[0].src.includes("sports") &&
           under[0].src.includes("choir") &&
-          during.at(-1).t > 700 &&
-          during.at(-1).t < 1500,
-        `${during.length} frames, until ${during.at(-1)?.t} ms, top ${top[0]?.src}, under ${under[0]?.src}`,
+          // how long the two layers coexist is the fade (0.9 s); WHEN it starts depends on how fast the new photo loads (0.3 to 0.9 s on a
+          // busy machine), so the check measures the fade itself and not the time since the click
+          during.at(-1).t - during[0].t > 700 &&
+          during.at(-1).t - during[0].t < 1300,
+        `${during.length} frames, fade ${during.at(-1)?.t - during[0]?.t} ms (from ${during[0]?.t} to ${during.at(-1)?.t}), top ${top[0]?.src}, under ${under[0]?.src}`,
       );
       ok(
         `Ecosystem photo, ${label}: opacity rises from 0 to 1 and the zoom eases from about 1.08 to 1, both only one way`,
@@ -1265,6 +1294,407 @@ for (const [label, width, height] of [
       before.room > 0 && after.top > before.top && after.pageY === before.pageY,
       JSON.stringify({ before, after }),
     );
+    await context.close();
+  }
+}
+
+// ---------------------------------------------------------------- 11. The Contact page (owner, 2026-11-02): the reusable hero, the details, the form, the map
+{
+  const SMALL_ERRORS = (errors, m) => {
+    // The map is Google's page inside an iframe: its own console messages are not ours.
+    const url = m.location()?.url ?? "";
+    if (
+      !/google\./.test(url) &&
+      ["error", "warning"].includes(m.type()) &&
+      !/preloaded using link preload|Download the React/.test(m.text())
+    )
+      errors.push(m.text().slice(0, 140));
+  };
+  const box = (page, selector) =>
+    page.evaluate((s) => {
+      const b = document.querySelector(s).getBoundingClientRect();
+      return { x: Math.round(b.left), y: Math.round(b.top + scrollY), w: Math.round(b.width), h: Math.round(b.height) };
+    }, selector);
+
+  // desktop 1920 x 993: the geometry of the Figma frame (node 5644:9493), measured from the page top (the header is the first 74px)
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => SMALL_ERRORS(errors, m));
+    await page.goto(BASE + "/contact-us", { waitUntil: "load" });
+    await page.waitForTimeout(3500);
+    for (let y = 0; y < 3300; y += 500) {
+      await page.mouse.wheel(0, 500);
+      await page.waitForTimeout(250);
+    }
+    await page.waitForTimeout(1800);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(1200);
+
+    const photo = await box(page, "[data-hero-photo]");
+    ok(
+      "contact (1920): the hero photo is 1920 x 736 right under the 74px header",
+      near(photo.x, 0) && near(photo.y, 74, 2) && near(photo.w, 1920) && near(photo.h, 736, 2),
+      JSON.stringify(photo),
+    );
+    const pill = await box(page, "section[aria-label='Contact us'] p");
+    const h1 = await box(page, "h1");
+    ok(
+      "contact (1920): the pill and the heading are where Figma has them (centred, y 731 and 779)",
+      near(pill.y, 731, 3) && near(pill.x + pill.w / 2, 960, 2) && near(h1.y, 779, 3) && near(h1.w, 616, 8) && near(h1.h, 58, 2),
+      JSON.stringify({ pill, h1 }),
+    );
+    const form = await box(page, "form");
+    const first = await box(page, "input[name=firstName]");
+    const message = await box(page, "textarea");
+    const send = await box(page, "button[type=submit]");
+    ok(
+      "contact (1920): the form is 784px wide on the right, fields 53px high, the message 213px, the button 176px",
+      near(form.x, 936, 3) &&
+        near(form.w, 784, 3) &&
+        near(first.w, 378, 2) &&
+        near(first.h, 53, 1.5) &&
+        near(message.h, 213, 1.5) &&
+        near(send.w, 176, 3),
+      JSON.stringify({ form, first, message, send }),
+    );
+    const map = await box(page, "iframe");
+    const footer = await box(page, "footer");
+    const total = await page.evaluate(() => document.documentElement.scrollHeight);
+    ok(
+      "contact (1920): the map is 1520 x 516 and the page is as high as the design (3223px)",
+      near(map.w, 1520, 3) && near(map.h, 516, 2) && near(map.y, 1878, 4) && near(total, 3223, 4),
+      JSON.stringify({ map, footerTop: footer.y, total }),
+    );
+    const meta = await page.evaluate(() => ({
+      variant: document.querySelector("header").getAttribute("data-variant"),
+      h1s: document.querySelectorAll("h1").length,
+      mapSrc: document.querySelector("iframe").getAttribute("src").slice(0, 40),
+      mapLoading: document.querySelector("iframe").getAttribute("loading"),
+      mapTitle: !!document.querySelector("iframe").getAttribute("title"),
+    }));
+    ok(
+      "contact: solid header, one h1, and the map is a lazy Google Maps embed with a title",
+      meta.variant === "solid" &&
+        meta.h1s === 1 &&
+        meta.mapSrc.startsWith("https://www.google.com/maps/embed") &&
+        meta.mapLoading === "lazy" &&
+        meta.mapTitle,
+      JSON.stringify(meta),
+    );
+
+    // the form
+    await page.evaluate(() => document.querySelector("form").scrollIntoView({ block: "center" }));
+    await page.waitForTimeout(600);
+    await page.getByRole("button", { name: /send message/i }).click();
+    await page.waitForTimeout(400);
+    const empty = await page.evaluate(() => ({
+      focus: document.activeElement?.getAttribute("name"),
+      errors: [...document.querySelectorAll("form [id$='-error']")].map((e) => e.textContent),
+    }));
+    ok(
+      "contact: pressing Send on an empty form says what is missing and puts the focus on the first field",
+      empty.focus === "firstName" && empty.errors.length === 5,
+      JSON.stringify(empty),
+    );
+    await page.fill("input[name=firstName]", "Asha");
+    await page.fill("input[name=lastName]", "Kaur");
+    await page.fill("input[name=email]", "asha@example.com");
+    await page.fill("input[name=phone]", "98780 07553");
+    await page.fill("input[name=subject]", "Admission dates");
+    await page.fill("textarea[name=message]", "Could you tell me about the admission dates?");
+    const cleared = await page.evaluate(() => document.querySelectorAll("form [id$='-error']").length);
+    await page.getByRole("button", { name: /send message/i }).click();
+    await page.waitForTimeout(1500);
+    // The e-mail host is not connected yet (src/lib/actions/contact.ts): the visitor is told the truth. When it is, this becomes "Thank you".
+    const result = await page.evaluate(() => ({
+      text: document.querySelector("form [aria-live]").textContent,
+      links: [...document.querySelectorAll("form [aria-live] a")].map((a) => a.getAttribute("href")),
+      kept: document.querySelector("input[name=firstName]").value,
+    }));
+    ok(
+      "contact: with the e-mail host not connected, a good message is NOT reported as sent: the visitor is given the address and the phone number, and keeps what was typed",
+      cleared === 0 &&
+        /cannot send messages just yet/.test(result.text) &&
+        !/has been sent/.test(result.text) &&
+        result.links.length === 2 &&
+        result.kept === "Asha",
+      JSON.stringify(result),
+    );
+    // the trap for robots is never reached by the keyboard
+    await page.evaluate(() => document.querySelector("input[name=firstName]").focus());
+    let trapped = false;
+    for (let i = 0; i < 14; i++) {
+      await page.keyboard.press("Tab");
+      if (await page.evaluate(() => document.activeElement?.getAttribute("name") === "website")) trapped = true;
+    }
+    ok("contact: 14 Tab presses through the form never land on the hidden robot field", !trapped);
+    ok("contact (1920): no console errors or warnings", errors.length === 0, JSON.stringify(errors.slice(0, 2)));
+    await context.close();
+  }
+
+  // every width: no sideways overflow, the form ABOVE the details below 1024 (full width, no space at its left) and beside them from 1024
+  for (const [width, height] of [
+    [360, 740],
+    [390, 844],
+    [768, 1024],
+    [1024, 768],
+    [1280, 720],
+    [1536, 864],
+  ]) {
+    const context = await browser.newContext({ viewport: { width, height } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => SMALL_ERRORS(errors, m));
+    await page.goto(BASE + "/contact-us", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    const layout = await page.evaluate(() => {
+      const r = (s) => document.querySelector(s).getBoundingClientRect();
+      const address = r("address");
+      const form = r("form");
+      const card = r("h1").width;
+      return {
+        overflow: document.documentElement.scrollWidth - innerWidth,
+        beside: form.left >= address.right - 1 && Math.abs(form.top - address.top) < 40,
+        under: address.top >= form.bottom - 1,
+        formFillsColumn: Math.abs(form.left - address.left) <= 1 && Math.abs(form.right - address.right) <= 1,
+        formInside: form.right <= innerWidth + 1 && form.left >= -1,
+        h1Inside: card <= innerWidth,
+        photoH: Math.round(r("[data-hero-photo]").height),
+      };
+    });
+    const wide = width >= 1024;
+    ok(
+      `contact (${width}): no sideways overflow, the form is ${wide ? "beside" : "above, filling the width of,"} the details, the photo is ${layout.photoH}px high`,
+      layout.overflow <= 0 &&
+        layout.formInside &&
+        layout.h1Inside &&
+        (wide ? layout.beside : layout.under && layout.formFillsColumn) &&
+        layout.photoH >= 295,
+      JSON.stringify(layout),
+    );
+    ok(`contact (${width}): no console errors or warnings`, errors.length === 0, JSON.stringify(errors.slice(0, 2)));
+    await context.close();
+  }
+
+  // the menu's "Contact us" links lead here
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.waitForTimeout(2700);
+    const hrefs = await page.evaluate(() =>
+      [...document.querySelectorAll("#site-menu a")].filter((a) => /contact/i.test(a.textContent)).map((a) => a.getAttribute("href")),
+    );
+    ok(
+      'menu: both "Contact us" links point to /contact-us',
+      hrefs.length === 2 && hrefs.every((h) => h === "/contact-us"),
+      JSON.stringify(hrefs),
+    );
+    await page
+      .locator("#site-menu a", { hasText: /^contact us$/i })
+      .first()
+      .click();
+    await page.waitForTimeout(1500);
+    ok("menu: following it opens the Contact page and closes the menu", new URL(page.url()).pathname === "/contact-us", page.url());
+    await context.close();
+  }
+}
+
+// ---------------------------------------------------------------- 12. The Principal's Welcome page (owner, 2026-11-02): the text-only hero, the message, the call to action and the photo strip
+{
+  const quiet = (errors, m) => {
+    if (["error", "warning"].includes(m.type()) && !/preloaded using link preload|Download the React/.test(m.text()))
+      errors.push(m.text().slice(0, 140));
+  };
+  const box = (page, selector) =>
+    page.evaluate((s) => {
+      const b = document.querySelector(s).getBoundingClientRect();
+      return { x: Math.round(b.left), y: Math.round(b.top + scrollY), w: Math.round(b.width), h: Math.round(b.height) };
+    }, selector);
+  const HERO = "section[aria-label='From the Principal’s desk']";
+  const LETTER = "section[aria-label='A message from the Principal']";
+
+  // desktop 1920 x 993: the geometry of the Figma frame (node 5748:2), measured from the page top (the header is the first 74px)
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => quiet(errors, m));
+    await page.goto(BASE + "/principals-welcome", { waitUntil: "load" });
+    await page.waitForTimeout(3500);
+
+    const pill = await box(page, `${HERO} p`);
+    const h1 = await box(page, "h1");
+    const sub = await box(page, "h1 + p");
+    const rule = await box(page, `${HERO} [aria-hidden='true']`);
+    ok(
+      "principal (1920): the text-only hero: pill, heading on ONE line (924 x 58), line of text and the crest rule are where Figma has them",
+      near(pill.y, 166, 3) &&
+        near(pill.x + pill.w / 2, 960, 2) &&
+        near(h1.y, 215, 3) &&
+        near(h1.w, 924, 10) &&
+        near(h1.h, 58, 2) &&
+        near(sub.y, 283, 3) &&
+        near(rule.y, 377, 3) &&
+        near(rule.h, 46, 1),
+      JSON.stringify({ pill, h1, sub, rule }),
+    );
+    const photoInHero = await page.evaluate((s) => document.querySelectorAll(`${s} [data-hero-photo]`).length, HERO);
+    ok("principal: the hero has no photo", photoInHero === 0);
+
+    await page.evaluate(() => window.scrollTo(0, 440));
+    await page.waitForTimeout(2800);
+    const portrait = await box(page, "[data-message-photo]");
+    const h2 = await box(page, `${LETTER} h2`);
+    ok(
+      "principal (1920): the portrait is 777 x 816 on the left, the quotation heading starts 37px to its right and is 40px type on one line",
+      near(portrait.x, 200, 2) &&
+        near(portrait.y, 538, 3) &&
+        near(portrait.w, 777, 2) &&
+        near(portrait.h, 816, 2) &&
+        near(h2.x, 1014, 3) &&
+        near(h2.h, 48, 2),
+      JSON.stringify({ portrait, h2 }),
+    );
+    const letter = await page.evaluate((s) => {
+      const paragraphs = [...document.querySelectorAll(`${s} p[data-message-item]`)];
+      const lines = (p) => Math.round(p.getBoundingClientRect().height / parseFloat(getComputedStyle(p).lineHeight));
+      const sig = document.querySelector(`${s} [data-message-item]:last-child p`);
+      return {
+        count: paragraphs.length,
+        lines: paragraphs.map(lines),
+        widest: Math.round(Math.max(...paragraphs.map((p) => p.getBoundingClientRect().width))),
+        sigStyle: sig ? getComputedStyle(sig).fontStyle + " " + getComputedStyle(sig).fontWeight : "",
+        italicLoaded: [...document.fonts].some((f) => f.style === "italic" && f.weight === "700" && f.status === "loaded"),
+        visible: paragraphs.every((p) => Number(getComputedStyle(p).opacity) === 1),
+      };
+    }, LETTER);
+    ok(
+      "principal (1920): five paragraphs break their lines where the design does (4, 4, 4, 4 and 5 lines, no wider than 697px), and the entrance has finished",
+      letter.count === 5 && JSON.stringify(letter.lines) === JSON.stringify([4, 4, 4, 4, 5]) && letter.widest <= 698 && letter.visible,
+      JSON.stringify(letter),
+    );
+    ok(
+      "principal: the name under the letter is bold italic, and the italic font file was fetched for it",
+      letter.sigStyle === "italic 700" && letter.italicLoaded,
+      letter.sigStyle + ", loaded " + letter.italicLoaded,
+    );
+
+    await page.evaluate(() => window.scrollTo(0, 1400));
+    await page.waitForTimeout(3000);
+    const cta = await box(page, "section[aria-label='Admissions'] > div > div");
+    const tile = await page.evaluate(() => {
+      const li = document.querySelector("section[aria-label='Life at Learning Paths School in pictures'] li");
+      const b = li.getBoundingClientRect();
+      return { y: Math.round(b.top + scrollY), w: Math.round(b.width) };
+    });
+    const footer = await box(page, "footer");
+    const total = await page.evaluate(() => document.documentElement.scrollHeight);
+    ok(
+      "principal (1920): the call to action is 1520 x 335 at 120px under the letter, the photo strip 120px under it and touching the footer",
+      near(cta.y, 1474, 4) &&
+        near(cta.w, 1520, 2) &&
+        near(cta.h, 335, 3) &&
+        near(tile.y, 1929, 4) &&
+        near(tile.w, 320, 2) &&
+        near(footer.y, 2249, 4) &&
+        near(total, 2995, 8),
+      JSON.stringify({ cta, tile, footerTop: footer.y, total }),
+    );
+    const ctaShown = await page.evaluate(() => {
+      const items = [...document.querySelectorAll("section[aria-label='Admissions'] [data-cta-item]")];
+      return items.length > 0 && items.every((el) => Number(getComputedStyle(el).opacity) === 1);
+    });
+    ok("principal: the call to action's entrance has finished (text and button visible)", ctaShown);
+    ok("principal (1920): no console errors or warnings", errors.length === 0, JSON.stringify(errors.slice(0, 2)));
+    await context.close();
+  }
+
+  // reduced motion: everything is simply there
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 }, reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto(BASE + "/principals-welcome", { waitUntil: "load" });
+    await page.waitForTimeout(2000);
+    const shown = await page.evaluate(() => {
+      const els = [...document.querySelectorAll("[data-hero-item], [data-message-item], [data-message-photo]")];
+      return {
+        n: els.length,
+        hidden: els.filter((el) => Number(getComputedStyle(el).opacity) < 1 || getComputedStyle(el).visibility === "hidden").length,
+      };
+    });
+    ok(
+      "principal (reduced motion): nothing is hidden, nothing waits for an entrance",
+      shown.n > 8 && shown.hidden === 0,
+      JSON.stringify(shown),
+    );
+    await context.close();
+  }
+
+  // every width: no sideways overflow, the portrait above the letter below 1024 and beside it from 1024, the heading never wider than the screen
+  for (const [width, height] of [
+    [360, 740],
+    [390, 844],
+    [768, 1024],
+    [1024, 768],
+    [1280, 720],
+    [1536, 864],
+  ]) {
+    const context = await browser.newContext({ viewport: { width, height } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => quiet(errors, m));
+    await page.goto(BASE + "/principals-welcome", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    const layout = await page.evaluate((s) => {
+      const r = (q) => document.querySelector(q).getBoundingClientRect();
+      const photo = r("[data-message-photo]");
+      const h2 = r(`${s} h2`);
+      const h1 = r("h1");
+      return {
+        overflow: document.documentElement.scrollWidth - innerWidth,
+        beside: h2.left >= photo.right - 1 && h2.top < photo.bottom,
+        above: h2.top >= photo.bottom - 1,
+        insideScreen: h1.left >= -1 && h1.right <= innerWidth + 1 && photo.left >= -1 && photo.right <= innerWidth + 1,
+        h1Lines: Math.round(h1.height / parseFloat(getComputedStyle(document.querySelector("h1")).lineHeight)),
+      };
+    }, LETTER);
+    const wide = width >= 1024;
+    ok(
+      `principal (${width}): no sideways overflow, the portrait is ${wide ? "beside" : "above"} the letter, the heading is ${layout.h1Lines} line(s)`,
+      layout.overflow <= 0 && layout.insideScreen && (wide ? layout.beside : layout.above),
+      JSON.stringify(layout),
+    );
+    ok(`principal (${width}): no console errors or warnings`, errors.length === 0, JSON.stringify(errors.slice(0, 2)));
+    await context.close();
+  }
+
+  // the menu's "Principal's Welcome" link leads here
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.waitForTimeout(2700);
+    const href = await page.evaluate(() =>
+      [...document.querySelectorAll("#site-menu a")].find((a) => /principal/i.test(a.textContent))?.getAttribute("href"),
+    );
+    ok('menu: "Principal’s Welcome" points to /principals-welcome', href === "/principals-welcome", String(href));
+    await page
+      .locator("#site-menu a", { hasText: /principal/i })
+      .first()
+      .click();
+    await page.waitForTimeout(1500);
+    ok("menu: following it opens the Principal's Welcome page", new URL(page.url()).pathname === "/principals-welcome", page.url());
     await context.close();
   }
 }

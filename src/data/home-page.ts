@@ -80,21 +80,22 @@ export function buildHomePage(sections: HomeSections): PageBlock[] {
     },
     // After the pan ends on the Journey section the page continues down to this (Figma: below the Journey frame).
     { blockType: "framework", content: sections.framework },
-    // Scene 2: The Ecosystem Behind LPS 360, then the view pans right to the alumni (Figma canvas: to its right). The gap before the
-    // alumni (200px at 1920px wide) is measured from the canvas overview.
+    // Scene 2: The Ecosystem Behind LPS 360, then the view pans right to the campus video (Figma canvas: the alumni were to its right; owner,
+    // 2026-11-02: the campus video and "Beyond the school gate" swapped places). The gap before the video (200px at 1920px wide) is the one
+    // that was measured from the canvas overview for the alumni.
     {
       blockType: "scene",
-      id: "ecosystem-alumni",
+      id: "ecosystem-campus",
       // On a phone the Ecosystem (one tall column) would have to be shrunk to about 75% to fit the pinned screen, leaving empty bands at the
       // sides (owner, 2026-10-28): there the two sections are an ordinary stack.
       stackOnPhones: true,
       panels: [
         { id: "ecosystem", contentWidth: 1520, block: { blockType: "ecosystem", content: sections.ecosystem } },
-        { id: "alumni", contentWidth: 1520, gapBefore: 200, block: { blockType: "alumni", content: sections.alumni } },
+        { id: "campus", contentWidth: 1520, gapBefore: 200, block: { blockType: "campus", content: sections.campus } },
       ],
     },
-    // Below the alumni scene: the campus video box (a poster image until the video exists), then the news.
-    { blockType: "campus", content: sections.campus },
+    // Below the scene: "Beyond the school gate" (the alumni, an ordinary section), then the news.
+    { blockType: "alumni", content: sections.alumni },
     { blockType: "news", content: sections.news },
     // The shared call to action that closes most pages, and the shared photo strip directly above the footer.
     { blockType: "cta", content: sections.cta },

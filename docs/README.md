@@ -31,6 +31,8 @@ Single source of truth for the Learning Paths School website.
 25. [Deployment: GitHub and Vercel](25-deployment-vercel.md)
 26. [Plan: the home page editable in Payload](26-cms-home-plan.md)
 27. [Mega menu](27-mega-menu.md)
+28. [Contact page and the reusable page hero](28-contact-page.md)
+29. [Principal's Welcome page, the text-only hero and the message section](29-principals-welcome.md)
 
 ## Rules
 

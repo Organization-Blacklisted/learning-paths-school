@@ -33,3 +33,12 @@ export const plusJakartaSans = localFont({
   variable: "--font-plus-jakarta-sans",
   display: "swap",
 });
+
+// Plus Jakarta Sans Bold Italic: only the signature under a message uses it (Figma Principal’s Welcome). `preload: false`, so the file is
+// fetched only on a page that shows it, not on every page like the weights above.
+export const plusJakartaItalic = localFont({
+  src: [{ path: "./plus-jakarta/PlusJakartaSans-BoldItalic.woff2", weight: "700", style: "italic" }],
+  variable: "--font-plus-jakarta-italic",
+  display: "swap",
+  preload: false,
+});

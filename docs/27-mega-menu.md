@@ -36,7 +36,7 @@ When the visitor clicks the hamburger, a panel **comes in from the right and cov
 | Connect | News & Events, Careers, Contact Us |
 
 To change any of it: edit `src/data/menu.ts`.
-- **Every address is `#`** until the pages exist ([03-sitemap.md](03-sitemap.md)).
+- **Every address is `#`** until the pages exist ([03-sitemap.md](03-sitemap.md)), **except three links**: the two "Contact us" links (the utility link at the top and the one under Connect) are `/contact-us` ([28-contact-page.md](28-contact-page.md)) and "Principal’s Welcome" under About Us is `/principals-welcome` ([29-principals-welcome.md](29-principals-welcome.md)).
 
 ## Tablet and phone (my design: only desktop is in Figma)
 

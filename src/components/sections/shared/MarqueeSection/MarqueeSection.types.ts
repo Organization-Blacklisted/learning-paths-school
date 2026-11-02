@@ -9,4 +9,6 @@ export type MarqueeSectionProps = {
    * standard 200px above it and (if it is the last section) 200px below it, like every other section.
    */
   attachToFooter?: boolean;
+  /** "default": 200px above. "inner": 120px, for the inner pages whose design draws 120px between sections. */
+  spacing?: "default" | "inner";
 };

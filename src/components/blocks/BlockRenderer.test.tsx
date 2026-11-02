@@ -171,13 +171,20 @@ describe("the home page (src/data/home-page.ts)", () => {
       "journey", // scene 1
       "framework",
       "ecosystem",
-      "alumni", // scene 2
-      "campus",
+      "campus", // scene 2
+      "alumni",
       "news",
       "cta",
       "marquee",
     ]);
     expect(container.querySelectorAll("[data-scene]")).toHaveLength(2);
+  });
+
+  it("puts the Alumni, now below the scene, in a container with the section spacing (a scene panel had both from the scene)", () => {
+    const { container } = render(<BlockRenderer blocks={homePage} />);
+    const alumni = container.querySelector('[data-section="alumni"]');
+    expect(alumni?.closest("[data-scene]")).toBeNull();
+    expect(alumni?.parentElement?.parentElement?.className).toContain("pt-section");
   });
 
   it("ends with the marquee attached to the footer, and nothing after it", () => {
@@ -191,9 +198,9 @@ describe("the home page (src/data/home-page.ts)", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("stacks the Ecosystem and Alumni scene on phones (pinned, the tall Ecosystem would be shrunk and narrowed), and no other scene", () => {
+  it("stacks the Ecosystem and Campus scene on phones (pinned, the tall Ecosystem would be shrunk and narrowed), and no other scene", () => {
     const stacked = homePage.flatMap((block) => (block.blockType === "scene" && block.stackOnPhones ? [block.id] : []));
-    expect(stacked).toEqual(["ecosystem-alumni"]);
+    expect(stacked).toEqual(["ecosystem-campus"]);
   });
 
   it("gives every scene at least two panels (a one-panel scene would pin the page for nothing)", () => {

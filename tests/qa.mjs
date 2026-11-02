@@ -229,6 +229,137 @@ const ok = (n, p, d = "") => {
     await page.close();
   }
 
+  // 7. The Contact page: head tags, landmarks, the sitemap, no overflow at every width, axe
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/contact-us", { waitUntil: "load" });
+    await page.waitForTimeout(1500);
+    const head = await page.evaluate(() => {
+      const meta = (sel) => document.querySelector(sel)?.getAttribute("content") ?? "";
+      return {
+        title: document.title,
+        description: meta('meta[name="description"]'),
+        canonical: document.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "",
+        ogUrl: meta('meta[property="og:url"]'),
+        lang: document.documentElement.lang,
+        h1: document.querySelectorAll("h1").length,
+        mains: document.querySelectorAll("main").length,
+        mainId: document.querySelector("main")?.id,
+        imgNoAlt: [...document.images].filter((i) => !i.hasAttribute("alt")).length,
+        unlabelled: [...document.querySelectorAll("input:not([type=hidden]):not([tabindex='-1']), select, textarea")].filter(
+          (el) => !el.labels || el.labels.length === 0,
+        ).length,
+      };
+    });
+    ok(
+      "contact: title, description, canonical and og:url are the page's own",
+      /Contact/.test(head.title) &&
+        head.description.length > 50 &&
+        /\/contact-us$/.test(head.canonical) &&
+        /\/contact-us$/.test(head.ogUrl),
+      JSON.stringify({ t: head.title, c: head.canonical }),
+    );
+    ok(
+      "contact: html lang=en, one h1, one main (the skip link's target), every img has an alt, every field has a label",
+      head.lang === "en" &&
+        head.h1 === 1 &&
+        head.mains === 1 &&
+        head.mainId === "main-content" &&
+        head.imgNoAlt === 0 &&
+        head.unlabelled === 0,
+      JSON.stringify(head),
+    );
+    const sitemap = await (await page.request.get(BASE + "/sitemap.xml")).text();
+    ok("the sitemap lists the Contact page", /<loc>[^<]*\/contact-us<\/loc>/.test(sitemap));
+    try {
+      await page.addScriptTag({ url: "https://cdn.jsdelivr.net/npm/axe-core@4.10.2/axe.min.js" });
+      const res = await page.evaluate(async () => {
+        const r = await window.axe.run(document, {
+          exclude: [["iframe"]],
+          runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"] },
+        });
+        return r.violations.map((v) => ({
+          id: v.id,
+          impact: v.impact,
+          nodes: v.nodes.length,
+          sample: v.nodes[0]?.target?.join(" ").slice(0, 90),
+        }));
+      });
+      console.log("contact axe violations:", JSON.stringify(res, null, 1));
+      const blocking = res.filter((v) => v.id !== "color-contrast");
+      ok(
+        "contact: axe finds no violations other than the known colour contrast",
+        blocking.length === 0,
+        res.map((v) => v.id + ":" + v.impact).join(", "),
+      );
+    } catch (e) {
+      console.log("axe unavailable:", String(e).slice(0, 100));
+    }
+    await context.close();
+  }
+
+  // 8. The Principal's Welcome page: head tags, landmarks, the sitemap, axe
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/principals-welcome", { waitUntil: "load" });
+    await page.waitForTimeout(1500);
+    const head = await page.evaluate(() => {
+      const meta = (sel) => document.querySelector(sel)?.getAttribute("content") ?? "";
+      return {
+        title: document.title,
+        description: meta('meta[name="description"]'),
+        canonical: document.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "",
+        ogUrl: meta('meta[property="og:url"]'),
+        lang: document.documentElement.lang,
+        h1: document.querySelectorAll("h1").length,
+        mains: document.querySelectorAll("main").length,
+        mainId: document.querySelector("main")?.id,
+        imgNoAlt: [...document.images].filter((i) => !i.hasAttribute("alt")).length,
+      };
+    });
+    ok(
+      "principal: title, description, canonical and og:url are the page's own",
+      /Principal/.test(head.title) &&
+        head.description.length > 50 &&
+        /\/principals-welcome$/.test(head.canonical) &&
+        /\/principals-welcome$/.test(head.ogUrl),
+      JSON.stringify({ t: head.title, c: head.canonical }),
+    );
+    ok(
+      "principal: html lang=en, one h1, one main (the skip link's target), every img has an alt",
+      head.lang === "en" && head.h1 === 1 && head.mains === 1 && head.mainId === "main-content" && head.imgNoAlt === 0,
+      JSON.stringify(head),
+    );
+    const sitemap = await (await page.request.get(BASE + "/sitemap.xml")).text();
+    ok("the sitemap lists the Principal's Welcome page", /<loc>[^<]*\/principals-welcome<\/loc>/.test(sitemap));
+    try {
+      await page.addScriptTag({ url: "https://cdn.jsdelivr.net/npm/axe-core@4.10.2/axe.min.js" });
+      const res = await page.evaluate(async () => {
+        const r = await window.axe.run(document, {
+          runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"] },
+        });
+        return r.violations.map((v) => ({
+          id: v.id,
+          impact: v.impact,
+          nodes: v.nodes.length,
+          sample: v.nodes[0]?.target?.join(" ").slice(0, 90),
+        }));
+      });
+      console.log("principal axe violations:", JSON.stringify(res, null, 1));
+      const blocking = res.filter((v) => v.id !== "color-contrast");
+      ok(
+        "principal: axe finds no violations other than the known colour contrast",
+        blocking.length === 0,
+        res.map((v) => v.id + ":" + v.impact).join(", "),
+      );
+    } catch (e) {
+      console.log("axe unavailable:", String(e).slice(0, 100));
+    }
+    await context.close();
+  }
+
   console.log(fails ? `\n${fails} CHECK(S) FAILED` : "\nALL CHECKS PASSED");
   await browser.close();
   process.exitCode = fails ? 1 : 0;

@@ -12,9 +12,12 @@ import type { SectionProps } from "./Section.types";
 // (the hero, or the previous section), and the LAST section on a page also gets one --spacing-section
 // below it, before the footer (`last:pb-section`, which applies when the section is the last child of
 // its parent, normally <main>). So between two sections there is exactly one gap, never two.
+// "inner" is the 120px gap some inner pages draw (src/styles/spacing.css); "none" leaves the spacing to the section itself.
+const SPACING = { default: "pt-section last:pb-section", inner: "pt-inner last:pb-inner", none: "" } as const;
+
 export default function Section({ children, label, className = "", spacing = "default", contained = true, contentWidth }: SectionProps) {
   return (
-    <section aria-label={label} className={`${spacing === "default" ? "pt-section last:pb-section" : ""} ${className}`}>
+    <section aria-label={label} className={`${SPACING[spacing]} ${className}`}>
       {contained ? <Container contentWidth={contentWidth}>{children}</Container> : children}
     </section>
   );

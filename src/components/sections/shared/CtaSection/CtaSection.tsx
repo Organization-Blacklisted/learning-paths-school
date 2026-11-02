@@ -17,11 +17,14 @@ import type { CtaSectionProps } from "./CtaSection.types";
 // It is a normal <Section> (main container, 200px spacing above, and below when it is the last thing on the page).
 // The band: blue gradient (#123b7a to #0a295e, left to right), 15px corners, a soft blue glow and five slanted white
 // 3% bars at the right (all anchored to the right edge, so on a narrow screen the decoration stays at the right and is
-// clipped), then the content: pill, heading ("LPS Forward" in an accent serif, slanted like the other headings),
+// clipped), then the content: pill, heading (Lexend Regular, 40px, white; "LPS Forward" is the same font slanted like the other headings),
 // paragraph, and the white button at the bottom right.
 //
-// The heading box is 65.4px high from xl, like the Figma group (the accent serif sits 8px lower there), so the band
-// height and the vertical position of everything match.
+// HEADING FONT (owner, 2026-11-02: "we will not use Scaver, it is outdated on Figma"): the heading was Plus Jakarta Sans at 48px with the
+// last words in the accent serif Scaver (never supplied, a system serif stood in). The current Figma (node 6795:3703) draws all of it in Lexend
+// Deca Regular 40px, the last words slanted by skewX(-8deg) and squashed to 99%, and there is no accent font any more.
+//
+// The heading box is 49.05px high from xl, like the Figma group, so the band height and the vertical position of everything match.
 // From xl (1280px) it is the design: content left, button bottom right, one line of heading. Below that (my
 // interpretation, only desktop exists in Figma) everything stacks and the heading wraps.
 //
@@ -38,7 +41,7 @@ const BARS = [
   { right: -513.447, top: -125.016, width: 825.377, height: 607.581, inner: 239.229 },
 ];
 
-export default function CtaSection({ content = defaultCta }: CtaSectionProps) {
+export default function CtaSection({ content = defaultCta, spacing = "default" }: CtaSectionProps) {
   const { label, badge, titleLead, titleAccent, text, button } = content;
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +66,7 @@ export default function CtaSection({ content = defaultCta }: CtaSectionProps) {
   );
 
   return (
-    <Section label={label}>
+    <Section label={label} spacing={spacing}>
       <div
         ref={rootRef}
         className="relative overflow-clip rounded-[15px] bg-linear-to-r from-brand-blue to-brand-blue-darker px-6 py-12 md:px-10 xl:flex xl:min-h-[335px] xl:items-center xl:py-0 xl:pr-[57px] xl:pl-[51px]"
@@ -105,10 +108,9 @@ export default function CtaSection({ content = defaultCta }: CtaSectionProps) {
             </Badge>
             <h2
               data-cta-item
-              className="font-body text-h1 leading-[1.2] font-normal tracking-[-0.01em] text-white xl:min-h-[65.436px] xl:whitespace-nowrap"
+              className="font-heading text-h2 leading-[1.2] font-normal tracking-[-0.01em] text-white xl:min-h-[49.05px] xl:whitespace-nowrap"
             >
-              {titleLead}{" "}
-              <span className="ml-[0.125em] inline-block font-accent font-normal [transform:skewX(-8deg)_scaleY(0.99)]">{titleAccent}</span>
+              {titleLead} <span className="ml-[0.14em] inline-block font-normal [transform:skewX(-8deg)_scaleY(0.99)]">{titleAccent}</span>
             </h2>
             <p
               data-cta-item

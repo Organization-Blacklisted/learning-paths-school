@@ -7,7 +7,7 @@ import { revalidateTag } from "next/cache";
 //   curl -X POST https://<site>/api/revalidate -H "x-revalidate-secret: $REVALIDATE_SECRET" -H "content-type: application/json" -d '{"tag":"home"}'
 //
 // The secret is the environment variable REVALIDATE_SECRET. Without it set, every call is refused. Only the tags listed here can be cleared.
-export const ALLOWED_TAGS = ["home"] as const;
+export const ALLOWED_TAGS = ["home", "contact", "principals-welcome"] as const;
 
 function sameSecret(given: string | null, expected: string): boolean {
   if (!given) return false;

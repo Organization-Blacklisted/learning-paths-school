@@ -23,6 +23,9 @@ Source: the "04 Colour palette & design tokens" section of the project brief, wh
 | Blue night (not in the brief; the ENTERPRISING label in the diagram) | `#0B2349` | `--color-brand-blue-night` | `text-brand-blue-night` |
 | Blue darker (not in the brief; end of the CTA band gradient) | `#0A295E` | `--color-brand-blue-darker` | `to-brand-blue-darker` |
 | Paper (not in the brief; text panel of the news cards) | `#FBFBFB` | `--color-brand-paper` | `bg-brand-paper` |
+| Snow (not in the brief; the page colour of the Figma Contact page, the hero card and the form labels) | `#F9F9F9` | `--color-brand-snow` | `bg-brand-snow` |
+| Fog (not in the brief; the 1px border of the Contact form's fields) | `#B8B8B8` | `--color-brand-fog` | `border-brand-fog` |
+| Azure (not in the brief; the name under a message: Figma Principal's Welcome, bold italic) | `#2F5EAC` | `--color-brand-azure` | `text-brand-azure` |
 | Cloud (not in the brief; news card background) | `#F6F6F6` | `--color-brand-cloud` | `bg-brand-cloud` |
 | Navy (darkest) | `#061939` | `--color-brand-navy` | `bg-brand-navy`, `text-brand-navy` |
 | Blue | `#123B7A` | `--color-brand-blue` | `bg-brand-blue` |
@@ -58,7 +61,7 @@ Fonts are local files in `src/fonts/`, loaded in `src/fonts/index.ts` with `next
 | Body | Plus Jakarta Sans | `font-body` (also `font-sans`) | `--font-body` | loaded: 300, 400, 500, 600, 700 upright (files for 200 to 800 with italics are supplied) |
 
 - Tokens are defined in `src/styles/typography.css`. To swap a font, change only that file.
-- **Accent serif:** `font-accent` (`--font-accent`) is for one highlighted phrase, used by the CTA band ("LPS Forward"). The design's font is **Scaver**, not supplied yet, so it falls back to a system serif. See [17-cta-section.md](17-cta-section.md).
+- **No accent font any more (2026-11-02, owner: "we will not use Scaver, it is outdated on Figma").** The `font-accent` token and the Scaver fallback were removed. The highlighted words of a heading are the heading font slanted (`<Accent>`: Lexend Medium, blue; the CTA band: Lexend Regular, white). See [17-cta-section.md](17-cta-section.md).
 - `h1` to `h6` get `font-heading` by default via a base rule in `globals.css`. `body` gets `font-body`.
 - Use `font-heading` / `font-body` in components, not the family names.
 - Lexend Deca has no italic files, so `italic` on a heading is browser-synthesized. Avoid it.
@@ -133,6 +136,8 @@ The container adds side gutters around the content. **LOCAL TRIAL (2026-10-28, n
 
 ### Section spacing
 
+**Token `--spacing-inner`** (same file): 120px from 1280px up, 64px at 360px, for the inner pages whose design draws 120px between sections (`<Section spacing="inner">`, `pt-inner`). **Never name a spacing token with a Tailwind word:** Tailwind makes utilities out of every `--spacing-<name>`, and a first attempt called `--spacing-block` overrode Tailwind's own `inline-block` (every slanted word of a heading became 120px wide). See [29-principals-welcome.md](29-principals-welcome.md).
+
 Token `--spacing-section` in `src/styles/spacing.css`: **200px on desktop**, fluid down to **80px** on small screens (scales between a 360px and a 1280px viewport like the type scale; the 80px minimum is my assumption, the brief only gives 200px). Available as Tailwind utilities: `gap-section`, `pt-section`, `pb-section`, `mt-section`, and so on.
 
 | Viewport | `--spacing-section` |
@@ -162,7 +167,7 @@ Verified in Chrome: the container content is 1520px at 1920px; the token is 200p
 
 | Component | Location | Status |
 | --- | --- | --- |
-| `Badge` | `components/ui/Badge` | the green pill (default and compact sizes) |
+| `Badge` | `components/ui/Badge` | the green pill (default, compact, eyebrow and eyebrow-semibold sizes; `eyebrow` is the bold 17px pill under a page photo, `eyebrow-semibold` the same pill in SemiBold, as the text-only hero draws it) |
 | `ButtonLink` | `components/ui/ButtonLink` | green and light link buttons |
 | `SectionTitle` | `components/ui/SectionTitle` | the h2 of a section (Lexend Regular, fluid h2 size, graphite); tracking and wrapping per design in `className` |
 | `Accent` | `components/ui/Accent` | the blue slanted word inside a heading (Lexend Medium, `skewX(-8deg) scaleY(0.99)`) |

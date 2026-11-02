@@ -62,6 +62,8 @@ export const list = ({ name, label, fields, description, min, max }: ListOptions
   name,
   label,
   type: "array",
+  // `required` as well: with minRows alone Payload lets an EMPTY list through (found in the Contact page's CMS test, 2026-11-02).
+  required: true,
   minRows: min,
   maxRows: max,
   fields,

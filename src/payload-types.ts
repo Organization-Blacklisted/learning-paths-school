@@ -89,9 +89,13 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     home: Home;
+    contact: Contact;
+    'principals-welcome': PrincipalsWelcome;
   };
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
+    contact: ContactSelect<false> | ContactSelect<true>;
+    'principals-welcome': PrincipalsWelcomeSelect<false> | PrincipalsWelcomeSelect<true>;
   };
   locale: null;
   widgets: {
@@ -381,43 +385,39 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface Home {
   id: number;
-  hero?: {
+  hero: {
     /**
      * Shown one after another. The photo is shown full width behind the text.
      */
-    slides?:
-      | {
-          /**
-           * 1920 x 993 works best. The text sits on top of it, so the photo needs the dark shading at the top and bottom that the current ones have (it is part of the picture).
-           */
-          image: number | Media;
-          /**
-           * For example Courage.
-           */
-          title: string;
-          /**
-           * For example that.
-           */
-          lead: string;
-          /**
-           * Include the quote marks.
-           */
-          quote: string;
-          id?: string | null;
-        }[]
-      | null;
+    slides: {
+      /**
+       * 1920 x 993 works best. The text sits on top of it, so the photo needs the dark shading at the top and bottom that the current ones have (it is part of the picture).
+       */
+      image: number | Media;
+      /**
+       * For example Courage.
+       */
+      title: string;
+      /**
+       * For example that.
+       */
+      lead: string;
+      /**
+       * Include the quote marks.
+       */
+      quote: string;
+      id?: string | null;
+    }[];
   };
-  vision?: {
+  vision: {
     /**
      * In order: Vision, Mission, Values. The design has exactly 3 here: change what is in each row, rows cannot be added or removed.
      */
-    items?:
-      | {
-          title: string;
-          text: string;
-          id?: string | null;
-        }[]
-      | null;
+    items: {
+      title: string;
+      text: string;
+      id?: string | null;
+    }[];
   };
   courage: {
     /**
@@ -437,19 +437,17 @@ export interface Home {
     /**
      * In this order: chess, building, stage, race, skating, carrom, dance, slide. Each photo is cropped to a fixed shape in the collage, so replace a photo with one of the same shape. The design has exactly 8 here: change what is in each row, rows cannot be added or removed.
      */
-    photos?:
-      | {
-          /**
-           * Do not change.
-           */
-          slot: string;
-          /**
-           * Choose a photo or upload one (JPG, PNG or WebP are converted to AVIF automatically). Its alt text comes from the library.
-           */
-          image: number | Media;
-          id?: string | null;
-        }[]
-      | null;
+    photos: {
+      /**
+       * Do not change.
+       */
+      slot: string;
+      /**
+       * Choose a photo or upload one (JPG, PNG or WebP are converted to AVIF automatically). Its alt text comes from the library.
+       */
+      image: number | Media;
+      id?: string | null;
+    }[];
   };
   journey: {
     badge: string;
@@ -462,28 +460,26 @@ export interface Home {
     /**
      * In order: Pre-Primary, Primary, Secondary, Senior Secondary. The design has exactly 4 here: change what is in each row, rows cannot be added or removed.
      */
-    stages?:
-      | {
-          level: string;
-          /**
-           * For example (Pre-Nursery to UKG).
-           */
-          range: string;
-          /**
-           * For example The Path of.
-           */
-          pathPrefix: string;
-          /**
-           * For example Discovery.
-           */
-          path: string;
-          /**
-           * Shown in a tall narrow frame (171 x 343), so a portrait photo works best.
-           */
-          image: number | Media;
-          id?: string | null;
-        }[]
-      | null;
+    stages: {
+      level: string;
+      /**
+       * For example (Pre-Nursery to UKG).
+       */
+      range: string;
+      /**
+       * For example The Path of.
+       */
+      pathPrefix: string;
+      /**
+       * For example Discovery.
+       */
+      path: string;
+      /**
+       * Shown in a tall narrow frame (171 x 343), so a portrait photo works best.
+       */
+      image: number | Media;
+      id?: string | null;
+    }[];
   };
   framework: {
     badge: string;
@@ -501,16 +497,14 @@ export interface Home {
     /**
      * In order: Proficient, Inclusive, Open-minded, Novel, Enterprising, Ethical, Resilient (they spell PIONEER). The design has exactly 7 here: change what is in each row, rows cannot be added or removed.
      */
-    items?:
-      | {
-          /**
-           * The letter in the circle stays the same.
-           */
-          label: string;
-          description: string;
-          id?: string | null;
-        }[]
-      | null;
+    items: {
+      /**
+       * The letter in the circle stays the same.
+       */
+      label: string;
+      description: string;
+      id?: string | null;
+    }[];
   };
   ecosystem: {
     badge: string;
@@ -523,27 +517,37 @@ export interface Home {
     /**
      * In order: Academic, Sports, Co-scholastic, Capstone, Social. The design has exactly 5 here: change what is in each row, rows cannot be added or removed.
      */
-    tabs?:
-      | {
-          /**
-           * Keep it about as long as the current one: the button width is fixed.
-           */
-          label: string;
-          /**
-           * Wide photo shown under the tabs (about 1520 x 531).
-           */
-          image: number | Media;
-          title: string;
-          text: string;
-          bullets?:
-            | {
-                text: string;
-                id?: string | null;
-              }[]
-            | null;
-          id?: string | null;
-        }[]
-      | null;
+    tabs: {
+      /**
+       * Keep it about as long as the current one: the button width is fixed.
+       */
+      label: string;
+      /**
+       * Wide photo shown under the tabs (about 1520 x 531).
+       */
+      image: number | Media;
+      title: string;
+      text: string;
+      bullets?:
+        | {
+            text: string;
+            id?: string | null;
+          }[]
+        | null;
+      id?: string | null;
+    }[];
+  };
+  campus: {
+    badge: string;
+    titleStart: string;
+    titleAccent: string;
+    titleEnd: string;
+    intro: string;
+    /**
+     * Shown 1200 x 594. It stays here until a video is added.
+     */
+    poster: number | Media;
+    tag: string;
   };
   alumni: {
     badge: string;
@@ -559,29 +563,15 @@ export interface Home {
     /**
      * The design has exactly 2 here: change what is in each row, rows cannot be added or removed.
      */
-    people?:
-      | {
-          name: string;
-          institution: string;
-          /**
-           * Shown in a frame of about 428 x 385.
-           */
-          image: number | Media;
-          id?: string | null;
-        }[]
-      | null;
-  };
-  campus: {
-    badge: string;
-    titleStart: string;
-    titleAccent: string;
-    titleEnd: string;
-    intro: string;
-    /**
-     * Shown 1200 x 594. It stays here until a video is added.
-     */
-    poster: number | Media;
-    tag: string;
+    people: {
+      name: string;
+      institution: string;
+      /**
+       * Shown in a frame of about 428 x 385.
+       */
+      image: number | Media;
+      id?: string | null;
+    }[];
   };
   news: {
     badge: string;
@@ -594,28 +584,26 @@ export interface Home {
     /**
      * Three fit side by side on a large screen; more can be swiped on small screens.
      */
-    items?:
-      | {
-          /**
-           * Shown as written, for example September 6, 2023.
-           */
-          date: string;
-          title: string;
-          /**
-           * Shown in five lines at most.
-           */
-          excerpt: string;
-          /**
-           * Where the card goes: a page of the site (/news/example) or a full address.
-           */
-          href: string;
-          /**
-           * Shown 318 x 203.
-           */
-          image: number | Media;
-          id?: string | null;
-        }[]
-      | null;
+    items: {
+      /**
+       * Shown as written, for example September 6, 2023.
+       */
+      date: string;
+      title: string;
+      /**
+       * Shown in five lines at most.
+       */
+      excerpt: string;
+      /**
+       * Where the card goes: a page of the site (/news/example) or a full address.
+       */
+      href: string;
+      /**
+       * Shown 318 x 203.
+       */
+      image: number | Media;
+      id?: string | null;
+    }[];
   };
   cta: {
     badge: string;
@@ -634,19 +622,174 @@ export interface Home {
      */
     buttonHref: string;
   };
-  marquee?: {
+  marquee: {
     /**
      * Shown as squares, in this order, scrolling forever.
      */
-    images?:
-      | {
-          /**
-           * A square photo (640 x 640 works best).
-           */
-          image: number | Media;
-          id?: string | null;
-        }[]
-      | null;
+    images: {
+      /**
+       * A square photo (640 x 640 works best).
+       */
+      image: number | Media;
+      id?: string | null;
+    }[];
+  };
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    /**
+     * Leave off for a normal public page.
+     */
+    noIndex?: boolean | null;
+    /**
+     * Only if another address is the main one for this page (a full address, https://...). Leave blank: the page's own address is used.
+     */
+    canonical?: string | null;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * The photo and heading, the contact details and the map of the Contact page, and its search-engine settings (SEO tab).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact".
+ */
+export interface Contact {
+  id: number;
+  hero: {
+    /**
+     * Shown in capitals, for example Contact us.
+     */
+    badge: string;
+    /**
+     * For example: Let’s Begin a
+     */
+    titleLead: string;
+    /**
+     * Shown in blue, slanted. For example: Conversation
+     */
+    titleAccent: string;
+    /**
+     * One short line.
+     */
+    subtitle: string;
+    /**
+     * 1920 x 736 works best (a wide photo; its middle is what shows on a narrow screen). Choose one from the library or upload one: JPG, PNG or WebP are converted to AVIF automatically.
+     */
+    image: number | Media;
+  };
+  details: {
+    emails: {
+      address: string;
+      /**
+       * For example: admissions. Leave empty for none.
+       */
+      note?: string | null;
+      id?: string | null;
+    }[];
+    phones: {
+      /**
+       * As people write it, for example: 0172-5134300
+       */
+      number: string;
+      /**
+       * For example: for admissions only. Leave empty for none.
+       */
+      note?: string | null;
+      id?: string | null;
+    }[];
+    /**
+     * One line.
+     */
+    location: string;
+  };
+  map: {
+    embedUrl: string;
+    /**
+     * For example: Map showing Learning Paths School in Sector 67, Mohali.
+     */
+    title: string;
+  };
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    /**
+     * Leave off for a normal public page.
+     */
+    noIndex?: boolean | null;
+    /**
+     * Only if another address is the main one for this page (a full address, https://...). Leave blank: the page's own address is used.
+     */
+    canonical?: string | null;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * The heading, the portrait and the letter of the Principal’s Welcome page, and its search-engine settings (SEO tab).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "principals-welcome".
+ */
+export interface PrincipalsWelcome {
+  id: number;
+  hero: {
+    /**
+     * Shown in capitals, for example Contact us.
+     */
+    badge: string;
+    /**
+     * For example: Let’s Begin a
+     */
+    titleLead: string;
+    /**
+     * Shown in blue, slanted. For example: Conversation
+     */
+    titleAccent: string;
+    /**
+     * One short line.
+     */
+    subtitle: string;
+  };
+  message: {
+    /**
+     * A portrait photo, about 777 x 816 (it is shown with rounded corners). Choose one from the library or upload one: JPG, PNG or WebP are converted to AVIF automatically. Its alt text comes from the library.
+     */
+    image: number | Media;
+    /**
+     * For example: “How can I win medals,
+     */
+    titleLead: string;
+    /**
+     * Shown in blue, slanted. For example: Ma’am?”
+     */
+    titleAccent: string;
+    paragraphs: {
+      /**
+       * A line break (Enter) inside a paragraph starts a new line without the space between paragraphs.
+       */
+      text: string;
+      id?: string | null;
+    }[];
+    /**
+     * Shown in blue, bold italic.
+     */
+    signatoryName: string;
+    /**
+     * For example: Principal
+     */
+    signatoryRole: string;
   };
   meta?: {
     title?: string | null;
@@ -774,6 +917,17 @@ export interface HomeSelect<T extends boolean = true> {
               id?: T;
             };
       };
+  campus?:
+    | T
+    | {
+        badge?: T;
+        titleStart?: T;
+        titleAccent?: T;
+        titleEnd?: T;
+        intro?: T;
+        poster?: T;
+        tag?: T;
+      };
   alumni?:
     | T
     | {
@@ -795,17 +949,6 @@ export interface HomeSelect<T extends boolean = true> {
               image?: T;
               id?: T;
             };
-      };
-  campus?:
-    | T
-    | {
-        badge?: T;
-        titleStart?: T;
-        titleAccent?: T;
-        titleEnd?: T;
-        intro?: T;
-        poster?: T;
-        tag?: T;
       };
   news?:
     | T
@@ -844,6 +987,101 @@ export interface HomeSelect<T extends boolean = true> {
               image?: T;
               id?: T;
             };
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+        noIndex?: T;
+        canonical?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact_select".
+ */
+export interface ContactSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        badge?: T;
+        titleLead?: T;
+        titleAccent?: T;
+        subtitle?: T;
+        image?: T;
+      };
+  details?:
+    | T
+    | {
+        emails?:
+          | T
+          | {
+              address?: T;
+              note?: T;
+              id?: T;
+            };
+        phones?:
+          | T
+          | {
+              number?: T;
+              note?: T;
+              id?: T;
+            };
+        location?: T;
+      };
+  map?:
+    | T
+    | {
+        embedUrl?: T;
+        title?: T;
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+        noIndex?: T;
+        canonical?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "principals-welcome_select".
+ */
+export interface PrincipalsWelcomeSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        badge?: T;
+        titleLead?: T;
+        titleAccent?: T;
+        subtitle?: T;
+      };
+  message?:
+    | T
+    | {
+        image?: T;
+        titleLead?: T;
+        titleAccent?: T;
+        paragraphs?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        signatoryName?: T;
+        signatoryRole?: T;
       };
   meta?:
     | T

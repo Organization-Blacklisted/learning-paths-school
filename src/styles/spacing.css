@@ -6,6 +6,13 @@
  *                    is my assumption). Use as gap-section, pt-section, pb-section, mt-section...
  *                    The <Section> component uses it above every section and below the last one.
  *
+ * --spacing-inner    the gap between the sections of an INNER page when the design draws 120px (the Principal’s Welcome page: the message, the call to
+ *                    action and the photo strip are 120px apart): 120px from 1280px up, scaling down to 64px at 360px (my assumption for the
+ *                    minimum). Use as pt-inner, pb-inner. <Section spacing="inner"> uses it.
+ *                    NOT called "block": Tailwind turns every --spacing-<name> into utilities, and "block" collided with its own `block` and
+ *                    `inline-block` (it made every `inline-block` as wide as the token: the Principal's Welcome heading broke in two). Pick a name
+ *                    that is not a Tailwind word.
+ *
  * --spacing-gutter   the space between the screen edge and the content column (LOCAL TRIAL, 2026-10-28, not pushed): 5% of the screen width,
  *                    never less than 20px and never more than 80px. So 20px on phones (400px and below), about 51px at 1024, 64px at 1280,
  *                    68px at 1366, 72px at 1440, and 80px from 1600 up. It used to be a flat 20px (below 768px) and 40px (768px and up).
@@ -17,5 +24,6 @@
  */
 @theme static {
   --spacing-section: clamp(5rem, 2.0652rem + 13.0435vw, 12.5rem);
+  --spacing-inner: clamp(4rem, 2.6304rem + 6.087vw, 7.5rem);
   --spacing-gutter: clamp(1.25rem, 5vw, 5rem);
 }

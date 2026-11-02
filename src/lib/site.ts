@@ -33,7 +33,7 @@ export const SHOW_HOME_SECTIONS = true;
 /**
  * HOW MANY SECTIONS OF THE HOME PAGE ARE SHOWN (owner: the first three on 2026-10-22, the first four on 2026-10-23, the first five and then six on 2026-10-24, and the whole page (null) on 2026-10-28, pushed the same day). The page is the list in src/data/home-page.ts;
  * every block, and every panel of a sideways scene, counts as one section, in page order: 1 hero, 2 vision / mission / values, 3 courage,
- * 4 journey, 5 framework, 6 ecosystem, 7 alumni, 8 campus, 9 news, 10 call to action, 11 photo strip. The sections after the limit are not
+ * 4 journey, 5 framework, 6 ecosystem, 7 campus, 8 alumni, 9 news, 10 call to action, 11 photo strip. The sections after the limit are not
  * rendered at all (no images, scripts or animations load for them). The header and the footer always stay.
  *
  * TO BRING THE WHOLE PAGE BACK set this to null (or build with HOME_SECTION_LIMIT=all). The browser checks (`npm run qa:serve`, and so CI)

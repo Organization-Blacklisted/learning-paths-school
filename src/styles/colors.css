@@ -40,4 +40,10 @@
   --color-brand-charcoal: #444444;
   /* Not in the brief's palette image. The thin vertical divider between the two lists of the Figma mega menu. */
   --color-brand-silver: #d1d1d1;
+  /* Not in the brief’s palette image. The page background of the Figma Contact page (the hero card and the form labels use it to blend in). */
+  --color-brand-snow: #f9f9f9;
+  /* Not in the brief’s palette image. The 1px border of the Figma contact form fields. */
+  --color-brand-fog: #b8b8b8;
+  /* Not in the brief’s palette image. The name of the signatory under a message (Figma Principal’s Welcome, bold italic). */
+  --color-brand-azure: #2f5eac;
 }

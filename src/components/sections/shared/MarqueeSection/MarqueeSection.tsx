@@ -40,7 +40,7 @@ const COPIES = 4;
 /** Pixels per second. */
 const SPEED = 60;
 
-export default function MarqueeSection({ content = defaultMarquee, attachToFooter = false }: MarqueeSectionProps) {
+export default function MarqueeSection({ content = defaultMarquee, attachToFooter = false, spacing = "default" }: MarqueeSectionProps) {
   const { label, images } = content;
   const rootRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -108,7 +108,12 @@ export default function MarqueeSection({ content = defaultMarquee, attachToFoote
   return (
     // Normal section spacing (200px above; also 200px below when it is the last section), so it can sit anywhere on a page.
     // attachToFooter: no space below, so the strip touches the footer (home page).
-    <Section label={label} contained={false} {...(attachToFooter ? { spacing: "none" as const, className: "pt-section" } : {})}>
+    <Section
+      label={label}
+      contained={false}
+      spacing={attachToFooter ? "none" : spacing}
+      className={attachToFooter ? (spacing === "inner" ? "pt-inner" : "pt-section") : ""}
+    >
       {/* --tile: one photo. 1/6 of the screen, 160px at least, 320px at most (320 at 1920px, as designed). */}
       <div ref={rootRef} className="relative h-(--tile) overflow-hidden [--tile:clamp(160px,16.6667vw,320px)]">
         <div ref={trackRef} className="flex h-full w-max will-change-transform">

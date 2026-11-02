@@ -4,7 +4,7 @@ import type { MenuContent, MenuLink, MenuSection } from "@/types/menu";
 //
 // The eight main items and every link under them are the owner's final list (2026-10-29). Spelling and capitals are the owner's, as given.
 //
-// TODO: every `href` is "#" until the pages exist (docs/03-sitemap.md); then they become the real addresses.
+// TODO: every `href` is "#" until the pages exist (docs/03-sitemap.md); then they become the real addresses. "Contact us" (twice) is /contact-us and "Principal’s Welcome" is /principals-welcome since 2026-11-02.
 
 const link = (id: string, label: string): MenuLink => ({ id, label, href: "#" });
 
@@ -14,7 +14,7 @@ const sections: MenuSection[] = [
     label: "About Us",
     links: [
       link("welcome", "Welcome to LPS"),
-      link("principal", "Principal’s Welcome"),
+      { ...link("principal", "Principal’s Welcome"), href: "/principals-welcome" },
       link("partnerships", "Partnerships"),
       link("campus", "Campus Experience"),
       link("awards", "Awards & Recognition"),
@@ -88,7 +88,7 @@ const sections: MenuSection[] = [
   {
     id: "connect",
     label: "Connect",
-    links: [link("news", "News & Events"), link("careers", "Careers"), link("contact", "Contact Us")],
+    links: [link("news", "News & Events"), link("careers", "Careers"), { ...link("contact", "Contact Us"), href: "/contact-us" }],
   },
 ];
 
@@ -96,6 +96,6 @@ export const menuContent: MenuContent = {
   label: "Main menu",
   closeLabel: "Close menu",
   sections,
-  utility: { parentLogin: link("parent-login", "Parent Login"), contact: link("contact", "Contact us") },
+  utility: { parentLogin: link("parent-login", "Parent Login"), contact: { ...link("contact", "Contact us"), href: "/contact-us" } },
   actions: { enquiry: link("enquiry", "Begin an Admission Enquiry"), career: link("career", "Career") },
 };
