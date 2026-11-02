@@ -80,11 +80,30 @@ describe("MegaMenu", () => {
     expect(parentButton(second.label).getAttribute("aria-expanded")).toBe("false");
   });
 
-  it("a mouse over an item chooses it (side by side only)", () => {
+  it("a mouse that moves over an item chooses it (side by side only)", () => {
     render(<MegaMenu open onClose={() => {}} />);
-    fireEvent.pointerEnter(parentButton(second.label), { pointerType: "mouse" });
+    fireEvent.pointerMove(document, { pointerType: "mouse", clientX: 1100, clientY: 300 });
+    fireEvent.pointerEnter(parentButton(second.label), { pointerType: "mouse", clientX: 1100, clientY: 300 });
     expect(parentButton(second.label).getAttribute("aria-expanded")).toBe("true");
-    fireEvent.pointerEnter(parentButton(first.label), { pointerType: "touch" });
+    fireEvent.pointerMove(document, { pointerType: "touch", clientX: 1100, clientY: 400 });
+    fireEvent.pointerEnter(parentButton(first.label), { pointerType: "touch", clientX: 1100, clientY: 400 });
+    expect(parentButton(second.label).getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("a hover with no real mouse movement does not choose an item (the page moved under a resting mouse: that made the list shake while the menu came in)", () => {
+    render(<MegaMenu open onClose={() => {}} />);
+    // the mouse rests at one spot; the browser sends pointer events for what slides under it, always at that same position
+    fireEvent.pointerMove(document, { pointerType: "mouse", clientX: 1100, clientY: 300 });
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    fireEvent.pointerEnter(parentButton(second.label), { pointerType: "mouse", clientX: 1100, clientY: 300 });
+    fireEvent.pointerMove(parentButton(second.label), { pointerType: "mouse", clientX: 1100, clientY: 300 });
+    expect(parentButton(second.label).getAttribute("aria-expanded")).toBe("false");
+    expect(parentButton(first.label).getAttribute("aria-expanded")).toBe("true");
+    // the same item once the mouse really moves onto it
+    fireEvent.pointerMove(document, { pointerType: "mouse", clientX: 1100, clientY: 303 });
+    fireEvent.pointerMove(parentButton(second.label), { pointerType: "mouse", clientX: 1100, clientY: 303 });
     expect(parentButton(second.label).getAttribute("aria-expanded")).toBe("true");
   });
 

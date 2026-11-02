@@ -2,7 +2,11 @@
 
 Newest first.
 
-## 2026-11-02 (latest): menu shake fix
+## 2026-11-02 (latest): menu shake, second fix
+
+- **Mega menu: the right-hand links still shook "sometimes" after the first fix (owner, on the live site).** Could not be reproduced in an automated Chrome. Most likely cause: items sliding and rising under a resting mouse make the browser send hover events with no mouse movement, which swapped the chosen item and its link list. Hover now chooses an item only if the pointer's screen position really changed in the last 200 ms. Unit tests added, real-Chrome hover checked. See [27-mega-menu.md](27-mega-menu.md). Not proven to be the only cause; not pushed yet.
+
+## 2026-11-02 (earlier): menu shake fix
 
 - **Mega menu: the right-hand links shook while the menu opened (owner, after the deploy).** A timer changed the links' animation delay at 1.2 s while they were still animating, which makes a running animation jump. The change now waits until the first list has finished rising, and lists chosen later by hover never change their delay while playing. See [27-mega-menu.md](27-mega-menu.md). Checked by sampling the links frame by frame on the dev server. Not pushed yet.
 

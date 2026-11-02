@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type CSSProperties, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import ButtonLink from "@/components/ui/ButtonLink";
 import Photo from "@/components/ui/Photo";
 import { menuContent } from "@/data/menu";
@@ -145,6 +145,28 @@ export default function MegaMenu({ open, onClose, returnFocusRef, warm = false, 
     }
   };
 
+  // Pointing at a main item chooses it (side by side), but ONLY while the mouse is really moving. While the menu comes in, the panel slides and the
+  // items rise under a mouse that is resting somewhere over the lists; the browser then still sends "pointer enter" for whatever ends up under
+  // it, with no movement at all, and the right-hand list swapped back and forth by itself (the shaking the owner saw, only sometimes: it
+  // depends on where the mouse rests). A real move changes the pointer's screen position, those events do not, so the position is watched on
+  // the whole document and a hover counts only within 200 ms of a real change of it.
+  const pointer = useRef({ x: -1, y: -1, movedAt: -Infinity });
+  useEffect(() => {
+    const watch = (event: globalThis.PointerEvent) => {
+      const at = pointer.current;
+      if (event.clientX === at.x && event.clientY === at.y) return;
+      at.x = event.clientX;
+      at.y = event.clientY;
+      at.movedAt = event.timeStamp;
+    };
+    document.addEventListener("pointermove", watch, { capture: true, passive: true });
+    return () => document.removeEventListener("pointermove", watch, { capture: true });
+  }, []);
+  const hover = (event: PointerEvent<HTMLElement>, sectionId: string) => {
+    if (event.pointerType !== "mouse" || !sideBySide) return;
+    if (event.timeStamp - pointer.current.movedAt > 200) return;
+    setActiveId(sectionId);
+  };
   const choose = (sectionId: string) => setActiveId((current) => (sideBySide ? sectionId : current === sectionId ? null : sectionId));
   // The entrance of the small links, the main items and the buttons: slow (900 ms each), one after another (70 ms apart), starting when the
   // panel has nearly arrived (700 ms of its 1000). Closing: no delay and a quick fade. The main items also change colour on hover, so their
@@ -244,9 +266,8 @@ export default function MegaMenu({ open, onClose, returnFocusRef, warm = false, 
                     aria-expanded={active}
                     aria-controls={listId}
                     onClick={() => choose(section.id)}
-                    onPointerEnter={(event) => {
-                      if (event.pointerType === "mouse" && sideBySide) setActiveId(section.id);
-                    }}
+                    onPointerEnter={(event) => hover(event, section.id)}
+                    onPointerMove={(event) => hover(event, section.id)}
                     style={delayItem(index + 1)}
                     className={`relative flex w-full items-center py-1.5 text-left font-body text-px-30 max-md:py-3.5 max-md:text-px-20 leading-[1.2] font-light text-brand-charcoal hover:text-brand-blue md:col-start-1 md:min-h-[var(--menu-row)] md:py-0 ${riseAndColour} ${shown} ${focusRing} max-md:after:mr-1 max-md:after:ml-auto max-md:after:size-2.5 max-md:after:shrink-0 max-md:after:border-r-2 max-md:after:border-b-2 max-md:after:transition-[rotate,translate] max-md:after:duration-300 ${
                       active
