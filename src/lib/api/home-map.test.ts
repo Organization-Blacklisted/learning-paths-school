@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildHomePage, defaultHomeSections, homePageAll } from "@/data/home-page";
 import type { Home } from "@/payload-types";
 import { homeDocFromData, homePhotoPaths } from "./home-seed";
-import { mapHome, text } from "./home-map";
+import { mapHome, optionalText, text } from "./home-map";
 
 // The CMS home page must give back EXACTLY the site as it is in src/data: this is what makes switching the page to the CMS safe
 // (docs/26-cms-home-plan.md). `homeDocFromData` is what the seed script stores; here its photos are fake media documents.
@@ -33,6 +33,28 @@ describe("mapHome", () => {
     expect(mapped.news.items[1]).toEqual(defaultHomeSections.news.items[1]);
     expect(mapped.cta.button).toEqual({ label: defaultHomeSections.cta.button.label, href: "/admissions" });
     expect(mapped.hero).toEqual(defaultHomeSections.hero);
+  });
+
+  it('the hero\'s small connecting word is optional: left empty it stays empty (it does not fall back to "that")', () => {
+    const doc = seeded();
+    expect(mapHome(doc).hero.slides[0].lead).toBe(defaultHomeSections.hero.slides[0].lead);
+    doc.hero!.slides![0].lead = "";
+    doc.hero!.slides![1].lead = "   ";
+    doc.hero!.slides![2].lead = " so ";
+    const mapped = mapHome(doc).hero.slides;
+    expect(mapped[0].lead).toBe("");
+    expect(mapped[1].lead).toBe("");
+    expect(mapped[2].lead).toBe("so");
+    expect(mapped[0].title).toBe(defaultHomeSections.hero.slides[0].title);
+    expect(mapped[0].quote).toBe(defaultHomeSections.hero.slides[0].quote);
+  });
+
+  it("optionalText is what was written, trimmed, or nothing", () => {
+    expect(optionalText("that")).toBe("that");
+    expect(optionalText("  that ")).toBe("that");
+    expect(optionalText("")).toBe("");
+    expect(optionalText(null)).toBe("");
+    expect(optionalText(undefined)).toBe("");
   });
 
   it("keeps the design values of a fixed list whatever the editor does (positions, widths, tones)", () => {
@@ -127,13 +149,12 @@ describe("text", () => {
   });
 });
 
-// The limits written in the CMS fields (maxLength, number of rows) must hold for today's content, or the seed (and any editor starting from
-// it) would be refused. Walks the Home global's own field definitions.
+// The number of rows written in the CMS fields must hold for today's content, or the seed (and any editor starting from it) would be refused.
+// There is no limit on how long a text may be (owner, 2026-11-02). Walks the Home global's own field definitions.
 describe("the CMS fields", () => {
   type FieldLike = {
     type: string;
     name?: string;
-    maxLength?: number;
     minRows?: number;
     maxRows?: number;
     fields?: FieldLike[];
@@ -154,15 +175,11 @@ describe("the CMS fields", () => {
         if (field.maxRows !== undefined && rows.length > field.maxRows)
           problems.push(`${here}: ${rows.length} rows, at most ${field.maxRows}`);
         rows.forEach((row, i) => check(field.fields ?? [], row, `${here}[${i}]`));
-      } else if ((field.type === "text" || field.type === "textarea") && field.name && field.maxLength) {
-        const text = value?.[field.name];
-        if (typeof text === "string" && text.length > field.maxLength)
-          problems.push(`${where}.${field.name}: ${text.length} characters, limit ${field.maxLength}`);
       }
     }
   };
 
-  it("allow today's content (no text too long, every list has an allowed number of rows)", async () => {
+  it("allow today's content (every list has an allowed number of rows)", async () => {
     const { Home } = await import("@/globals/Home");
     check(Home.fields as unknown as FieldLike[], homeDocFromData(fakeMedia) as Record<string, unknown>, "home");
     expect(problems).toEqual([]);

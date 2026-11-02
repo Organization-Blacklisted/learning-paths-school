@@ -41,6 +41,26 @@ export const SHOW_HOME_SECTIONS = true;
  */
 export const HOME_SECTION_LIMIT: number | null = resolveSectionLimit(process.env.HOME_SECTION_LIMIT, null);
 
+/**
+ * HOME SECTIONS HIDDEN FOR NOW (2026-11-02, client: the "The Courage To Find Your Path" section is not wanted yet). A list of section types
+ * (the block types of src/data/home-page.ts: hero, vision, courage, journey, framework, ecosystem, campus, alumni, news, cta, marquee). They are not
+ * rendered at all (no images, scripts or animations load for them), the rest of the page closes up, and nothing is deleted: the section's code,
+ * content and CMS tab stay as they are. TO BRING ONE BACK remove it from this list (empty the list to show everything). The browser checks
+ * (`npm run qa:serve`, and so CI) build with HOME_HIDDEN_SECTIONS=none, like HOME_SECTION_LIMIT=all above, so a hidden section stays tested.
+ */
+export const HIDDEN_HOME_SECTIONS: readonly string[] = resolveHiddenSections(process.env.HOME_HIDDEN_SECTIONS, ["courage"]);
+
+/** "none" means nothing is hidden, a comma-separated list means those types, nothing (or an empty value) means the fallback. Exported for tests. */
+export function resolveHiddenSections(value: string | undefined, fallback: readonly string[]): readonly string[] {
+  const text = value?.trim().toLowerCase();
+  if (!text) return fallback;
+  if (text === "none") return [];
+  return text
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 /** "all" means no limit, a whole number means that many sections, anything else (or nothing) means the fallback. Exported for tests. */
 export function resolveSectionLimit(value: string | undefined, fallback: number | null): number | null {
   const text = value?.trim().toLowerCase();

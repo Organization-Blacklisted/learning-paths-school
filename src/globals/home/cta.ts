@@ -7,11 +7,11 @@ export const ctaTab: Tab = {
   label: "Call to action",
   description: "The blue admissions band near the bottom.",
   fields: [
-    line("badge", "Green pill above the heading", 70),
-    line("titleLead", "Heading, first part", 50, "Shown in white."),
-    line("titleAccent", "Heading, last part", 40, "Shown in white, slanted."),
-    paragraph("text", "Paragraph", 220),
-    line("buttonLabel", "Button text", 30),
-    line("buttonHref", "Button link", 200, "A page of the site (/admissions) or a full address."),
+    line("badge", "Green pill above the heading"),
+    line("titleLead", "Heading, first part", "Shown in white."),
+    line("titleAccent", "Heading, last part", "Shown in white, slanted."),
+    paragraph("text", "Paragraph"),
+    line("buttonLabel", "Button text"),
+    line("buttonHref", "Button link", "A page of the site (/admissions) or a full address."),
   ],
 };

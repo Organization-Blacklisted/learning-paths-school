@@ -9,7 +9,7 @@ export type HeroSlide = {
   };
   /** First word, shown large (e.g. "Courage"). */
   title: string;
-  /** Small connecting word (e.g. "that"). */
+  /** Small connecting word (e.g. "that"). Optional: an empty string shows no word and no gap. */
   lead: string;
   /** Amber italic quote. */
   quote: string;

@@ -9,16 +9,16 @@ export const frameworkTab: Tab = {
   description: "The diagram of the seven PIONEER outcomes.",
   fields: [
     ...heading(),
-    paragraph("intro", "Paragraph", 300),
+    paragraph("intro", "Paragraph"),
     photo("centrePhoto", "Photo in the middle of the ring"),
-    line("centreLabel", "Text under the ring", 40),
+    line("centreLabel", "Text under the ring"),
     list({
       name: "items",
       label: "The seven outcomes",
       min: 7,
       max: 7,
       description: "In order: Proficient, Inclusive, Open-minded, Novel, Enterprising, Ethical, Resilient (they spell PIONEER).",
-      fields: [line("label", "Name", 24, "The letter in the circle stays the same."), paragraph("description", "Description", 160)],
+      fields: [line("label", "Name", "The letter in the circle stays the same."), paragraph("description", "Description")],
     }),
   ],
 };

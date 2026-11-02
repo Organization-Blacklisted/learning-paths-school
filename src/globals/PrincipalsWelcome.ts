@@ -16,7 +16,6 @@ const paragraph: Field = {
   label: "Paragraph",
   type: "textarea",
   required: true,
-  maxLength: 1200,
   admin: { description: "A line break (Enter) inside a paragraph starts a new line without the space between paragraphs." },
 };
 
@@ -58,8 +57,8 @@ export const PrincipalsWelcome: GlobalConfig = {
                       "Portrait",
                       "A portrait photo, about 777 x 816 (it is shown with rounded corners). Choose one from the library or upload one: JPG, PNG or WebP are converted to AVIF automatically. Its alt text comes from the library.",
                     ),
-                    line("titleLead", "Heading, grey part", 60, "For example: “How can I win medals,"),
-                    line("titleAccent", "Heading, blue part", 30, "Shown in blue, slanted. For example: Ma’am?”"),
+                    line("titleLead", "Heading, grey part", "For example: “How can I win medals,"),
+                    line("titleAccent", "Heading, blue part", "Shown in blue, slanted. For example: Ma’am?”"),
                     {
                       name: "paragraphs",
                       label: "Paragraphs of the letter",
@@ -70,8 +69,8 @@ export const PrincipalsWelcome: GlobalConfig = {
                       fields: [paragraph],
                       admin: { components: { RowLabel: "@/components/admin/RowLabel#RowLabel" } },
                     },
-                    line("signatoryName", "Name under the letter", 60, "Shown in blue, bold italic."),
-                    line("signatoryRole", "Role under the name", 60, "For example: Principal"),
+                    line("signatoryName", "Name under the letter", "Shown in blue, bold italic."),
+                    line("signatoryRole", "Role under the name", "For example: Principal"),
                   ],
                 },
               ],

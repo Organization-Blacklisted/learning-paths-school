@@ -10,8 +10,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const PORT = process.env.QA_PORT ?? "3002";
-// HOME_SECTION_LIMIT=all: the checks always test the WHOLE home page, also while some sections are hidden on the live site (src/lib/site.ts).
-const env = { ...process.env, NEXT_DIST_DIR: ".next-prod", HOME_SECTION_LIMIT: "all" };
+// HOME_SECTION_LIMIT=all and HOME_HIDDEN_SECTIONS=none: the checks always test the WHOLE home page, also while some sections are hidden on the live site (src/lib/site.ts).
+const env = { ...process.env, NEXT_DIST_DIR: ".next-prod", HOME_SECTION_LIMIT: "all", HOME_HIDDEN_SECTIONS: "none" };
 const npx = process.platform === "win32" ? "npx.cmd" : "npx";
 const shell = process.platform === "win32";
 

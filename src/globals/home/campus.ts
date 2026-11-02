@@ -7,12 +7,12 @@ export const campusTab: Tab = {
   label: "Campus",
   description: 'The section "A Campus Built Around Possibility": heading, paragraph and the big media box.',
   fields: [
-    line("badge", "Green pill above the heading", 70),
-    line("titleStart", "Heading, first word", 10),
-    line("titleAccent", "Heading, blue part", 20),
-    line("titleEnd", "Heading, end", 50),
-    paragraph("intro", "Paragraph", 400),
+    line("badge", "Green pill above the heading"),
+    line("titleStart", "Heading, first word"),
+    line("titleAccent", "Heading, blue part"),
+    line("titleEnd", "Heading, end"),
+    paragraph("intro", "Paragraph"),
     photo("poster", "Photo in the media box", "Shown 1200 x 594. It stays here until a video is added."),
-    line("tag", "Small label on the photo", 24),
+    line("tag", "Small label on the photo"),
   ],
 };

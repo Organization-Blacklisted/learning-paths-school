@@ -44,7 +44,7 @@ Today every photo is a pre-compressed AVIF in `public/images`, served from Verce
 - [x] Install `@payloadcms/plugin-seo` at 3.91.0 (exact), run `generate:importmap`.
 
 **B. Schema** (done) (`src/globals/home/`, one module per section so they can become blocks later)
-- [x] Section field modules: hero, vision/mission/values, courage, journey, framework, ecosystem, alumni, campus, news, call to action, photo strip (editable: text, lists, links, photos with alt; `maxLength` and descriptions; no design values).
+- [x] Section field modules: hero, vision/mission/values, courage, journey, framework, ecosystem, alumni, campus, news, call to action, photo strip (editable: text, lists, links, photos with alt; descriptions; no character limits since 2026-11-02; no design values).
 - [x] `Home` Global: tabs Content (a sub-tab per section) and SEO, admin group "Pages", drafts, Live Preview at 375 / 768 / 1440.
 - [x] SEO plugin on `Home` (title, description, image) plus a noindex checkbox and an optional canonical URL.
 - [x] `Media`: AVIF conversion on upload, unique file names, long cache headers on the media route.

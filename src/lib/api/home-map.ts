@@ -27,6 +27,14 @@ export function text(value: string | null | undefined, fallback: string): string
   return `${lead}${value.trim()}${tail}`;
 }
 
+/**
+ * An OPTIONAL piece of text (the hero's small connecting word): what the editor wrote, or nothing when it was left empty. Unlike `text` it never
+ * falls back to the default, because "empty" is an answer here.
+ */
+export function optionalText(value: string | null | undefined): string {
+  return value ? value.trim() : "";
+}
+
 /** The media document of an upload field, when it has been loaded (depth 1) and has a file. */
 function media(ref: Ref): Media | null {
   return ref && typeof ref === "object" && ref.url ? ref : null;
@@ -74,7 +82,7 @@ export function mapHome(home: Home | null | undefined, defaults: HomeSections = 
               ...base,
               image: photo(slide.image, base.image, true),
               title: text(slide.title, base.title),
-              lead: text(slide.lead, base.lead),
+              lead: optionalText(slide.lead),
               quote: text(slide.quote, base.quote),
               scale: i === 0 ? ("compact" as const) : ("large" as const),
             };

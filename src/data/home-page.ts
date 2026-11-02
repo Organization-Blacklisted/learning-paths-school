@@ -9,8 +9,8 @@ import { homeJourney } from "@/data/home-journey";
 import { homeNews } from "@/data/home-news";
 import { homeVision } from "@/data/home-vision";
 import { defaultMarquee } from "@/data/marquee";
-import { takeFirstSections } from "@/lib/blocks";
-import { HOME_SECTION_LIMIT } from "@/lib/site";
+import { takeFirstSections, withoutSections } from "@/lib/blocks";
+import { HIDDEN_HOME_SECTIONS, HOME_SECTION_LIMIT } from "@/lib/site";
 import type { CtaContent } from "@/types/cta";
 import type {
   AlumniContent,
@@ -106,5 +106,5 @@ export function buildHomePage(sections: HomeSections): PageBlock[] {
 /** The whole home page from the default content (the files in src/data). */
 export const homePageAll: PageBlock[] = buildHomePage(defaultHomeSections);
 
-/** What the home page shows now from the default content: the first HOME_SECTION_LIMIT sections of the full page (see src/lib/site.ts). */
-export const homePage: PageBlock[] = takeFirstSections(homePageAll, HOME_SECTION_LIMIT);
+/** What the home page shows now from the default content: the full page without the hidden sections, cut to the first HOME_SECTION_LIMIT (see src/lib/site.ts). */
+export const homePage: PageBlock[] = takeFirstSections(withoutSections(homePageAll, HIDDEN_HOME_SECTIONS), HOME_SECTION_LIMIT);

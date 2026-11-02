@@ -4,7 +4,7 @@ import { useLivePreview } from "@payloadcms/live-preview-react";
 import { useMemo } from "react";
 import BlockRenderer from "@/components/blocks";
 import { buildHomePage } from "@/data/home-page";
-import { takeFirstSections } from "@/lib/blocks";
+import { takeFirstSections, withoutSections } from "@/lib/blocks";
 import { mapHome } from "@/lib/api/home-map";
 import type { Home } from "@/payload-types";
 
@@ -15,13 +15,24 @@ import type { Home } from "@/payload-types";
 // An empty home page: what the mapper gets when the CMS could not be read (it then returns the default content).
 const EMPTY_HOME = {} as Home;
 
-// `sectionLimit` comes from the server (src/lib/site.ts reads an environment variable that the browser cannot see).
-export default function HomePageClient({ initialData, sectionLimit }: { initialData: Home | null; sectionLimit: number | null }) {
+// `sectionLimit` and `hiddenSections` come from the server (src/lib/site.ts reads environment variables that the browser cannot see).
+export default function HomePageClient({
+  initialData,
+  sectionLimit,
+  hiddenSections,
+}: {
+  initialData: Home | null;
+  sectionLimit: number | null;
+  hiddenSections: readonly string[];
+}) {
   const { data } = useLivePreview<Home>({
     initialData: initialData ?? EMPTY_HOME,
     serverURL: typeof window === "undefined" ? "" : window.location.origin,
     depth: 1,
   });
-  const blocks = useMemo(() => takeFirstSections(buildHomePage(mapHome(data)), sectionLimit), [data, sectionLimit]);
+  const blocks = useMemo(
+    () => takeFirstSections(withoutSections(buildHomePage(mapHome(data)), hiddenSections), sectionLimit),
+    [data, sectionLimit, hiddenSections],
+  );
   return <BlockRenderer blocks={blocks} />;
 }

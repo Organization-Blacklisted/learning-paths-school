@@ -2,7 +2,25 @@
 
 Newest first.
 
-## 2026-11-02 (latest): menu twitch, the real cause
+## 2026-11-02 (latest): no character limits in the CMS; the hero's small word is optional
+
+### CMS fields (LOCAL, not pushed)
+- **Owner request (a screenshot of the admin: "This value must be shorter than the max length of 24 characters", "This field is required" on a hero slide):** make the hero slide's **Small connecting word optional** and **remove the character limit from the whole CMS**.
+- **No limits:** every `maxLength` is gone from the Home, Contact and Principal's Welcome globals (the helpers `line()` and `paragraph()` in `src/globals/home/fields.ts` no longer take a limit; 60 call sites updated). An editor can write a text of any length. Kept: the number of rows of the designed lists (the layout is drawn for that number), the required-ness of fields, and the visitor-facing limits of the Contact form (those protect the mail box, not the CMS). No database change (the limits were never in the schema; the columns are plain text, so no migration).
+- **Small connecting word optional:** `line("lead", ..., { required: false })`. Cleared in the admin, it shows **no word and no gap**: the mapper has `optionalText()` (empty stays empty, it does not fall back to "that") and the hero (`HeroSlideshowSection`) renders the quote at the left, without the 82px column reserved for the word. Checked in the dev browser: with a word the columns are 82px + 473px (quote at x 154), without it one column (quote at x 72).
+- **Tests:** the Home, Contact and Principal's Welcome fields have no `maxLength`/`minLength` (new test), the word is optional and the big word and quote stay required, `optionalText`, and an empty word through `mapHome`. The old "no text too long" check of the seeded content now checks the number of rows only. 267 unit tests.
+- **Found on the way:** the dev server did not pick up edits again (the same stale watcher as with the CSS rule); restarting it fixed it.
+
+## 2026-11-02 (earlier): the Courage section is hidden for now
+
+### "The Courage To Find Your Path" hidden on the home page (LOCAL, not pushed)
+- **Client request:** the Courage section is not wanted yet ("display none for now").
+- **How:** `HIDDEN_HOME_SECTIONS` in `src/lib/site.ts` (default `["courage"]`), applied by the new `withoutSections()` in `src/lib/blocks.ts` in `HomePageClient` and `homePage`. The section is not rendered at all (no images, scripts or animations), nothing is deleted: its component, content (`src/data/home-courage.ts`), CMS tab and tests all stay. The first sideways scene is now Vision/Mission/Values then Our Learning Journey (the 360px gap before the Journey panel was measured with the Courage panel between them and is unchanged).
+- **To bring it back:** empty the list (or remove `"courage"` from it) in `src/lib/site.ts`. It works for any section type (`hero, vision, courage, journey, framework, ecosystem, campus, alumni, news, cta, marquee`); `HOME_HIDDEN_SECTIONS=none` (or a comma list) overrides it per build.
+- **Tests:** the browser checks build with `HOME_HIDDEN_SECTIONS=none` (`tests/serve-prod.mjs`, like `HOME_SECTION_LIMIT=all`), so the Courage checks keep running in CI. 8 new unit tests (`withoutSections`, `resolveHiddenSections`, the site hides Courage). `HOME_SECTION_LIMIT` now counts the sections that are shown.
+- **Still editable:** the "Courage" tab in the Home admin is unchanged (editors can prepare the text); it just does not show on the site.
+
+## 2026-11-02 (earlier): menu twitch, the real cause
 
 - **Mega menu: "the whole canvas shakes when you open it again" (owner).** Cause measured on every open: the scroll lock removes the page scrollbar, the page behind the menu jumps 7.5px sideways in the first frame (and the menu panel changes width by 15px). Fix: `html { scrollbar-gutter: stable }` in `globals.css`; the header's x and the menu's width now stay constant over repeated opens and closes. See [27-mega-menu.md](27-mega-menu.md). Not pushed yet.
 

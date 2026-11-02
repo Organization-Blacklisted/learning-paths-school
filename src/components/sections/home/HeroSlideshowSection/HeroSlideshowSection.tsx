@@ -228,6 +228,8 @@ export default function HeroSlideshowSection({ content }: HeroSlideshowSectionPr
           <div className="relative h-full">
             {slides.map((slide, i) => {
               const s = scaleClasses[slide.scale];
+              // The small connecting word is optional (CMS): without it there is no word and no 82px column reserved for it, the quote starts at the left.
+              const hasLead = slide.lead.trim() !== "";
               return (
                 <div
                   key={slide.id}
@@ -239,8 +241,10 @@ export default function HeroSlideshowSection({ content }: HeroSlideshowSectionPr
                   className={`absolute left-0 text-white ${s.block} ${i === 0 ? "" : "invisible opacity-0"}`}
                 >
                   <p className={`font-heading font-semibold capitalize ${s.title} ${titleShadow}`}>{slide.title}</p>
-                  <div className={`flex flex-wrap items-start gap-x-3 md:grid md:grid-cols-[81.97px_auto] md:gap-x-0 ${s.gap}`}>
-                    <span className={`ml-[5px] font-heading font-semibold ${s.lead} ${leadShadow}`}>{slide.lead}</span>
+                  <div
+                    className={`flex flex-wrap items-start gap-x-3 md:grid md:gap-x-0 ${hasLead ? "md:grid-cols-[81.97px_auto]" : "md:grid-cols-[auto]"} ${s.gap}`}
+                  >
+                    {hasLead && <span className={`ml-[5px] font-heading font-semibold ${s.lead} ${leadShadow}`}>{slide.lead}</span>}
                     <span
                       className={`block origin-top-left font-heading font-medium text-brand-amber [transform:matrix(1,0,-0.13917,0.99027,0,0)] ${s.quote} ${titleShadow}`}
                     >

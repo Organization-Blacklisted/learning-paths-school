@@ -12,7 +12,7 @@ export const visionTab: Tab = {
       min: 3,
       max: 3,
       description: "In order: Vision, Mission, Values.",
-      fields: [line("title", "Title", 30), paragraph("text", "Text", 260)],
+      fields: [line("title", "Title"), paragraph("text", "Text")],
     }),
   ],
 };

@@ -399,9 +399,9 @@ export interface Home {
        */
       title: string;
       /**
-       * For example that.
+       * For example that. Optional: leave it empty to show only the quote after the big word.
        */
-      lead: string;
+      lead?: string | null;
       /**
        * Include the quote marks.
        */

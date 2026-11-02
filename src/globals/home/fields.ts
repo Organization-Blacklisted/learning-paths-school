@@ -2,27 +2,26 @@ import type { ArrayField, Field } from "payload";
 
 // Small helpers so the section modules read as a list of what an editor can change. What is NOT here on purpose: positions, widths, colours,
 // timings, order and the number of rows of the designed lists. Those are design and stay in code (src/data/home-*.ts), see
-// docs/26-cms-home-plan.md. Limits (`max`) are generous multiples of the current text: they only stop a text that would break the layout.
+// docs/26-cms-home-plan.md. There is NO limit on how long a text may be (owner, 2026-11-02: "remove the limit thing from the whole CMS"); the rows of
+// the designed lists are still fixed, because the layout is drawn for that number.
 
 const ROW_LABEL = { RowLabel: "@/components/admin/RowLabel#RowLabel" };
 
-/** A one-line text. */
-export const line = (name: string, label: string, max: number, description?: string): Field => ({
+/** A one-line text. Required unless `required: false` (an optional text may be left empty). */
+export const line = (name: string, label: string, description?: string, { required = true }: { required?: boolean } = {}): Field => ({
   name,
   label,
   type: "text",
-  required: true,
-  maxLength: max,
+  required,
   admin: { description },
 });
 
 /** A paragraph. */
-export const paragraph = (name: string, label: string, max: number, description?: string): Field => ({
+export const paragraph = (name: string, label: string, description?: string): Field => ({
   name,
   label,
   type: "textarea",
   required: true,
-  maxLength: max,
   admin: { description },
 });
 
@@ -42,9 +41,9 @@ export const photo = (name: string, label: string, description?: string): Field 
 
 /** The three texts almost every section starts with: the green pill and the two-colour heading. */
 export const heading = (lead = "Heading, grey part", accent = "Heading, blue part"): Field[] => [
-  line("badge", "Green pill above the heading", 70),
-  line("titleLead", lead, 80),
-  line("titleAccent", accent, 50, "Shown in blue, slanted."),
+  line("badge", "Green pill above the heading"),
+  line("titleLead", lead),
+  line("titleAccent", accent, "Shown in blue, slanted."),
 ];
 
 type ListOptions = {

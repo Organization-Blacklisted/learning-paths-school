@@ -7,17 +7,17 @@ export const alumniTab: Tab = {
   label: "Alumni",
   description: 'The section "Their Paths Continue Long After They Leave".',
   fields: [
-    line("badge", "Green pill above the heading", 70),
-    line("titleStart", "Heading, first word", 20),
-    line("titleAccent", "Heading, blue part", 40),
-    line("titleSecondLine", "Heading, second line", 50),
+    line("badge", "Green pill above the heading"),
+    line("titleStart", "Heading, first word"),
+    line("titleAccent", "Heading, blue part"),
+    line("titleSecondLine", "Heading, second line"),
     {
       name: "paragraphs",
       label: "Paragraphs",
       type: "array",
       minRows: 1,
       maxRows: 3,
-      fields: [paragraph("text", "Paragraph", 400)],
+      fields: [paragraph("text", "Paragraph")],
     },
     list({
       name: "people",
@@ -25,8 +25,8 @@ export const alumniTab: Tab = {
       min: 2,
       max: 2,
       fields: [
-        line("name", "Name", 40),
-        line("institution", "University or institution", 60),
+        line("name", "Name"),
+        line("institution", "University or institution"),
         photo("image", "Portrait", "Shown in a frame of about 428 x 385."),
       ],
     }),

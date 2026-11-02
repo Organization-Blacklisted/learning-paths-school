@@ -9,10 +9,10 @@ import { line, paragraph, photo } from "../home/fields";
 // and read it back with `pageHeroFromDoc` (src/lib/api/page-hero-map.ts). What an editor can change: the pill, the two-colour heading, the
 // line under it and the photo. The photo's alt text comes from the media library. Positions, sizes and the crest rule are design (in code).
 export const pageHeroFields = ({ photo: withPhoto = true }: { photo?: boolean } = {}): Field[] => [
-  line("badge", "Green pill above the heading", 40, "Shown in capitals, for example Contact us."),
-  line("titleLead", "Heading, grey part", 40, "For example: Let’s Begin a"),
-  line("titleAccent", "Heading, blue part", 30, "Shown in blue, slanted. For example: Conversation"),
-  paragraph("subtitle", "Line under the heading", 120, "One short line."),
+  line("badge", "Green pill above the heading", "Shown in capitals, for example Contact us."),
+  line("titleLead", "Heading, grey part", "For example: Let’s Begin a"),
+  line("titleAccent", "Heading, blue part", "Shown in blue, slanted. For example: Conversation"),
+  paragraph("subtitle", "Line under the heading", "One short line."),
   ...(withPhoto
     ? [
         photo(

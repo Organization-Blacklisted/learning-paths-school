@@ -24,3 +24,22 @@ export function takeFirstSections(blocks: PageBlock[], limit: number | null): Pa
   }
   return kept;
 }
+
+/**
+ * Leaves out the sections of the given types (for example `["courage"]`), wherever they are: a plain block of that type, or a PANEL of a sideways
+ * scene. A scene that loses some panels keeps the rest (one panel left is just an ordinary section); a scene that loses all of them disappears.
+ * Nothing of a hidden section is rendered, so none of its images, scripts or animations load. Used to hide a section for now without deleting it.
+ */
+export function withoutSections(blocks: PageBlock[], hidden: readonly string[]): PageBlock[] {
+  if (hidden.length === 0) return blocks;
+  const kept: PageBlock[] = [];
+  for (const block of blocks) {
+    if (block.blockType === "scene") {
+      const panels = block.panels.filter((panel) => !hidden.includes(panel.block.blockType));
+      if (panels.length > 0) kept.push(panels.length === block.panels.length ? block : { ...block, panels });
+    } else if (!hidden.includes(block.blockType)) {
+      kept.push(block);
+    }
+  }
+  return kept;
+}

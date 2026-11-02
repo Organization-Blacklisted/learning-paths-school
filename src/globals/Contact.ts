@@ -12,11 +12,10 @@ import { pageHeroFields } from "./shared/page-hero";
 
 const ROW_LABEL = { RowLabel: "@/components/admin/RowLabel#RowLabel" };
 
-const optionalLine = (name: string, label: string, max: number, description?: string): Field => ({
+const optionalLine = (name: string, label: string, description?: string): Field => ({
   name,
   label,
   type: "text",
-  maxLength: max,
   admin: { description },
 });
 
@@ -68,11 +67,10 @@ export const Contact: GlobalConfig = {
                           label: "Email address",
                           type: "text",
                           required: true,
-                          maxLength: 80,
                           validate: (value: string | null | undefined) =>
                             value && EMAIL.test(value.trim()) ? true : "Please enter an email address like name@example.com.",
                         },
-                        optionalLine("note", "Note in brackets", 40, "For example: admissions. Leave empty for none."),
+                        optionalLine("note", "Note in brackets", "For example: admissions. Leave empty for none."),
                       ],
                       admin: { components: ROW_LABEL },
                     },
@@ -84,12 +82,12 @@ export const Contact: GlobalConfig = {
                       minRows: 1,
                       maxRows: 4,
                       fields: [
-                        line("number", "Phone number", 30, "As people write it, for example: 0172-5134300"),
-                        optionalLine("note", "Note in brackets", 40, "For example: for admissions only. Leave empty for none."),
+                        line("number", "Phone number", "As people write it, for example: 0172-5134300"),
+                        optionalLine("note", "Note in brackets", "For example: for admissions only. Leave empty for none."),
                       ],
                       admin: { components: ROW_LABEL },
                     },
-                    line("location", "Address", 120, "One line."),
+                    line("location", "Address", "One line."),
                   ],
                 },
                 {
@@ -103,7 +101,6 @@ export const Contact: GlobalConfig = {
                       label: "Google Maps embed",
                       type: "textarea",
                       required: true,
-                      maxLength: 2000,
                       validate: (value: unknown) =>
                         typeof value === "string" && mapEmbedSrc(value)
                           ? true
@@ -112,7 +109,6 @@ export const Contact: GlobalConfig = {
                     line(
                       "title",
                       "Description of the map for screen readers",
-                      120,
                       "For example: Map showing Learning Paths School in Sector 67, Mohali.",
                     ),
                   ],

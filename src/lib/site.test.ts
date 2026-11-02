@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveSectionLimit, resolveSiteUrl } from "@/lib/site";
+import { HIDDEN_HOME_SECTIONS, resolveHiddenSections, resolveSectionLimit, resolveSiteUrl } from "@/lib/site";
 
 describe("resolveSiteUrl", () => {
   it("uses NEXT_PUBLIC_SITE_URL when it is set, without a trailing slash", () => {
@@ -64,5 +64,22 @@ describe("resolveSectionLimit", () => {
     expect(resolveSectionLimit("three", 3)).toBe(3);
     expect(resolveSectionLimit("2.5", 3)).toBe(3);
     expect(resolveSectionLimit("-1", 3)).toBe(3);
+  });
+});
+
+describe("resolveHiddenSections", () => {
+  it("nothing set means the fallback; none means nothing is hidden", () => {
+    expect(resolveHiddenSections(undefined, ["courage"])).toEqual(["courage"]);
+    expect(resolveHiddenSections("  ", ["courage"])).toEqual(["courage"]);
+    expect(resolveHiddenSections("none", ["courage"])).toEqual([]);
+    expect(resolveHiddenSections("NONE", ["courage"])).toEqual([]);
+  });
+
+  it("a comma-separated list names the hidden sections", () => {
+    expect(resolveHiddenSections("courage, News ,", [])).toEqual(["courage", "news"]);
+  });
+
+  it("the site hides the Courage section for now (client, 2026-11-02)", () => {
+    expect(HIDDEN_HOME_SECTIONS).toEqual(["courage"]);
   });
 });

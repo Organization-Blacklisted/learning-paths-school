@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { takeFirstSections } from "@/lib/blocks";
+import { takeFirstSections, withoutSections } from "@/lib/blocks";
 import type { PageBlock, SectionBlock } from "@/types/page";
 
 const any = {} as never; // the content is never read here
@@ -55,6 +55,32 @@ describe("takeFirstSections", () => {
   it("does not change the original page", () => {
     const before = outline(page);
     takeFirstSections(page, 2);
+    expect(outline(page)).toBe(before);
+  });
+});
+
+describe("withoutSections", () => {
+  it("nothing hidden keeps the page as it is", () => {
+    expect(withoutSections(page, [])).toBe(page);
+  });
+
+  it("drops a panel of a scene and the rest of the scene closes up", () => {
+    expect(outline(withoutSections(page, ["courage"]))).toBe("hero [vision,journey] framework [ecosystem,alumni] campus news");
+  });
+
+  it("drops a plain block, wherever it is", () => {
+    expect(outline(withoutSections(page, ["campus", "news"]))).toBe("hero [vision,courage,journey] framework [ecosystem,alumni]");
+  });
+
+  it("a scene that loses every panel disappears; one panel left stays (it is then just a section)", () => {
+    expect(outline(withoutSections(page, ["ecosystem", "alumni"]))).toBe("hero [vision,courage,journey] framework campus news");
+    expect(outline(withoutSections(page, ["alumni"]))).toBe("hero [vision,courage,journey] framework [ecosystem] campus news");
+  });
+
+  it("an unknown type hides nothing, and the original page is not changed", () => {
+    const before = outline(page);
+    expect(outline(withoutSections(page, ["nope"]))).toBe(before);
+    withoutSections(page, ["courage"]);
     expect(outline(page)).toBe(before);
   });
 });
