@@ -15,10 +15,10 @@ import type { SectionProps } from "./Section.types";
 // "inner" is the 120px gap some inner pages draw (src/styles/spacing.css); "none" leaves the spacing to the section itself.
 const SPACING = { default: "pt-section last:pb-section", inner: "pt-inner last:pb-inner", none: "" } as const;
 
-export default function Section({ children, label, className = "", spacing = "default", contained = true, contentWidth }: SectionProps) {
+export default function Section({ children, label, className = "", spacing = "default", contained = true }: SectionProps) {
   return (
     <section aria-label={label} className={`${SPACING[spacing]} ${className}`}>
-      {contained ? <Container contentWidth={contentWidth}>{children}</Container> : children}
+      {contained ? <Container>{children}</Container> : children}
     </section>
   );
 }

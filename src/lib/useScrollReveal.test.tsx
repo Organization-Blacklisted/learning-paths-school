@@ -1,7 +1,10 @@
 import { render } from "@testing-library/react";
 import { useRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MOTION_OK, PHONE_MOTION } from "@/lib/motion";
+import { MOTION_OK, PHONE } from "@/lib/motion";
+
+// A phone-only entrance, as a section can ask for with the `media` option.
+const PHONE_MOTION = `${PHONE} and ${MOTION_OK}`;
 import { useScrollReveal } from "@/lib/useScrollReveal";
 
 // GSAP itself is replaced by a recording fake: these tests are about what the hook does around the animation (media query,

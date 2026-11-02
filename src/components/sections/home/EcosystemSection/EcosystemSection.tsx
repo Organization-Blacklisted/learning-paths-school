@@ -29,12 +29,12 @@ import type { EcosystemSectionProps } from "./EcosystemSection.types";
 // src/data/home-ecosystem.ts). The tabs work: click or the arrow keys (Home and End too) switch the content.
 //
 // LAYOUT. From 1600px (the container is then the full 1520px): the design, each tab as wide as in Figma (325, 326, 274, 198 and 360px,
-// centred, 1483px in all). From 1024 to 1599px (my interpretation, only desktop exists in Figma) the tabs keep their natural width and
-// wrap onto a second row when they do not fit. Below 1024px the tab bar is a row you swipe sideways and the photo is 16:9. The text row
-// has two columns from 1024px and stacks below it.
+// centred, 1483px in all). From 1024 to 1599px (my interpretation, only desktop exists in Figma) the tabs keep their natural width, always in ONE row
+// (the bar swipes sideways when they do not fit, at every width below 1600px). Below 640px the photo is 16:9. The text row has two columns
+// from 1024px and stacks below it.
 //
 // ANIMATION ("as you think will suit it", like the other sections; nothing is specified in Figma):
-// - On entering view, once: the pill and heading rise in, the tab bar fades in, the photo is wiped open from the left while it
+// - On entering view (and, quicker, each time it comes back into view): the pill and heading rise in, the tab bar fades in, the photo is wiped open from the left while it
 //   settles from a slight zoom, and the text row rises in. About 1.5 s.
 // - The blue highlight of the active tab is one shape that SLIDES from tab to tab (position and width animated, 0.45 s).
 // - On a tab change the photo CROSS-FADES (owner, 2026-10-24; it was a wipe from the left): the new photo is loaded first, then it fades in
@@ -87,7 +87,7 @@ export default function EcosystemSection({ content }: EcosystemSectionProps) {
 
   const current = tabs[active];
 
-  // Entrance, once, when the section scrolls into view.
+  // Entrance when the section scrolls into view (and, quicker, each time it comes back: useScrollReveal).
   useScrollReveal(
     rootRef,
     ({ gsap, q }) => {

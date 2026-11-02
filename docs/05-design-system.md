@@ -42,14 +42,7 @@ Notes:
 
 ### Base tokens
 
-Still the generator's defaults, in `src/app/globals.css`. They are not yet tied to the brand palette:
-
-| Token | Light | Dark |
-| --- | --- | --- |
-| `--background` | `#ffffff` | `#0a0a0a` |
-| `--foreground` | `#171717` | `#ededed` |
-
-The dark-mode block is leftover boilerplate. Decide whether the site has a dark mode at all (the brief does not mention one) and, if not, remove it. See [decisions](07-decisions.md).
+In `src/app/(frontend)/globals.css`: `--background` `#ffffff` and `--foreground` `#171717`. The design is light only (there is no dark mode in the brief or the Figma): the generator's dark-mode block was removed and `color-scheme: light` is set, so a visitor whose system is in dark mode no longer gets a black page. See [decisions](07-decisions.md).
 
 ## Typography
 
@@ -132,7 +125,7 @@ Two values from the project brief ("Main content container: 1520 px for most sec
 
 (The Figma footer is 1530px wide. It uses `main` instead, a 10px difference accepted by the owner.)
 
-The container adds side gutters around the content. **LOCAL TRIAL (2026-10-28, not pushed): the gutter is the fluid token `--spacing-gutter` = 5% of the screen width, never below 20px and never above 80px** (about 51px at 1024, 64px at 1280, 68px at 1366, 72px at 1440, 80px from 1600 up); it used to be a flat 20px (below 768px) and 40px (768px and up). The content area is exactly the chosen width (1520px for the main container) from 1680px up and shrinks with the screen below that; at 1920px the margins are still 200px. See [06-changelog.md](06-changelog.md).
+The container adds side gutters around the content. **Since 2026-10-28 the gutter is the fluid token `--spacing-gutter` = 5% of the screen width, never below 20px and never above 80px** (about 51px at 1024, 64px at 1280, 68px at 1366, 72px at 1440, 80px from 1600 up); it used to be a flat 20px (below 768px) and 40px (768px and up). The content area is exactly the chosen width (1520px for the main container) from 1680px up and shrinks with the screen below that; at 1920px the margins are still 200px. See [06-changelog.md](06-changelog.md).
 
 ### Section spacing
 

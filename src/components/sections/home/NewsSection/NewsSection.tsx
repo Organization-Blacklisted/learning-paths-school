@@ -25,7 +25,7 @@ import type { NewsSectionProps } from "./NewsSection.types";
 // the three cards sit in a row of equal columns; below 1024px the cards become a row you swipe sideways, each 318px (80% of the screen at most),
 // snapping to the card edges. (The Figma cards are 318, 318 and 310px wide; equal widths of 315px are used, the 8px difference looks like a slip.)
 //
-// ANIMATION (owner: "as you think will suit it"), once when the section scrolls into view, about 1.4 s: the pill, heading
+// ANIMATION (owner: "as you think will suit it"), when the section scrolls into view (about 1.4 s; quicker on later visits): the pill, heading
 // and paragraph rise in; then the cards grow up from the bottom one after another (a clip wipe, like the Alumni portraits and the
 // Journey columns) while each photo settles from a slight zoom (1.15 to 1), the date, title and text of the card follow, and the
 // green arrow draws itself. On hover (or keyboard focus) a card lifts, its

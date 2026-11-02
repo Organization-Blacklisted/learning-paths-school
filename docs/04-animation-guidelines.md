@@ -17,7 +17,7 @@ Planned toolkit for this site:
 - **`@gsap/react`** (not installed): clean setup/cleanup in React.
 - **Lenis** (installed, in use): smooth scrolling for mouse wheels, driven by the GSAP ticker so ScrollTrigger stays in step. Touch devices keep native scrolling. Off with reduced motion. Owner's choice (2026-10-21).
 - A 360 viewer only if the "In-vision 360" campus tag in the homepage design means real 360 imagery (to confirm).
-- **Embla** (installed) for ordinary drag/swipe carousels. The home hero used it briefly, but a scroll-driven hero cannot, because Embla cannot be driven by the scroll position. It is currently unused.
+- **Embla** (removed from the project on 2026-11-02, nothing used it; the swipe slider of the hero below 1024px is hand-written with pointer events and GSAP). The home hero used it briefly, but a scroll-driven hero cannot, because Embla cannot be driven by the scroll position. It is currently unused.
 
 Rules for every scene: a reduced-motion version, content as real server-rendered HTML (the animation only enhances it), keyboard scrolling must still work, animate only `transform` and `opacity`, optimise the images, test on a weak phone. Each scene needs a short motion spec from the design (what changes over which scroll range, what stays pinned, the mobile behaviour). Figma only shows still frames. Start with a small 2 to 3 scene prototype to settle the scroll feel before building the whole page.
 

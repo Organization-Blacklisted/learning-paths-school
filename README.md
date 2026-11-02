@@ -30,7 +30,7 @@ All project knowledge lives in [`docs/`](docs/README.md). Start there.
 | [docs/08-footer.md](docs/08-footer.md) | Footer: structure, breakpoints, fidelity, open items |
 | [docs/09-header.md](docs/09-header.md) | Header: transparent and solid variants, assets, fidelity, open items |
 | [docs/10-payload-cms.md](docs/10-payload-cms.md) | Payload CMS: what exists, access rules, env, verification, gotchas |
-| [docs/11-home-hero.md](docs/11-home-hero.md) | Home hero slideshow: behaviour, Embla, images, fidelity, open items |
+| [docs/11-home-hero.md](docs/11-home-hero.md) | Home hero slideshow: behaviour (pinned from 1024px, a swipe slider below), images, fidelity, open items |
 | [docs/12-home-vision-mission-values.md](docs/12-home-vision-mission-values.md) | Home: Vision, Mission and Values section: spec, fidelity, open items |
 | [docs/13-home-courage.md](docs/13-home-courage.md) | Home: The Courage To Find Your Path (photo collage) and the sideways scroll scene: spec, images, fidelity, open items |
 | [docs/14-home-journey.md](docs/14-home-journey.md) | Home: Our Learning Journey (four stage columns): spec, images, animation, fidelity, open items |
@@ -44,7 +44,7 @@ All project knowledge lives in [`docs/`](docs/README.md). Start there.
 | [docs/24-qa-suite.md](docs/24-qa-suite.md) | Checks, tests and CI: unit tests (`npm test`), the pre-commit hook, GitHub Actions, the browser checks (`qa`, `qa:interact`) and the screenshot comparison (`qa:snapshot`) |
 | [docs/23-shared-building-blocks.md](docs/23-shared-building-blocks.md) | Shared hooks and components (`useScrollReveal`, `Photo`, `SectionTitle`, `Accent`, `BodyText`, `TabBar`, `BlockRenderer`...) and how to use them |
 | [docs/22-home-campus.md](docs/22-home-campus.md) | Home: campus video box (poster image now): how to add the video later, behaviour, animation, fidelity, open items |
-| [docs/21-home-alumni.md](docs/21-home-alumni.md) | Home: alumni section (second panel of scene 2), the fit-to-screen scaling of pinned panels, animation, fidelity, open items |
+| [docs/21-home-alumni.md](docs/21-home-alumni.md) | Home: alumni section (an ordinary section below the Ecosystem and Campus scene), the fit-to-screen scaling of pinned panels, animation, fidelity, open items |
 | [docs/20-home-ecosystem.md](docs/20-home-ecosystem.md) | Home: The Ecosystem Behind LPS 360 (five tabs): placeholder content, tabs, sliding highlight, animation, fidelity, open items |
 | [docs/19-home-news.md](docs/19-home-news.md) | Home: What's New At LPS (news cards): layout, animation and hover, images, fidelity, open items |
 | [docs/18-marquee-section.md](docs/18-marquee-section.md) | Shared, reusable photo marquee above the footer: usage, how the loop works, fidelity, open items |

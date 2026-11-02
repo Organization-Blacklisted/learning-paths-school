@@ -12,10 +12,5 @@ export const PHONE = "(max-width: 1023px)";
 /** A tablet or wider (768px, Tailwind's `md`). Below it is a phone. */
 export const FROM_TABLET = "(min-width: 768px)";
 
-/** Desktop width with motion: the sideways scenes run. */
-export const DESKTOP_MOTION = `${DESKTOP} and ${MOTION_OK}`;
-/** Below desktop width with motion: no sideways pan, so a section plays once when it comes into view. */
-export const PHONE_MOTION = `${PHONE} and ${MOTION_OK}`;
-
 /** True when the visitor asked for reduced motion. Client only (call it inside an effect or an event handler). */
 export const prefersReducedMotion = () => window.matchMedia(MOTION_REDUCED).matches;

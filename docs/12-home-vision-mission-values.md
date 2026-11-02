@@ -1,6 +1,6 @@
 # Home: Vision, Mission and Values
 
-Figma: node `6507:183` ("Frame 1618876728"), a 715px centred column. Code: `src/components/sections/home/VisionMissionValuesSection/`. Content: `src/data/home-vision.ts`. Types: `src/types/home.ts`. Rendered from `src/app/(frontend)/page.tsx`, below the hero.
+Figma: node `6507:183` ("Frame 1618876728"), a 715px centred column. Code: `src/components/sections/home/VisionMissionValuesSection/`. Content: `src/data/home-vision.ts`. Types: `src/types/home/`. Rendered from `src/app/(frontend)/page.tsx`, below the hero.
 
 ## What it is
 

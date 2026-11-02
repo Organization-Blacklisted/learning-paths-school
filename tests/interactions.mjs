@@ -1819,6 +1819,21 @@ for (const [label, width, height] of [
     await page.evaluate(() => window.scrollTo(0, 0));
     await settle(800);
 
+    // a slide change is under way (a dot, half way through) when a finger goes down on the hero and starts scrolling the page: the slider must
+    // still end up ON a slide, not between two (it used to stay half way until autoplay skipped one)
+    await page.evaluate((dots) => document.querySelectorAll(dots)[1].click(), DOTS);
+    await page.waitForTimeout(170);
+    await swipe(cdp, [width * 0.5, height * 0.7], [width * 0.5, height * 0.3], 200);
+    await settle(1500);
+    now = await state();
+    ok(
+      `${label}: a finger that starts scrolling in the middle of a slide change does not leave the slider between two slides`,
+      Math.abs(now.x) % width === 0,
+      JSON.stringify(now),
+    );
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await settle(800);
+
     await page.evaluate((dots) => document.querySelectorAll(dots)[2].click(), DOTS);
     await settle();
     now = await state();

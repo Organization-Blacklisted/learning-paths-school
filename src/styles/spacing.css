@@ -13,7 +13,7 @@
  *                    `inline-block` (it made every `inline-block` as wide as the token: the Principal's Welcome heading broke in two). Pick a name
  *                    that is not a Tailwind word.
  *
- * --spacing-gutter   the space between the screen edge and the content column (LOCAL TRIAL, 2026-10-28, not pushed): 5% of the screen width,
+ * --spacing-gutter   the space between the screen edge and the content column (since 2026-10-28): 5% of the screen width,
  *                    never less than 20px and never more than 80px. So 20px on phones (400px and below), about 51px at 1024, 64px at 1280,
  *                    68px at 1366, 72px at 1440, and 80px from 1600 up. It used to be a flat 20px (below 768px) and 40px (768px and up).
  *                    <Container> uses it as padding and in its max width (content + 2 gutters), the sideways scenes use it in their panel

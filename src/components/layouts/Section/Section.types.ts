@@ -13,6 +13,4 @@ export type SectionProps = {
   spacing?: "default" | "inner" | "none";
   /** Wrap the children in a <Container> (gutters + max width). Default true. Turn off for full-bleed content. */
   contained?: boolean;
-  /** Container content width in px. Default: the main container (1520). See CONTAINER_WIDTH. */
-  contentWidth?: number;
 };

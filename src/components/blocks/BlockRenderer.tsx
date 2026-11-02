@@ -16,7 +16,7 @@ import type { PageBlock, SectionBlock } from "@/types/page";
 
 // Turns a page's list of blocks into its sections, so a page is DATA (a list of blocks) and not hand-written markup:
 //
-//   <main id="main-content">…<BlockRenderer blocks={homePage} /></main>
+//   <main id="main-content">…<BlockRenderer blocks={blocks} /></main>
 //
 // A new section type is added in one place: its entry in `renderSection` (TypeScript flags a block type that has no renderer).
 // Sideways scenes ("scene" blocks) wrap their panels' sections in <HorizontalScene>.

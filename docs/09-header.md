@@ -7,7 +7,7 @@ Implemented from Figma file `vmveiWg8pCIGYCrlaqrRLw`:
 | Transparent (over the hero) | `6282:929` | 1920 x 993. The header is only the top row. The hero image, gradients, "Courage that I am enough" text and slider dots in that frame are hero content and were **not** built. |
 | Solid | `5688:14371` | 1920 x 74 |
 
-Code: `src/components/layouts/Header/`. Content: `src/data/header.ts`. Types: `src/types/header.ts`. Rendered once from `src/app/layout.tsx`.
+Code: `src/components/layouts/Header/`. Content: `src/data/header.ts`. Types: `src/types/header.ts`. Rendered once from `src/app/(frontend)/layout.tsx`.
 
 ## Variants
 

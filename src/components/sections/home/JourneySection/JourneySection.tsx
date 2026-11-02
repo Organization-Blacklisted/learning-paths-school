@@ -27,7 +27,7 @@ import type { JourneySectionProps } from "./JourneySection.types";
 // ANIMATION (owner: a highly interactive homepage). Desktop: scroll-driven on the scene's timeline. The pill, heading
 // and paragraph rise and fade in as they come into view, then each column in turn: its colour grows up from the
 // bottom, its content rises in, and its photo settles from a slight zoom (1.15 to 1). Scrolling back reverses it.
-// Below lg: the same, played once as each part scrolls into view. Reduced motion: no animation, all shown.
+// Reduced motion: no animation, all shown.
 // Everything is only hidden by JS, so without it the section is fully visible.
 
 const TONES: Record<JourneyStage["tone"], { bg: string; text: string }> = {

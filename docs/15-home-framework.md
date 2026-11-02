@@ -1,8 +1,8 @@
 # Home: The LPS 360 Framework
 
-> **Hidden on phones (below 768px) since 2026-11-03** (client request): `display: none`, no entrance animation set up, its photo never requested. Tablets and desktops show it as before. See [06-changelog.md](06-changelog.md).
+> **Hidden on phones (below 768px) since 2026-11-02** (client request): `display: none`, no entrance animation set up, its photo never requested. Tablets and desktops show it as before. See [06-changelog.md](06-changelog.md).
 
-Figma: "Frame 1618876729", node `6529:1879`, 1421 x 1075px. Code: `src/components/sections/home/FrameworkSection/`. Content and all positions: `src/data/home-framework.ts`. Types: `src/types/home.ts` (`FrameworkContent`, `FrameworkItem`). Shared green pill: `src/components/ui/Badge/` (also used by [Our Learning Journey](14-home-journey.md)). Rendered from `src/app/(frontend)/page.tsx` **after** the sideways scene: when the pan ends on the Journey section the page continues **down** to this (in the Figma canvas it sits below the Journey frame). It is the fifth home section and uses the standard `Section` (200px above and below).
+Figma: "Frame 1618876729", node `6529:1879`, 1421 x 1075px. Code: `src/components/sections/home/FrameworkSection/`. Content and all positions: `src/data/home-framework.ts`. Types: `src/types/home/` (`FrameworkContent`, `FrameworkItem`). Shared green pill: `src/components/ui/Badge/` (also used by [Our Learning Journey](14-home-journey.md)). Rendered from `src/app/(frontend)/page.tsx` **after** the sideways scene: when the pan ends on the Journey section the page continues **down** to this (in the Figma canvas it sits below the Journey frame). It is the fifth home section and uses the standard `Section` (200px above and below).
 
 ## What it is
 
@@ -46,7 +46,7 @@ Reduced motion: no animation, everything shown. Without JavaScript everything is
 
 - Loading: the photo is requested after the page has loaded and the browser is idle (`useIdleReady`); its box (`aspect-ratio` on a phone, the Figma size from lg) keeps its space meanwhile.
 - `pioneers.avif`: the ellipse photo (the Figma PNG with transparent corners, 755 x 927, 0.9 MB) as **AVIF quality 95 with alpha**, 170 KB, 47.1 dB on the visible pixels. Served as it is (`unoptimized`).
-- The ring, the letter circle (`circle.svg`), the six lines (`line135.svg` to `line140.svg`) and the dots (`dot221.svg`, `dot222.svg`, `dot223.svg`, `dot226.svg`) are the Figma SVGs, **unmodified**, in `public/images/home/framework/`. **Changed 2026-10-30 (owner request):** the Figma export had two darker dots (`dot224.svg`, `#0E2F61`, bottom; `dot225.svg`, `#0B2349`, top right, at Resilient), which looked like a mistake next to the others (`#123B7A`). Those two positions now use `dot221.svg` (the same shape in `#123B7A`) and the two darker files were deleted, so all seven dots are the same colour. The lines and dots are only rendered from lg up.
+- The ring, the letter circle (`circle.svg`), the lines (`line135.svg`, `line138.svg` and `line139.svg`; the Figma exports line135, 136, 137 and 140 were byte-for-byte identical, so `line135.svg` serves all four) and the dots (`dot221.svg`, `dot222.svg`, `dot223.svg`, `dot226.svg`) are the Figma SVGs, **unmodified**, in `public/images/home/framework/`. **Changed 2026-10-30 (owner request):** the Figma export had two darker dots (`dot224.svg`, `#0E2F61`, bottom; `dot225.svg`, `#0B2349`, top right, at Resilient), which looked like a mistake next to the others (`#123B7A`). Those two positions now use `dot221.svg` (the same shape in `#123B7A`) and the two darker files were deleted, so all seven dots are the same colour. The lines and dots are only rendered from lg up.
 
 ## Fidelity
 
@@ -63,4 +63,4 @@ Verified in Chrome at 1920px, after the animation, against the Figma render (142
 - **Below 1024px is my interpretation** (list layout).
 - **Alt text** of the photo is mine; the ring, lines and dots are decorative.
 - The Figma canvas has more frames below (dotted outlines): next sections.
-- **Sideways scroll below 360px wide (found 2026-10-28, not fixed):** the white label boxes of the diagram stick out of the screen by 5px at 350px wide and by 20px at 320px wide, so the page scrolls sideways a little on very small phones. Seen with a measurement of every element wider than the screen; it is the `absolute bg-white` boxes of this diagram. Not caused by the 2026-10-28 changes (the side margin is 20px below 400px, as before).
+- **Sideways scroll below 360px wide (found 2026-10-28): no longer applies.** The whole section is hidden below 768px (2026-11-02), so the label boxes of the diagram that stuck out of the screen on very small phones are not shown there.

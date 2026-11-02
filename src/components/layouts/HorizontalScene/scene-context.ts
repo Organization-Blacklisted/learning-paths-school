@@ -8,8 +8,8 @@ import { createContext, useContext, useEffect, useRef } from "react";
 // <HorizontalScene> owns ONE scrubbed timeline of duration 1: 0 is "the pin has just started", 1 is "the last panel
 // is centred", and scroll moves it. A panel adds its own tweens to that timeline with `useSceneTimeline`, using
 // positions between 0 and 1 (a fraction of the whole pan), so its animation follows the scroll exactly and
-// reverses when the user scrolls back. The callback only runs when the scene is in its pinned row layout (from
-// 1024px, motion allowed); everywhere else the panel stays in its normal, finished state.
+// reverses when the user scrolls back. The callback only runs when the scene is in its pinned row layout (at every width
+// when motion is allowed; a `stackOnPhones` scene only from 640 x 500); everywhere else the panel stays in its normal, finished state.
 //
 //   useSceneTimeline((tl, { stage, distance }) => {
 //     tl.from(box, { autoAlpha: 0, duration: 0.2 }, 0.3);   // from 30% to 50% of the pan

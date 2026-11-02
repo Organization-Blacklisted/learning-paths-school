@@ -67,7 +67,7 @@ Lighthouse's best-practices score of 82 is only "does not use HTTPS" (the test r
 **Technical, later:**
 - **Content-Security-Policy and HSTS.** HSTS belongs on the host (HTTPS only). A strict CSP needs a nonce set-up that also works with Payload's admin.
 - `experimental.globalNotFound` is marked experimental in Next 16.4. Fall back to the plain 404 if a future upgrade changes it.
-- Optional size savings, deliberately not done: subsetting the fonts to Latin (about 100 KB less, but loses accented or extended characters the CMS might bring), and removing the installed-but-unused Embla packages.
+- Optional size savings, deliberately not done: subsetting the fonts to Latin (about 100 KB less, but loses accented or extended characters the CMS might bring). (The unused Embla packages were removed on 2026-11-02.)
 - `npm audit` has 20 findings in build tooling (see [07-decisions.md](07-decisions.md)); none ship to the browser.
 - The header scrolls away while a scene is pinned (open question in [07-decisions.md](07-decisions.md)).
 

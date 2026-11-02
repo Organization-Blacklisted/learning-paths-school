@@ -6,11 +6,11 @@
 // Rules (change the numbers below, and say why in docs/24, if the design really needs more):
 //   1. Photos are AVIF. A JPG, PNG or WebP photo is refused (make it with scripts/optimize-image.mjs). The one exception is the Open Graph
 //      preview picture in public/images/og/, because social sites do not read AVIF.
-//   2. One photo weighs at most MAX_PHOTO_KB. The heaviest today is the Ecosystem choir, 359 KB.
+//   2. One photo weighs at most MAX_PHOTO_KB. The heaviest today is the Ecosystem coscholastic photo, 382 KB.
 //   3. All photos together weigh at most MAX_TOTAL_KB (10 MB since 2026-11-02, owner: it was 6 MB and the Contact page's photo left 0.2 MB). This is the
 //      whole site, not one page: a visitor only loads the photos of the page they open. The limit that protects speed is rule 2.
 //   4. A photo is at most MAX_WIDTH pixels wide: more is wasted bytes (the design's widest photo is 1920px).
-//   5. An SVG weighs at most MAX_SVG_KB (the logo is 127 KB: if the designer sends a cleaner export, lower it).
+//   5. An SVG weighs at most MAX_SVG_KB (the logo is 90 KB: if the designer sends a cleaner export, lower it).
 import { readdirSync, statSync } from "node:fs";
 import { extname, join, relative, sep } from "node:path";
 import sharp from "sharp";

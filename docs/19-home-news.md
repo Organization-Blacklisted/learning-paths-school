@@ -1,6 +1,6 @@
 # Home: What's New At LPS
 
-Figma: "Frame 1618876584", node `6282:899`, 1520 x 506px. Code: `src/components/sections/home/NewsSection/`. Content: `src/data/home-news.ts`. Types: `NewsContent`, `NewsItem` in `src/types/home.ts`. Photos and arrow: `public/images/home/news/`. On the home page it is the section **above the CTA band** (after the LPS 360 Framework).
+Figma: "Frame 1618876584", node `6282:899`, 1520 x 506px. Code: `src/components/sections/home/NewsSection/`. Content: `src/data/home-news.ts`. Types: `NewsContent`, `NewsItem` in `src/types/home/`. Photos and arrow: `public/images/home/news/`. On the home page it is the section **above the CTA band** (after the LPS 360 Framework).
 
 ## What it is
 

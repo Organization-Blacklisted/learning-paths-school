@@ -67,7 +67,7 @@ export default buildConfig({
   sharp,
   plugins: [
     // The SEO tab of the pages (a Global or a collection listed here gets one): title, description and share image with length
-    // counters, a search-result preview and "generate" buttons, plus two fields the plugin lacks. Read by generateMetadata (src/lib/api/seo.ts).
+    // counters, a search-result preview and "generate" buttons, plus two fields the plugin lacks. Read by generateMetadata (src/lib/metadata.ts).
     seoPlugin({
       globals: ["home", "contact", "principals-welcome"],
       uploadsCollection: "media",

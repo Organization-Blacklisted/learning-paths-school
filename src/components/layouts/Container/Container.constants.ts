@@ -1,4 +1,4 @@
-// Content widths (px, at desktop) used on the site. Pass one to <Container contentWidth={...}> or <Section contentWidth={...}>.
+// Content widths (px, at desktop) used on the site. Pass one to <Container contentWidth={...}>.
 //
 // main: the main content container. The project brief: "1520 px for most sections (desktop)". This is the
 //       default, and it is also what the footer and the solid header use.

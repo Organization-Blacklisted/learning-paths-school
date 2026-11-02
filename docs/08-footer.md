@@ -1,6 +1,6 @@
 # Footer
 
-Implemented from Figma: file `vmveiWg8pCIGYCrlaqrRLw`, node `6282:795` (1920px desktop frame). Code is in `src/components/layouts/Footer/`, content in `src/data/footer.ts`, types in `src/types/footer.ts`. It is rendered once, from `src/app/layout.tsx`.
+Implemented from Figma: file `vmveiWg8pCIGYCrlaqrRLw`, node `6282:795` (1920px desktop frame). Code is in `src/components/layouts/Footer/`, content in `src/data/footer.ts`, types in `src/types/footer.ts`. It is rendered once, from `src/app/(frontend)/layout.tsx`.
 
 ## Structure
 

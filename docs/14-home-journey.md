@@ -1,6 +1,6 @@
 # Home: Our Learning Journey
 
-Figma: "Frame 1618876734", node `6547:5798`, 1520 x 746px. Code: `src/components/sections/home/JourneySection/`. Content: `src/data/home-journey.ts`. Types: `src/types/home.ts` (`JourneyContent`, `JourneyStage`). Rendered from `src/app/(frontend)/page.tsx` as the **third panel** of `HorizontalScene`: the view keeps panning right from the Courage collage to this section (see [13-home-courage.md](13-home-courage.md#sideways-scroll-scene)). It is the fourth home section.
+Figma: "Frame 1618876734", node `6547:5798`, 1520 x 746px. Code: `src/components/sections/home/JourneySection/`. Content: `src/data/home-journey.ts`. Types: `src/types/home/` (`JourneyContent`, `JourneyStage`). Rendered from `src/app/(frontend)/page.tsx` as the **third panel** of `HorizontalScene`: the view keeps panning right from the Courage collage to this section (see [13-home-courage.md](13-home-courage.md#sideways-scroll-scene)). It is the fourth home section.
 
 ## What it is
 

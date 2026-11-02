@@ -290,6 +290,10 @@ export default function HeroSlideshowSection({ content }: HeroSlideshowSectionPr
           const moved = state.p - startP; // in slides, positive = towards the next one
           const direction = Math.abs(speed) > 0.35 ? (speed < 0 ? 1 : -1) : Math.abs(moved) > 0.2 ? Math.sign(moved) : 0;
           goTo(Math.round(startP) + direction);
+        } else {
+          // A tap, or a finger that started scrolling the page (the browser then cancels the pointer): `onDown` stopped a slide change that was
+          // playing, so settle on the nearest slide. Otherwise the slider stays between two slides until autoplay skips one.
+          goTo(Math.round(state.p));
         }
         mode = "undecided";
         arm();

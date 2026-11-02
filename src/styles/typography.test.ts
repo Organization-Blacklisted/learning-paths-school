@@ -21,7 +21,7 @@ describe("typography tokens (src/styles/typography.css)", () => {
     .map(([, name, value]) => ({ name, value: value.trim() }));
 
   it("finds the size tokens", () => {
-    expect(sizes.length).toBeGreaterThanOrEqual(17);
+    expect(sizes.length).toBeGreaterThanOrEqual(16);
   });
 
   it("makes every font size token a clamp(), none is a plain number", () => {

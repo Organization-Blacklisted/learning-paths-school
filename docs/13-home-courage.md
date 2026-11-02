@@ -2,7 +2,7 @@
 
 > **Hidden on the home page since 2026-11-02** (client: not wanted yet). It is not rendered; the code, content and CMS tab are unchanged. To show it again, remove `"courage"` from `HIDDEN_HOME_SECTIONS` in `src/lib/site.ts` (see [06-changelog.md](06-changelog.md)).
 
-Figma: "Group 237", node `6529:1750`, 1548 x 747.865px. Code: `src/components/sections/home/CourageSection/`. Content: `src/data/home-courage.ts`. Types: `src/types/home.ts` (`CourageContent`, `CouragePhoto`). Rendered from `src/app/(frontend)/page.tsx` as the second panel of `HorizontalScene`, to the right of Vision/Mission/Values. It is the third home section.
+Figma: "Group 237", node `6529:1750`, 1548 x 747.865px. Code: `src/components/sections/home/CourageSection/`. Content: `src/data/home-courage.ts`. Types: `src/types/home/` (`CourageContent`, `CouragePhoto`). Rendered from `src/app/(frontend)/page.tsx` as the second panel of `HorizontalScene`, to the right of Vision/Mission/Values. It is the third home section.
 
 ## What it is
 

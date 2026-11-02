@@ -20,7 +20,7 @@ type PlayOptions = {
 };
 
 type RevealOptions = PlayOptions & {
-  /** Only reveal when this media query matches (default: no "reduce motion"). Use PHONE_MOTION for a phone-only entrance. */
+  /** Only reveal when this media query matches (default: no "reduce motion"). For example `${PHONE} and ${MOTION_OK}` (src/lib/motion.ts) for a phone-only entrance. */
   media?: string;
 };
 

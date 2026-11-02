@@ -2,7 +2,24 @@
 
 Newest first.
 
-## 2026-11-03: a swipe hero on phones and tablets, the LPS 360 Framework hidden on phones, and CI made green again
+## 2026-11-02 (latest): the swipe hero no longer freezes between two slides (LOCAL, not pushed)
+
+- **Bug (found by the full review, in the swipe slider written earlier the same day):** a finger that went down on the hero while autoplay was changing slide stopped the change (`onDown` kills the tween), but only a sideways swipe moved the slider on afterwards. A tap, or a vertical scroll (which ends in `pointercancel`), left it between two slides, both texts faded, for about 3.5 s until autoplay skipped a slide. Reproduced on the dev server first: `x = -149` on a phone and exactly half way (no text) on a tablet.
+- **Fix (`HeroSlideshowSection.tsx`, `onUp`):** when the gesture was not a swipe, `goTo(Math.round(state.p))` settles on the nearest slide. Afterwards the same reproduction ends exactly on a slide.
+- **Test:** a new swipe-hero check (`tests/interactions.mjs` section 13) starts a slide change with a dot, puts a finger down half way through and scrolls: the slider must end on a slide, on a phone, a tablet and a tablet on its side.
+
+## 2026-11-02 (latest): clean-up of stale docs, comments and dead code (LOCAL, not pushed)
+
+### Stale things found by a full review, fixed
+- **A full review** (three read-only reviewers: front end, CMS and security, docs and dependencies; their findings were spot-checked) found stale docs, stale comments, dead code and unused packages. The bugs it found are listed separately and are NOT in this entry.
+- **Docs made true again:** `03-sitemap.md` (Courage hidden, every section built, the Alumni below the scene, Contact and Principal's Welcome live, three URLs in the sitemap), `11-home-hero.md` (pinned from 1024px, a swipe slider below it; Embla removed), `24-qa-suite.md` (the repository and CI exist, about 10 minutes, 166 checks in 14 sections, 2 and 1 scene pins on tablet and phone, 6.0 MB of photos, the CI-style lesson, two garbled characters), `21-home-alumni.md` (the alumni's history marked as such), `26-cms-home-plan.md` (no character limits), `10-payload-cms.md` (on production), `05-design-system.md` (the real path of `globals.css`, no dark mode, the gutter is live), `02-architecture.md`, `15-home-framework.md`, `27-mega-menu.md`, the README, `scripts/README.md` and the comment of `scripts/check-images.mjs`. Paths that no longer exist were corrected (`src/types/home.ts` is the folder `src/types/home/`; `src/app/layout.tsx` is `src/app/(frontend)/layout.tsx`; `HomeHeroSection` is `HeroSlideshowSection`). My own entries of today that said 2026-11-03 now say 2026-11-02 (today).
+- **Comments that contradicted the code:** `HorizontalScene` (the row layout runs at every width, not "from md"; what the cleanup's `fit()` really does), `scene-context.ts`, the Journey, Ecosystem (the tab bar is always one row), Framework and News sections ("played once": they replay, quicker), `BlockRenderer`, `payload.config.ts` (the SEO code is in `src/lib/metadata.ts`).
+- **Dead code removed:** the unused `homePage` export, the `DESKTOP_MOTION` and `PHONE_MOTION` constants (the one test that used `PHONE_MOTION` builds it itself), the colour tokens `brand-steel` and `brand-blue-mid`, the size tokens `--text-h3` and `--text-body` (nothing used them), `Section`'s `contentWidth` prop (no caller; `Container` keeps its own), five `.gitkeep` files in folders that have content, and three of four byte-identical diagram SVGs (`line136`, `line137`, `line140`: the diagram uses `line135` for all four).
+- **Duplicates merged:** `src/lib/api/home.ts` was a hand-written copy of `globalReader`: it is now `globalReader("home", "home")` (same cache key, tag, published-only read and no-database fallback). The footer's own copy of the primary button style, which had drifted from `ButtonLink` (no `nowrap`, no `shrink-0`), is now `<ButtonLink>`.
+- **Packages removed:** `@neon/env`, `embla-carousel-react` and `embla-carousel-autoplay` (nothing imported them). The leftover `.next-dev` folder (355 MB, ignored by git) was deleted.
+- **Left on purpose, and why:** `RotatingWord` and the CMS `rotatingWords` field are unreachable today (the Courage section is hidden and uses the typewriter), but removing the field is a database change and the section may come back, so they stay until the owner decides. The unused font files in `src/fonts/` are kept deliberately (the comment there explains: they are not shipped).
+
+## 2026-11-02 (later): a swipe hero on phones and tablets, the LPS 360 Framework hidden on phones, and CI made green again
 
 ### Hero slider below 1024px, Framework hidden below 768px (LOCAL, not pushed)
 - **Client requests:** (1) "the LPS 360 hidden always, on just mobile screens"; (2) "on mobile and tablets the homepage hero needs to work like a normal slider with normal swipes, and below that the scroll-based UI triggers".

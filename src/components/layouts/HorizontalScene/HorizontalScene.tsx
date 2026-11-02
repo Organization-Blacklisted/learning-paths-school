@@ -15,9 +15,9 @@ import { SceneContext, type SceneCallback, type SceneRegistry } from "./scene-co
 // one centred on screen. While pinned, vertical scroll moves the track left, one pixel of scroll per pixel of
 // movement, until the last panel is centred. Then the pin is released and the page scrolls on.
 //
-// The layout is plain CSS so the server-rendered page is already right: from md up (and when the user has not
-// asked for reduced motion) the panels are a row inside a clipped, screen-high stage; otherwise (phones, reduced
-// motion) they are an ordinary vertical stack with the section spacing between them and no pin.
+// The layout is plain CSS so the server-rendered page is already right: when the user has not asked for reduced motion the panels are a
+// row inside a clipped, screen-high stage, at EVERY width (a scene with `stackOnPhones` is a row only from 640px wide and 500px high);
+// otherwise (reduced motion, or a phone for such a scene) they are an ordinary vertical stack with the section spacing between them and no pin.
 // The JS only adds the pin and the movement, and only in the row layout (gsap.matchMedia with the same query).
 //
 // Panels taller than the screen are scaled down to fit it while the scene is pinned (see `fit` below).
@@ -217,7 +217,7 @@ export default function HorizontalScene({ panels, stackOnPhones = false }: Horiz
       mm.revert();
       ScrollTrigger.removeEventListener("refreshInit", fit);
       ScrollTrigger.removeEventListener("refresh", settle);
-      fit(); // clears the scaling (the query no longer applies to a torn-down scene)
+      fit(); // measures again for the window as it is now: it clears the scaling when the row layout no longer applies, otherwise it applies it again
     };
   }, [sideways, rowQueryText]);
 

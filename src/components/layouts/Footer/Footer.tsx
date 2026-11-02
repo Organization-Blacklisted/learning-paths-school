@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import Container from "@/components/layouts/Container";
+import ButtonLink from "@/components/ui/ButtonLink";
 import { footerContent } from "@/data/footer";
 
 // Layout notes (Figma node 6282:795, 1920px frame). The Figma content column is 1530px; the footer uses
@@ -58,12 +59,7 @@ export default function Footer() {
           <div className="flex flex-col items-start gap-8 min-[1200px]:max-[1650px]:w-[min(619px,calc(100%_-_552px))] min-[1200px]:shrink-0 min-[1650px]:-mr-[13px] min-[1650px]:w-[590px]">
             {/* 619px is the Figma text box (wider than its 590px column). Applied from 1650px so it can't overflow the viewport. */}
             <p className="text-body-lg leading-[1.4444] text-white/80 min-[1650px]:w-[619px]">{cta.description}</p>
-            <Link
-              href={cta.buttonHref}
-              className="rounded-[4px] bg-brand-green px-[15px] py-[13px] text-body-lg leading-[1.4444] text-white capitalize transition-[filter] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              {cta.buttonLabel}
-            </Link>
+            <ButtonLink href={cta.buttonHref}>{cta.buttonLabel}</ButtonLink>
           </div>
         </div>
 

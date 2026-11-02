@@ -1,10 +1,10 @@
 # Home hero
 
-> **Two modes since 2026-11-03:** from 1024px the pinned, scroll-controlled hero described below; **below 1024px (phones and tablets) a normal swipe slider** (not pinned, drag and snap, autoplay, dots; vertical swipes scroll the page). Details and tests: [06-changelog.md](06-changelog.md).
+> **Two modes since 2026-11-02:** from 1024px the pinned, scroll-controlled hero described below; **below 1024px (phones and tablets) a normal swipe slider** (not pinned, drag and snap, autoplay, dots; vertical swipes scroll the page). Details and tests: [06-changelog.md](06-changelog.md).
 
 Homepage hero. Figma: component set "Component 2" (`6253:893`) with three variants (`6253:892`, `6253:891`, `6253:890`), one per slide. The instance used on the page is node `6282:929`. The header inside that frame is the separate [header](09-header.md).
 
-Code: `src/components/sections/home/HeroSlideshowSection/`. Content: `src/data/home-hero.ts`. Types: `src/types/home.ts`. Rendered from `src/app/(frontend)/page.tsx`.
+Code: `src/components/sections/home/HeroSlideshowSection/`. Content: `src/data/home-hero.ts`. Types: `src/types/home/`. Rendered from `src/app/(frontend)/page.tsx`.
 
 ## Slides
 
@@ -22,7 +22,7 @@ Pagination: a 56 x 8 white pill for the active slide, 12px `#464949` circles for
 
 Decided by the owner (2026-10-21): the hero autoplays when the page loads, and once the user scrolls, the scroll takes over and moves through slide 2 and slide 3, and then the page moves on down to the Vision/Mission/Values section (which then pans sideways to "The Courage To Find Your Path", see [13-home-courage.md](13-home-courage.md)), like the ESPN feature.
 
-- **The hero is pinned** to the screen. Scrolling moves one "progress" value from slide 1 to slide 3, **one screen of scroll per slide change** (2 screens in total, so the hero's pin spacer is 3 screens tall). After slide 3 the hero is released and scrolls away.
+- **From 1024px the hero is pinned** to the screen. (Below 1024px it is a swipe slider: everything from here to "Implementation" describes the pinned desktop hero.) Scrolling moves one "progress" value from slide 1 to slide 3, **one screen of scroll per slide change** (2 screens in total, so the hero's pin spacer is 3 screens tall). After slide 3 the hero is released and scrolls away.
 - That one value drives everything: the image track slides sideways, the texts fade, and the pagination pill glides to the next dot. Scrolling back reverses it.
 - **Text:** each text is visible only within half a slide of its own slide, so the outgoing text is gone before the next one appears. A plain cross-dissolve (both at 50%) overlapped into unreadable text when the user stopped half way. At exactly half way between two slides there is no text, just the photos.
 - **Autoplay on landing** (from the Figma prototype: 3.5 s per slide, 0.4 s change, loops 1, 2, 3, back to 1). Autoplay works by **scrolling the page** to the next slide's position, so the scroll position is always the single source of truth. The 3 to 1 step scrolls back two screens in 0.4 s, so it visibly passes through slide 2 on the way, as the prototype's track does.
@@ -35,7 +35,7 @@ Decided by the owner (2026-10-21): the hero autoplays when the page loads, and o
 
 GSAP ScrollTrigger (`pin: true`) plus Lenis smooth scrolling (`SmoothScroll` component in the layout). A `render(progress)` function writes the track position, the text opacities and the dot sizes and colours for any progress value; scroll calls it continuously, dots and reduced motion call it directly. Shared helpers: `src/lib/gsap.ts` (`registerGsap`) and `src/lib/scroll.ts` (`scrollToY`, which uses Lenis when active). See the [animation guidelines](04-animation-guidelines.md).
 
-History: a first version used custom GSAP with its own autoplay and swipe, then it was rewritten with Embla (less code, swipe and autoplay built in). Scroll control needs the slide to follow the scroll position, which Embla cannot do, so the hero went back to GSAP, now scroll-driven. Embla stays installed for ordinary carousels. Horizontal swipe and hover-pause were dropped with it: on a phone, vertical scrolling is the gesture that moves the slides.
+History: a first version used custom GSAP with its own autoplay and swipe, then it was rewritten with Embla (less code, swipe and autoplay built in). Scroll control needs the slide to follow the scroll position, which Embla cannot do, so the hero went back to GSAP, now scroll-driven. Embla was removed from the project on 2026-11-02 (nothing used it); the swipe slider below 1024px is hand-written (pointer events and GSAP, see the changelog). Horizontal swipe and hover-pause were dropped with it: on a phone, vertical scrolling is the gesture that moves the slides.
 
 Slides 2 and 3 are **requested only after the page has loaded and the browser is idle** (`useIdleReady`), with `loading="eager"` once rendered (lazy loading would never fetch them: they are off screen on the track). Before this, all three hero photos were requested at once and on a throttled phone slide 1 landed last (10 s). The autoplay timer skips a change while the next slide's photo has not arrived, so a blank slide is never shown. See [production readiness](16-production-readiness.md).
 
@@ -77,7 +77,7 @@ Verified in Chrome against the production build (and a smoke test on the running
 - **Scroll mapping at exact positions:** 0 screens is slide 1; 0.25 screens has text 1 at half opacity; 0.5 screens has no text and the track at -16.7%; 0.75 screens has text 2 at half; 1 screen is slide 2; 1.5 screens has no text; 2 screens is slide 3. After 2 screens the hero is released.
 - **Autoplay:** 3.5 s between slides (measured 3.51 s and 3.41 s), sequence 2, 3, then back through 2 to 1. A wheel scroll stops it for good (6 s watched, nothing moved).
 - **Reduced motion:** no pin spacers, no Lenis, no autoplay, slide 1 shown, dots switch instantly.
-- **Screen sizes:** one screen of scroll shows slide 2 with no horizontal overflow at 390 x 844, 768 x 1024, 1280 x 800, 1920 x 993 and 2560 x 1300. No console errors.
+- **Screen sizes (measured when the hero was pinned at every width):** one screen of scroll showed slide 2 with no horizontal overflow at 390 x 844, 768 x 1024, 1280 x 800, 1920 x 993 and 2560 x 1300. Since 2026-11-02 the widths below 1024px use the swipe slider (checked by `tests/interactions.mjs` section 13).
 - The earlier pixel diff of the text area against Figma (about 1%) was measured on the previous version; the text and dots are unchanged.
 
 ## Known issues and open items
@@ -85,9 +85,8 @@ Verified in Chrome against the production build (and a smoke test on the running
 - **Image resolution.** The Figma source photos are small: 1536 x 1024 (slides 1 and 3) and 1721 x 914 (slide 2). The hero is 1920px wide, so they are already upscaled by about 1.25 times and will look soft on large or retina screens. Ask the school for the original high-resolution photos.
 - **Alt texts are mine** (descriptions of the photos). Refine them with the school.
 - **Autoplay has no visible pause button.** It stops on the first user scroll or key, and is off with reduced motion, but WCAG 2.2.2 asks for a pause control on auto-advancing content longer than 5 seconds. Needs a design decision.
-- **The header scrolls away while the hero is pinned** (the transparent header is positioned at the top of the page, not fixed), so the menu is not reachable during the two screens of the pinned hero. Decide whether the header should stay fixed during the scroll scenes.
+- **The header scrolls away while the hero is pinned (desktop)** (the transparent header is positioned at the top of the page, not fixed), so the menu is not reachable during the two screens of the pinned hero. Decide whether the header should stay fixed during the scroll scenes.
 - **Scroll distance** is one screen per slide. This is a feel setting (`end` in the ScrollTrigger); the owner or team may want it shorter or longer. Snapping to whole slides when scrolling stops is not done (Lenis and ScrollTrigger snapping conflict; it can be added with Lenis snapping).
-- The rest of the homepage is not built.
 - Figma also contains a "Component 3" next to "Component 2". It was not used.
 
 ## Height on a phone (2026-10-30)

@@ -30,7 +30,7 @@ import type { FrameworkSectionProps } from "./FrameworkSection.types";
 // text wraps exactly like the design at any width. Below lg the diagram would be too small to read, so (my
 // interpretation, the design only exists for desktop) it becomes a list: the photo, then each pill with its description.
 //
-// ANIMATION (owner: a highly interactive homepage), played once when the section scrolls into view, about 2.5 seconds:
+// ANIMATION (owner: a highly interactive homepage), played when the section scrolls into view (about 2.5 seconds; a quicker replay each time it comes back):
 // the heading parts rise in, the ring grows in, the photo pops, then the seven pills fly in from their sides one after
 // another (left pills from the left, right pills from the right, "Novel" from below) with their line drawing out and their
 // dot popping, and each description rises in. Reduced motion: no animation, everything shown. Everything is only hidden by

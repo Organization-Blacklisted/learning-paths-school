@@ -5,7 +5,6 @@ import type { ComponentPropsWithoutRef } from "react";
 // A link that looks like a button (4px corners, 15 x 13px padding, Plus Jakarta Sans 18px). Two looks from the Figma designs:
 //   "primary": green, white text (the footer's "Begin an Admission Enquiry")
 //   "light":   white, graphite text and a green external-link icon (the CTA band's "Explore Admissions")
-// The footer still has its own copy of the primary look; switch it to this component when the footer is next touched.
 // The label never wraps and the button never shrinks in a flex row (owner, 2026-10-28: "Explore Admissions" broke onto two lines at 1308px
 // wide, where the CTA band's row gets tight): a button is as wide as its label, the text beside it gives way.
 // All extra props (className, data attributes, aria-*) go to the <a>.

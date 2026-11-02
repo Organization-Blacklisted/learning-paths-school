@@ -7,7 +7,7 @@ After the home page was complete, the code was reviewed for repetition. Everythi
 | Was repeated | Now | Used by |
 | --- | --- | --- |
 | The one-off entrance of a section: `useEffect`, GSAP, media query, hide the elements, paused timeline, `ScrollTrigger` with `once`, clean-up (about 15 lines per section) | **`useScrollReveal(rootRef, build, { media?, start? })`**, `src/lib/useScrollReveal.ts` | News, CTA, Framework, Ecosystem, Campus, and the phone entrances of Courage and Alumni |
-| Media query strings (`"(max-width: 1023px) and (prefers-reduced-motion: no-preference)"` and others, 20+ times), and the 1024px breakpoint living separately in CSS and JS | **`src/lib/motion.ts`**: `MOTION_OK`, `MOTION_REDUCED`, `DESKTOP`, `PHONE`, `DESKTOP_MOTION`, `PHONE_MOTION`, `prefersReducedMotion()` | every section, `HorizontalScene`, `SmoothScroll`, `useIdleReady` |
+| Media query strings (`"(max-width: 1023px) and (prefers-reduced-motion: no-preference)"` and others, 20+ times), and the 1024px breakpoint living separately in CSS and JS | **`src/lib/motion.ts`**: `MOTION_OK`, `MOTION_REDUCED`, `DESKTOP`, `PHONE`, `FROM_TABLET`, `prefersReducedMotion()` | every section, `HorizontalScene`, `SmoothScroll`, `useIdleReady` |
 | `useIdleReady` + `{ready && <Image unoptimized loading="eager" draggable={false} …>}` (20 times) | **`<Photo ready={…} …>`**, `src/components/ui/Photo` | all photos below the first screen |
 | The h2 classes (nearly identical in six sections) and the blue slanted word (`skewX(-8deg) scaleY(0.99)`) | **`<SectionTitle>`** and **`<Accent>`**, `src/components/ui/` | News, Alumni, Campus, Framework, Ecosystem, Journey |
 | The large body paragraph (`font-body text-body-lg leading-[1.5]`) | **`<BodyText>`**, `src/components/ui/BodyText` (colour, width and alignment go in `className`) | the same sections |
@@ -38,7 +38,7 @@ useScrollReveal(rootRef, ({ gsap, q }) => {
 });
 ```
 
-The hook adds what used to be copied: no entrance with reduced motion (everything just shows), a ScrollTrigger that plays the timeline once (`start` defaults to `"top 75%"`), clean-up on unmount. For a phone-only entrance (a section that is part of a sideways scene on desktop) pass `{ media: PHONE_MOTION }`. Sections that follow the scroll (the sideways scenes, the typing in the Courage section) still use `useSceneTimeline`; sections with their own special animation keep it.
+The hook adds what used to be copied: no entrance with reduced motion (everything just shows), a ScrollTrigger that plays the timeline once (`start` defaults to `"top 75%"`), clean-up on unmount. For an entrance that only plays in some layouts pass `{ media }` (for example ``${PHONE} and ${MOTION_OK}`` for a phone-only one, or the Campus section's own query for the stacked layout of its scene). Sections that follow the scroll (the sideways scenes, the typing in the Courage section) still use `useSceneTimeline`; sections with their own special animation keep it.
 
 ### A heading
 

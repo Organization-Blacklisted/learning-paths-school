@@ -1,6 +1,6 @@
 # Home: Their Paths Continue Long After They Leave (alumni)
 
-Figma: "Frame 1618876383", node `6282:755`, 1520 x 461px. Code: `src/components/sections/home/AlumniSection/`. Content: `src/data/home-alumni.ts`. Types: `AlumniContent`, `AlumniPerson` in `src/types/home.ts`. Portraits: `public/images/home/alumni/`. Since 2026-11-02 it is an **ordinary section below the Ecosystem scene** (the owner swapped it with the campus video, which took its place as the second panel of that scene: [22-home-campus.md](22-home-campus.md)); `BlockRenderer` gives it the 1520px container and the 200px spacing a scene panel got from the scene, and its entrance is a scroll entrance (`useScrollReveal`: the pill, heading and paragraphs rise in, then each portrait opens from the bottom with a slight zoom settle and its caption rises; quicker on later visits; nothing with reduced motion). Before that it was the second panel of the Ecosystem scene and its entrance rode the sideways pan.
+Figma: "Frame 1618876383", node `6282:755`, 1520 x 461px. Code: `src/components/sections/home/AlumniSection/`. Content: `src/data/home-alumni.ts`. Types: `AlumniContent`, `AlumniPerson` in `src/types/home/`. Portraits: `public/images/home/alumni/`. Since 2026-11-02 it is an **ordinary section below the Ecosystem scene** (the owner swapped it with the campus video, which took its place as the second panel of that scene: [22-home-campus.md](22-home-campus.md)); `BlockRenderer` gives it the 1520px container and the 200px spacing a scene panel got from the scene, and its entrance is a scroll entrance (`useScrollReveal`: the pill, heading and paragraphs rise in, then each portrait opens from the bottom with a slight zoom settle and its caption rises; quicker on later visits; nothing with reduced motion). Before that it was the second panel of the Ecosystem scene and its entrance rode the sideways pan.
 
 ## What it is
 
@@ -8,7 +8,7 @@ Left, a 633px block: the green pill **BEYOND THE SCHOOL GATE**, the two-line hea
 
 ## The scene
 
-`page.tsx` now has two scenes: scene 1 (Vision/Mission/Values, Courage, Journey) and **scene 2: Ecosystem, then alumni**, with the LPS 360 Framework between them and What's New after. The gap between the Ecosystem and the alumni content is **200px** at 1920px (measured from the owner's canvas screenshot, as the other gaps were), set with `gapBefore: 200`. The pan is 1920px of scroll at 1920px wide.
+(Historical, until 2026-11-02: `page.tsx` had two scenes: scene 1 (Vision/Mission/Values, Courage, Journey) and **scene 2: Ecosystem, then alumni**, with the LPS 360 Framework between them and What's New after. Today scene 2 is the Ecosystem and the Campus video, and the alumni are an ordinary section below it. The numbers below are from when the alumni were the second panel.) The gap between the Ecosystem and the alumni content is **200px** at 1920px (measured from the owner's canvas screenshot, as the other gaps were), set with `gapBefore: 200`. The pan is 1920px of scroll at 1920px wide.
 
 ### New in HorizontalScene: panels taller than the screen are scaled to fit
 
@@ -40,7 +40,7 @@ Both Figma portraits are the same 1122 x 1402 file placed and cropped differentl
 Verified in Chrome on the live home page (scroll to the end of scene 2), 1920 x 1080:
 
 - Frame 1520 x 461. Pill at y 67.5, heading 52px below it, paragraphs 175px below the pill and 497 wide; cards at x 648 and 1092, 428 wide, 461 high; portraits 428 x 385.2; captions 217.6 wide, 405.9px down, 49px high. The render is 27.9 dB against Figma (2% of values differ, text anti-aliasing and 0.5px).
-- Scene: three pinned scenes on the page; at the pin start the Ecosystem is centred with the whole section on screen and the alumni text still hidden at the right; half way the first portrait is open and the second still closing; at the end the alumni section is centred (960px), everything revealed and the portraits loaded; scrolling back restores the start. At 1920 x 950 the stage is 950px high (fits); at 1440 x 800 the stage is 800px (the Ecosystem is scaled to fit; before this fix it was 1041px and its bottom was cut). The first scene's checks and the other sections' checks still pass; a scroll through the whole page has no horizontal overflow and no console messages.
+- Historical check (while the alumni were the second panel): three pinned scenes on the page; at the pin start the Ecosystem is centred with the whole section on screen and the alumni text still hidden at the right; half way the first portrait is open and the second still closing; at the end the alumni section is centred (960px), everything revealed and the portraits loaded; scrolling back restores the start. At 1920 x 950 the stage is 950px high (fits); at 1440 x 800 the stage is 800px (the Ecosystem is scaled to fit; before this fix it was 1041px and its bottom was cut). The first scene's checks and the other sections' checks still pass; a scroll through the whole page has no horizontal overflow and no console messages.
 
 ## Known issues and open items
 
