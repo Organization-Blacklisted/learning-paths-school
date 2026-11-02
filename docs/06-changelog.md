@@ -2,7 +2,11 @@
 
 Newest first.
 
-## 2026-11-02 (latest): the campus video and "Beyond the school gate" swap places
+## 2026-11-02 (latest): menu shake fix
+
+- **Mega menu: the right-hand links shook while the menu opened (owner, after the deploy).** A timer changed the links' animation delay at 1.2 s while they were still animating, which makes a running animation jump. The change now waits until the first list has finished rising, and lists chosen later by hover never change their delay while playing. See [27-mega-menu.md](27-mega-menu.md). Checked by sampling the links frame by frame on the dev server. Not pushed yet.
+
+## 2026-11-02 (earlier): the campus video and "Beyond the school gate" swap places
 
 ### Home page order (LOCAL, not pushed)
 - **Owner request:** "we need to interchange this video comes up and beyond school gate down" (the alumni section sat directly above the campus video). After two misreadings of mine (first: Alumni becomes an ordinary section and the pan is dropped; then: the video added above the Ecosystem), the owner clarified: **a plain swap of the two places**, and chose "Video takes the pan slot".

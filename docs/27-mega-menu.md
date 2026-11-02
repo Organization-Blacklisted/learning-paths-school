@@ -79,3 +79,9 @@ Checked in Chrome at 1920 x 993 against a render of the Figma node: the close bu
 - Tablet and phone are my design: the designer should look at them.
 - **"Parent Login" and "Contact us"** (the two small links at the top of the menu) have no destination yet (`#`).
 - Phone: the photo and the one-row links follow the owner's reference picture; the logo is not shown on the menu.
+
+## Fix 2026-11-02: the right-hand links shook while the menu opened
+
+- **Cause:** the first list's links start rising after a 950 ms delay (the panel is still arriving). A timer at 1200 ms then switched the delay to the short 60 ms one for later hovers, **while those links were still animating**. Changing the delay of a running CSS animation shifts its timeline, so the links jumped forward at 1.2 s: the shake the owner saw ("all these right items shake when opening").
+- **Fix (`MegaMenu.tsx`):** the switch now happens only after the first list has finished rising (950 ms + the last link's stagger + 900 ms + 100 ms, about 2.5 s), and only the FIRST list uses the long delay at all: a list chosen by pointing at another item always uses the short one, so its delay never changes while it plays.
+- **Checked** on the dev server by sampling every frame of the first link's opacity and offset while the menu opened: a smooth rise from about 1.0 s to 1.8 s, no jump at 1.2 s.

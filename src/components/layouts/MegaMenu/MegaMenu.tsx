@@ -85,7 +85,7 @@ export default function MegaMenu({ open, onClose, returnFocusRef, warm = false, 
   // The chosen main item. Side by side the first one is chosen when the menu opens; on a phone every item starts closed.
   const [activeId, setActiveId] = useState<string | null>(sections[0].id);
   const [wasOpen, setWasOpen] = useState(open);
-  // false while the menu is still coming in (the first links wait for the panel), true from about a second after it opened
+  // false while the menu is still coming in (the first links wait for the panel and rise), true once the first list has finished rising
   const [entered, setEntered] = useState(false);
   if (open !== wasOpen) {
     setWasOpen(open);
@@ -94,9 +94,11 @@ export default function MegaMenu({ open, onClose, returnFocusRef, warm = false, 
   }
   useEffect(() => {
     if (!open) return;
-    const timer = window.setTimeout(() => setEntered(true), 1200);
+    // Only once the first list has finished rising: changing a running animation's delay makes it jump (the right-hand links used to shake at 1.2 s).
+    const settled = 950 + (Math.max(...sections.map((section) => section.links.length)) - 1) * 80 + 900 + 100;
+    const timer = window.setTimeout(() => setEntered(true), settled);
     return () => window.clearTimeout(timer);
-  }, [open]);
+  }, [open, sections]);
 
   // Open: the page stops scrolling, Escape closes, the focus goes to the close button; closed again: the focus goes back to the menu button.
   useEffect(() => {
@@ -286,7 +288,8 @@ export default function MegaMenu({ open, onClose, returnFocusRef, warm = false, 
                         {section.links.map((link, linkIndex) => (
                           <li
                             key={link.id}
-                            style={{ animationDelay: `${(entered ? 60 : 950) + linkIndex * 80}ms` }}
+                            // The first list waits for the panel; a list chosen later (pointing at another item) does not, and its delay never changes while it plays.
+                            style={{ animationDelay: `${(entered || section.id !== sections[0].id ? 60 : 950) + linkIndex * 80}ms` }}
                             className={open && active ? "md:animate-menu-link motion-reduce:animate-none" : undefined}
                           >
                             <Link
