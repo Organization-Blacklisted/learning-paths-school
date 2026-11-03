@@ -40,7 +40,7 @@ import type { EcosystemSectionProps } from "./EcosystemSection.types";
 // - The blue highlight of the active tab is one shape that SLIDES from tab to tab (position and width animated, 0.45 s).
 // - On a tab change the photo CROSS-FADES (owner, 2026-10-24; it was a wipe from the left): the new photo is loaded first, then it fades in
 //   over the old one (0.9 s) while it eases from a slight zoom (1.08) to its normal size (1.4 s), a calm "premium" settle. The old photo stays
-//   under it until the fade is done, so there is never a blank frame. The title, text and bullets rise in one after another.
+//   under it until the fade AND the settle are both done (1.4 s), so there is never a blank frame. The title, text and bullets rise in one after another.
 // - Reduced motion: nothing animated, the photo swaps at once, the highlight jumps, all shown. Everything is only hidden by JS.
 //
 // THE PHOTO IS A STACK OF LAYERS (see `layers`). Normally one. A tab change adds a layer on top once its photo has loaded (so a slow

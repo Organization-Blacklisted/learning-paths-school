@@ -920,14 +920,15 @@ for (const [label, width, height] of [
       const top = during.map((f) => f.layers.find((l) => l.top));
       const under = during.map((f) => f.layers.find((l) => !l.top));
       ok(
-        `Ecosystem photo, ${label}: the new photo is on top of the old one while it fades in (two layers for about 0.9 s)`,
+        `Ecosystem photo, ${label}: the new photo is on top of the old one while it fades in (two layers until the zoom has settled, about 1.4 s)`,
         during.length >= 20 &&
           top[0].src.includes("sports") &&
           under[0].src.includes("choir") &&
-          // how long the two layers coexist is the fade (0.9 s); WHEN it starts depends on how fast the new photo loads (0.3 to 0.9 s on a
-          // busy machine), so the check measures the fade itself and not the time since the click
-          during.at(-1).t - during[0].t > 700 &&
-          during.at(-1).t - during[0].t < 1300,
+          // how long the two layers coexist is the fade and the settle together (the old photo is dropped when BOTH are done, 1.4 s: dropping it
+          // while the new photo was still settling made the picture jump, 2026-11-03); WHEN it starts depends on how fast the new photo loads, so the
+          // check measures that stretch itself and not the time since the click
+          during.at(-1).t - during[0].t > 1200 &&
+          during.at(-1).t - during[0].t < 1700,
         `${during.length} frames, fade ${during.at(-1)?.t - during[0]?.t} ms (from ${during[0]?.t} to ${during.at(-1)?.t}), top ${top[0]?.src}, under ${under[0]?.src}`,
       );
       ok(
