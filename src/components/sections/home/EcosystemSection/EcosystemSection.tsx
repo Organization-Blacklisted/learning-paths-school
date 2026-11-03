@@ -180,6 +180,9 @@ export default function EcosystemSection({ content }: EcosystemSectionProps) {
     const { gsap } = registerGsap();
     if (prefersReducedMotion()) return;
     const ctx = gsap.context(() => {
+      // The texts sit on their own layer while this tab is shown (text that script moves is otherwise drawn on whole pixels and snaps when it stops:
+      // docs/04-animation-guidelines.md). The clean-up of the next tab change reverts it.
+      gsap.set("[data-eco-row][data-active] [data-eco-text]", { willChange: "transform, opacity" });
       gsap.fromTo(
         "[data-eco-row][data-active] [data-eco-text]",
         { autoAlpha: 0, y: 18 },

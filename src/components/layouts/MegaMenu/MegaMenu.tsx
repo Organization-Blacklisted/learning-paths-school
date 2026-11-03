@@ -62,6 +62,10 @@ const spacing = {
   "--menu-row": "clamp(36px, calc(41px - (993px - 100svh) * 0.0222), 41px)", // height of a main item (41px: the first row in Figma, which carries the mark)
 } as CSSProperties;
 
+// PROMOTED (the cause of the shaking, found by the owner with the stages on 2026-11-03: the main items, then the same fix for the other rising parts): the rising
+// parts sit on their own layer for as long as the menu is open, so the browser does not make one for each of them when its rise starts and drop it when it ends
+// (text is drawn differently on a layer and off it: a flicker, once per element). See `promoted` below and docs/27-mega-menu.md (fourth fix, 2026-11-03).
+
 const rise = "transition-[opacity,translate] ease-out motion-reduce:transition-none";
 // the main items fade in AND change colour on hover: one transition declaration for both
 const riseAndColour = "transition-[color,opacity,translate] ease-out motion-reduce:transition-none";
@@ -178,6 +182,8 @@ export default function MegaMenu({ open, onClose, returnFocusRef, warm = false, 
     transitionDelay: `0ms, ${startAt(index)}ms, ${startAt(index)}ms`,
     transitionDuration: `250ms, ${riseMs}ms, ${riseMs}ms`,
   });
+  // the rising parts sit on their own layer while the menu is open (see PROMOTED above)
+  const promoted = open ? "will-change-[transform,opacity]" : "";
   const shown = open ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0";
   const showPhoto = wide && (open || warm);
 
@@ -221,7 +227,7 @@ export default function MegaMenu({ open, onClose, returnFocusRef, warm = false, 
         {/* Top row: Parent Login, Contact us, the close button (on a phone the close button is on the photo and the two links are under it, in one row) */}
         <div className="flex items-center justify-end gap-[clamp(20px,2.8vw,53px)] max-sm:contents">
           <ul
-            className={`flex items-center gap-[clamp(16px,1.7vw,32px)] max-sm:order-1 max-sm:mt-5 max-sm:gap-x-5 max-[359px]:gap-x-4 ${rise} ${shown}`}
+            className={`flex items-center gap-[clamp(16px,1.7vw,32px)] max-sm:order-1 max-sm:mt-5 max-sm:gap-x-5 max-[359px]:gap-x-4 ${rise} ${shown} ${promoted}`}
             style={delay(0)}
           >
             <li>
@@ -269,7 +275,7 @@ export default function MegaMenu({ open, onClose, returnFocusRef, warm = false, 
                     onPointerEnter={(event) => hover(event, section.id)}
                     onPointerMove={(event) => hover(event, section.id)}
                     style={delayItem(index + 1)}
-                    className={`relative flex w-full items-center py-1.5 text-left font-body text-px-30 max-md:py-3.5 max-md:text-px-20 leading-[1.2] font-light text-brand-charcoal hover:text-brand-blue md:col-start-1 md:min-h-[var(--menu-row)] md:py-0 ${riseAndColour} ${shown} ${focusRing} max-md:after:mr-1 max-md:after:ml-auto max-md:after:size-2.5 max-md:after:shrink-0 max-md:after:border-r-2 max-md:after:border-b-2 max-md:after:transition-[rotate,translate] max-md:after:duration-300 ${
+                    className={`relative flex w-full items-center py-1.5 text-left font-body text-px-30 max-md:py-3.5 max-md:text-px-20 leading-[1.2] font-light text-brand-charcoal hover:text-brand-blue md:col-start-1 md:min-h-[var(--menu-row)] md:py-0 ${riseAndColour} ${shown} ${promoted} ${focusRing} max-md:after:mr-1 max-md:after:ml-auto max-md:after:size-2.5 max-md:after:shrink-0 max-md:after:border-r-2 max-md:after:border-b-2 max-md:after:transition-[rotate,translate] max-md:after:duration-300 ${
                       active
                         ? "max-md:after:translate-y-0.5 max-md:after:-rotate-[135deg]"
                         : "max-md:after:-translate-y-0.5 max-md:after:rotate-45"
@@ -311,7 +317,7 @@ export default function MegaMenu({ open, onClose, returnFocusRef, warm = false, 
                             key={link.id}
                             // The first list waits for the panel; a list chosen later (pointing at another item) does not, and its delay never changes while it plays.
                             style={{ animationDelay: `${(entered || section.id !== sections[0].id ? 60 : 950) + linkIndex * 80}ms` }}
-                            className={open && active ? "md:animate-menu-link motion-reduce:animate-none" : undefined}
+                            className={open && active ? `md:animate-menu-link motion-reduce:animate-none ${promoted}` : undefined}
                           >
                             <Link
                               href={link.href}
@@ -334,7 +340,7 @@ export default function MegaMenu({ open, onClose, returnFocusRef, warm = false, 
 
         {/* The two buttons */}
         <div
-          className={`mt-6 flex flex-wrap items-center gap-[18px] max-sm:order-4 max-sm:mt-4 max-sm:flex-col max-sm:items-stretch sm:mt-10 md:mt-[var(--menu-actions)] ${rise} ${shown}`}
+          className={`mt-6 flex flex-wrap items-center gap-[18px] max-sm:order-4 max-sm:mt-4 max-sm:flex-col max-sm:items-stretch sm:mt-10 md:mt-[var(--menu-actions)] ${rise} ${shown} ${promoted}`}
           style={delay(sections.length + 1)}
         >
           <ButtonLink href={actions.enquiry.href} onClick={onClose} className="max-sm:justify-center">

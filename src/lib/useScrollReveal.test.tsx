@@ -50,11 +50,24 @@ function Harness({ build, options }: { build: Build; options?: Options }) {
   );
 }
 
-// A fake timeline that remembers its speed: timeScale() reads it, timeScale(x) sets it.
-type FakeTimeline = gsap.core.Timeline & { speed: number };
-const timeline = ({ speed = 1, duration = 2.4 } = {}) => {
-  const tl = { speed, restart: vi.fn(), pause: vi.fn(), duration: vi.fn(() => duration) } as unknown as FakeTimeline &
-    Record<string, unknown>;
+// A fake timeline that remembers its speed: timeScale() reads it, timeScale(x) sets it. `targets` are what its tweens animate (getChildren
+// returns one tween per target list), and eventCallback(name, fn) stores a callback the test can fire with tl.callbacks[name]().
+type FakeTimeline = gsap.core.Timeline & { speed: number; callbacks: Record<string, (() => void) | null> };
+const timeline = ({ speed = 1, duration = 2.4, targets = [] as unknown[][] } = {}) => {
+  const callbacks: Record<string, (() => void) | null> = {};
+  const tl = {
+    speed,
+    callbacks,
+    restart: vi.fn(),
+    pause: vi.fn(),
+    duration: vi.fn(() => duration),
+    getChildren: vi.fn(() => targets.map((list) => ({ targets: () => list }))),
+    eventCallback: vi.fn((name: string, fn?: () => void) => {
+      if (fn === undefined) return callbacks[name] ?? null;
+      callbacks[name] = fn;
+      return tl;
+    }),
+  } as unknown as FakeTimeline & Record<string, unknown>;
   tl.timeScale = vi.fn((value?: number) => {
     if (value === undefined) return tl.speed;
     tl.speed = value;
@@ -166,6 +179,75 @@ describe("useScrollReveal", () => {
     expect(fake.matchMediaContext.revert).toHaveBeenCalledTimes(1);
     expect(first).toHaveBeenCalledTimes(1);
     expect(second).toHaveBeenCalledTimes(1);
+  });
+
+  describe("smoothness: will-change for what the entrance animates", () => {
+    const targets = (...lists: unknown[][]) => timeline({ targets: lists });
+
+    it("puts will-change on everything the timeline animates when it plays, and keeps it there when the entrance is done (dropping it makes text jump by a pixel)", () => {
+      const items = [document.createElement("p"), document.createElement("p")];
+      const tl = targets([items[0]], [items[1]]);
+      render(<Harness build={() => tl} />);
+      expect(items[0].style.willChange).toBe("");
+      fake.ScrollTrigger.create.mock.calls[0][0].onEnter();
+      expect(items[0].style.willChange).toBe("transform, opacity");
+      expect(items[1].style.willChange).toBe("transform, opacity");
+      expect(tl.eventCallback).not.toHaveBeenCalledWith("onComplete", expect.anything()); // nothing is taken off at the end
+    });
+
+    it("does it for the targets of tweens given as one list, and ignores what is not an element (a plain object, a duplicate)", () => {
+      const a = document.createElement("div");
+      const b = document.createElement("div");
+      const tl = targets([a, b, { x: 0 }], [a]);
+      render(<Harness build={() => tl} />);
+      fake.ScrollTrigger.create.mock.calls[0][0].onEnter();
+      expect(a.style.willChange).toBe("transform, opacity");
+      expect(b.style.willChange).toBe("transform, opacity");
+    });
+
+    it("takes it off when nothing of the section can be seen any more (back to the hidden start), and puts it on again for the replay", () => {
+      const a = document.createElement("div");
+      const tl = targets([a]);
+      render(<Harness build={() => tl} />);
+      const play = fake.ScrollTrigger.create.mock.calls[0][0];
+      const seen = FakeObserver.instances[0];
+      play.onEnter();
+      expect(a.style.willChange).toBe("transform, opacity");
+      seen.emit(false); // out of view: back to the hidden start
+      expect(a.style.willChange).toBe("auto");
+      play.onEnter();
+      expect(a.style.willChange).toBe("transform, opacity");
+    });
+
+    it("takes it off when the section goes away", () => {
+      const a = document.createElement("div");
+      const tl = targets([a]);
+      const { unmount } = render(<Harness build={() => tl} />);
+      fake.ScrollTrigger.create.mock.calls[0][0].onEnter();
+      expect(a.style.willChange).toBe("transform, opacity");
+      // the clean-up the hook hands to matchMedia (it runs when the query stops matching or the section goes away)
+      (fake.matchMediaContext.add.mock.results[0].value as () => void)();
+      expect(a.style.willChange).toBe("auto");
+      unmount();
+    });
+
+    it("keeps it on for a one-off (replay: false), which has no moment of being out of sight, until the section goes away", () => {
+      const a = document.createElement("div");
+      const tl = targets([a]);
+      render(<Harness build={() => tl} options={{ replay: false }} />);
+      fake.ScrollTrigger.create.mock.calls[0][0].onEnter();
+      expect(a.style.willChange).toBe("transform, opacity");
+      (fake.matchMediaContext.add.mock.results[0].value as () => void)();
+      expect(a.style.willChange).toBe("auto");
+    });
+
+    it("leaves the section's own onComplete alone", () => {
+      const own = vi.fn();
+      const tl = targets([document.createElement("div")]);
+      tl.eventCallback("onComplete", own);
+      render(<Harness build={() => tl} />);
+      expect(tl.callbacks.onComplete).toBe(own);
+    });
   });
 
   describe("replay", () => {

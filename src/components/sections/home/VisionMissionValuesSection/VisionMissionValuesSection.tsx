@@ -43,26 +43,16 @@ export default function VisionMissionValuesSection({ content }: VisionMissionVal
       const connectors = gsap.utils.toArray<HTMLElement>("[data-connector]", column);
       if (!shieldImg) return;
 
-      // force3D + will-change keep the moving parts on their own GPU layer for the whole reveal. Without it the
-      // text is repainted on the main thread and drawn on whole pixels while it rises (it steps and shimmers), and
-      // GSAP's default drops back to a 2D transform at the end, which makes the text snap by a pixel.
-      gsap.set(shieldImg, { clipPath: SHIELD_ONLY_CLIP, willChange: "clip-path" });
-      gsap.set(blocks, { autoAlpha: 0, y: 24, force3D: true, willChange: "transform, opacity" });
-      gsap.set(connectors, { scaleY: 0, transformOrigin: "top center", force3D: true, willChange: "transform" });
+      // The moving parts sit on their own GPU layer while the section is on the screen: playOnScroll (src/lib/useScrollReveal.ts) puts will-change on
+      // everything the timeline animates when it plays and takes it off only when nothing of the column can be seen any more. (This section used to do it
+      // by hand and took it off when the reveal ended, which made the text snap by a pixel at the end: docs/04-animation-guidelines.md.)
+      gsap.set(shieldImg, { clipPath: SHIELD_ONLY_CLIP });
+      gsap.set(blocks, { autoAlpha: 0, y: 24 });
+      gsap.set(connectors, { scaleY: 0, transformOrigin: "top center" });
 
       // Plays when the top of the column reaches 75% of the screen height: in full the first time, then as a quick replay each time the
-      // column comes back into view (see playOnScroll). will-change is put back at the start of every play, because the end of the
-      // previous one cleared it.
-      const tl = gsap.timeline({
-        paused: true,
-        defaults: { ease: "power2.out", force3D: true },
-        onStart: () => {
-          gsap.set(shieldImg, { willChange: "clip-path" });
-          gsap.set(blocks, { willChange: "transform, opacity" });
-          gsap.set(connectors, { willChange: "transform" });
-        },
-        onComplete: () => gsap.set([shieldImg, ...blocks, ...connectors], { willChange: "auto" }),
-      });
+      // column comes back into view (see playOnScroll).
+      const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
       tl.to(shieldImg, { clipPath: "inset(0 0 0% 0)", duration: 0.9, ease: "power2.inOut" })
         .to(blocks[0], { autoAlpha: 1, y: 0, duration: 0.8 }, "-=0.3")
         .to(connectors[0], { scaleY: 1, duration: 0.5, ease: "power1.inOut" }, "-=0.3")

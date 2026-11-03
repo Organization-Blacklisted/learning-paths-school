@@ -26,6 +26,8 @@ import type { HeaderProps } from "./Header.types";
 //    white sections. The change between the two looks is a short transition of the background, the padding, the row height and the
 //    content width (and the menu icon cross-fades), not a jump.
 //
+// The header slides away and back by a CSS transition (translate), and always has its own layer (will-change-transform): text that moves is otherwise drawn
+// on whole pixels and snaps when the move ends, the cause of the "shaking" found on the CTA band and the menu on 2026-11-03 (docs/04-animation-guidelines.md).
 // The logo (353px wide, about 52px tall) is taller than the solid row (45px) and is centred on it, as in Figma.
 // The menu button opens the mega menu (src/components/layouts/MegaMenu, owner 2026-10-29): a full-screen panel that comes in from the right. The menu is
 // rendered NEXT TO the <header>, not inside it: the header slides away with a transform when the visitor scrolls down, and a fixed element inside a
@@ -93,7 +95,7 @@ export default function Header({ variant }: HeaderProps) {
         data-look={solidLook ? "solid" : "transparent"}
         data-hidden={hidden ? "" : undefined}
         onFocus={showOnFocus}
-        className={`${transparentVariant ? "fixed inset-x-0 top-0" : "sticky top-0"} z-50 transition-[translate,background-color] duration-300 ease-out motion-reduce:transition-none ${
+        className={`${transparentVariant ? "fixed inset-x-0 top-0" : "sticky top-0"} z-50 will-change-transform transition-[translate,background-color] duration-300 ease-out motion-reduce:transition-none ${
           hidden ? "-translate-y-full" : "translate-y-0"
         } ${solidLook ? "bg-brand-blue" : "bg-transparent"}`}
       >

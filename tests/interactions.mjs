@@ -2427,6 +2427,106 @@ for (const [label, width, height] of [
   }
 }
 
+// ---------------------------------------------------------------- 17. Entrances ask the browser for a smooth move (owner, 2026-11-03: "whenever we show anything with a fade it shakes a little")
+// Without will-change Chrome draws a moving element's text on whole pixels (it rises in steps, stalls and snaps at the end). The shared reveal hook
+// (src/lib/useScrollReveal.ts) puts will-change on what an entrance animates when it plays and keeps it while the section is on the screen (taking it off at the
+// end of the entrance made the CTA button's label jump 1px: the owner saw the button "grow"); it takes it off when the section is out of sight. The smoothness
+// itself was measured in the browser's own frames (docs/06-changelog.md); this checks the wiring in a real page.
+{
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await context.newPage();
+  await page.goto(BASE + "/partnerships", { waitUntil: "load" });
+  await page.waitForTimeout(3000);
+  const samples = await page.evaluate(async () => {
+    const band = document.querySelector("[data-cta-item]").closest("div.relative.overflow-clip");
+    const heading = band.querySelector("h2");
+    const top = band.getBoundingClientRect().top + scrollY;
+    window.scrollTo(0, top - innerHeight * 0.95); // just above it: not played yet
+    await new Promise((r) => setTimeout(r, 1200));
+    const before = getComputedStyle(heading).willChange;
+    const out = [];
+    const t0 = performance.now();
+    window.scrollTo(0, top - innerHeight * 0.35); // lands on it: the entrance plays
+    await new Promise((resolve) => {
+      const tick = () => {
+        const style = getComputedStyle(heading);
+        out.push([style.willChange, +style.opacity]);
+        if (performance.now() - t0 < 3500) requestAnimationFrame(tick);
+        else resolve();
+      };
+      requestAnimationFrame(tick);
+    });
+    // then scroll far away from the band (it is put back to its hidden start, nobody sees it) and read it again
+    window.scrollTo(0, 0);
+    await new Promise((r) => setTimeout(r, 1500));
+    return { before, out, after: getComputedStyle(heading).willChange };
+  });
+  const fading = samples.out.filter(([, opacity]) => opacity > 0.02 && opacity < 0.98);
+  ok("entrance: the CTA heading is not promoted before its entrance plays", samples.before === "auto", samples.before);
+  ok(
+    "entrance: the CTA heading has will-change: transform, opacity for the whole time it fades in",
+    fading.length > 4 && fading.every(([w]) => /transform/.test(w) && /opacity/.test(w)),
+    `${fading.length} frames, ${[...new Set(fading.map(([w]) => w))].join(" | ")}`,
+  );
+  ok(
+    "entrance: ... and it is still on when the entrance is over and the band is on the screen (dropping it makes the text jump by a pixel)",
+    /transform/.test(samples.out.at(-1)[0]) && samples.out.at(-1)[1] === 1,
+    JSON.stringify(samples.out.at(-1)),
+  );
+  ok(
+    "entrance: ... and it is taken off when the band has been scrolled out of sight (no layers kept for the whole page)",
+    samples.after === "auto",
+    samples.after,
+  );
+  await context.close();
+}
+
+// ---------------------------------------------------------------- 18. No animated text is left without its own layer (owner, 2026-11-03: "the same thing may be happening on other sections")
+// Text that script moves is drawn on whole pixels and snaps when the move ends, unless it is on its own layer (will-change: transform): docs/04-animation-guidelines.md.
+// Scroll each inner page like a visitor; at every stop, every text element that GSAP has animated and that is on the screen must have will-change with transform.
+// (Any new animated text that skips the shared reveal fails here. The home page's pinned, scroll-driven scenes are not checked: their text moves with the wheel.)
+{
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await context.newPage();
+  for (const path of ["/partnerships", "/awards-recognition", "/principals-welcome"]) {
+    await page.goto(BASE + path, { waitUntil: "load" });
+    await page.waitForTimeout(3000);
+    await page.mouse.move(720, 450);
+    const height = await page.evaluate(() => document.documentElement.scrollHeight);
+    const offenders = new Set();
+    let seen = 0;
+    for (let i = 0, y = 0; y < height - 900 && i < 30; i++) {
+      await page.mouse.wheel(0, 500);
+      await page.waitForTimeout(1700); // the entrance plays and settles
+      y = await page.evaluate(() => scrollY);
+      const stop = await page.evaluate(() => {
+        const bad = [];
+        let animated = 0;
+        for (const el of document.querySelectorAll("main *")) {
+          if (!/translate: none; rotate: none; scale: none/.test(el.getAttribute("style") ?? "")) continue; // never touched by GSAP
+          const r = el.getBoundingClientRect();
+          const style = getComputedStyle(el);
+          if (r.bottom < 0 || r.top > innerHeight || !r.width || !r.height || style.visibility === "hidden" || +style.opacity === 0)
+            continue;
+          if (!(el.innerText ?? "").trim()) continue; // only text shows the snap
+          animated++;
+          if (!/transform/.test(style.willChange))
+            bad.push(`<${el.tagName.toLowerCase()}> ${(el.innerText ?? "").trim().slice(0, 24).replace(/\s+/g, " ")}`);
+        }
+        return { animated, bad };
+      });
+      seen += stop.animated;
+      for (const b of stop.bad) offenders.add(b);
+    }
+    ok(
+      `animated text (${path}): every animated text element on the screen has its own layer`,
+      offenders.size === 0 && seen > 0,
+      offenders.size ? `${offenders.size} without: ${[...offenders].slice(0, 3).join(" ; ")}` : `${seen} sightings, none without`,
+    );
+  }
+  await context.close();
+}
+
 console.log(fails ? `\n${fails} CHECK(S) FAILED` : "\nALL INTERACTION CHECKS PASSED");
 await browser.close();
 process.exitCode = fails ? 1 : 0;
