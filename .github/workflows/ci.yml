@@ -73,8 +73,26 @@ jobs:
             sleep 1
           done
           echo "the site did not start in 120 s"; cat serve.log; exit 1
-      - run: npm run qa
-      - run: npm run qa:interact
+      # The browser checks keep their output (tee) so the step after them can write every failing check as an ANNOTATION: the run's log needs admin rights
+      # to read, annotations are shown in the run summary and are readable without them.
+      - name: Run npm run qa
+        run: |
+          set -o pipefail
+          npm run qa 2>&1 | tee qa.log
+      - name: Failing checks of npm run qa
+        if: failure()
+        run: |
+          grep -E "^FAIL" qa.log | head -8 | while IFS= read -r line; do echo "::error title=qa check failed::$(printf '%s' "${line:0:900}" | sed 's/%/%25/g')"; done || true
+          echo "::error title=qa: end of the log::$(tail -n 12 qa.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+      - name: Run npm run qa:interact
+        run: |
+          set -o pipefail
+          npm run qa:interact 2>&1 | tee interact.log
+      - name: Failing checks of npm run qa:interact
+        if: failure()
+        run: |
+          grep -E "^FAIL" interact.log | head -8 | while IFS= read -r line; do echo "::error title=qa:interact check failed::$(printf '%s' "${line:0:900}" | sed 's/%/%25/g')"; done || true
+          echo "::error title=qa:interact: end of the log::$(tail -n 12 interact.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
       - name: Server log
         if: failure()
         run: cat serve.log
