@@ -6,11 +6,13 @@ import { useEffect } from "react";
 import { registerGsap } from "@/lib/gsap";
 import { prefersReducedMotion } from "@/lib/motion";
 import { refreshOnRealResize } from "@/lib/resize";
+import { SMOOTH_SCROLL } from "@/lib/smooth-scroll";
 import { setLenis, setNormalizer } from "@/lib/scroll";
 
 // Smooth (eased) scrolling for mouse wheels, driven by GSAP's ticker so ScrollTrigger stays in step with it.
 // Touch devices keep their native scrolling (Lenis does not take it over by default). Off entirely with
-// prefers-reduced-motion. Renders nothing. Mounted once in the (frontend) layout.
+// prefers-reduced-motion. Renders nothing. Mounted once in the (frontend) layout. How the glide moves and ends: src/lib/smooth-scroll.ts (the end of the
+// first version made the whole screen shake on the owner's display).
 export default function SmoothScroll() {
   useEffect(() => {
     const { gsap, ScrollTrigger } = registerGsap();
@@ -38,7 +40,7 @@ export default function SmoothScroll() {
         : undefined;
     if (normalize) setNormalizer(normalize);
 
-    const lenis = new Lenis({ autoRaf: false, duration: 1.15 });
+    const lenis = new Lenis({ autoRaf: false, ...SMOOTH_SCROLL });
     setLenis(lenis);
     const onTick = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(onTick);

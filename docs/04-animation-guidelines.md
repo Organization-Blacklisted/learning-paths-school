@@ -15,7 +15,7 @@ Observed on that ESPN page (read from the live page in Chrome): the page does no
 Planned toolkit for this site:
 - **GSAP + ScrollTrigger** (installed): pinning, scrubbed timelines, optional snapping. Register the plugin once.
 - **`@gsap/react`** (not installed): clean setup/cleanup in React.
-- **Lenis** (installed, in use): smooth scrolling for mouse wheels, driven by the GSAP ticker so ScrollTrigger stays in step. Touch devices keep native scrolling. Off with reduced motion. Owner's choice (2026-10-21).
+- **Lenis** (installed, in use): smooth scrolling for mouse wheels, driven by the GSAP ticker so ScrollTrigger stays in step. **How the glide ENDS matters (2026-11-03):** the first setting (Lenis' default exponential easing over 1.15 s) ended in a creep of single pixels over about 20 frames and made the whole screen shake when a scroll stopped on the owner's display (invisible in a headless Chrome). It is now ease out cubic over 1 s (`src/lib/smooth-scroll.ts`, the last 2px in about 6 frames), picked by the owner from four tried on their own screen. Do not go back to a long exponential tail without checking on a real screen. Touch devices keep native scrolling. Off with reduced motion. Owner's choice (2026-10-21).
 - A 360 viewer only if the "In-vision 360" campus tag in the homepage design means real 360 imagery (to confirm).
 - **Embla** (removed from the project on 2026-11-02, nothing used it; the swipe slider of the hero below 1024px is hand-written with pointer events and GSAP). The home hero used it briefly, but a scroll-driven hero cannot, because Embla cannot be driven by the scroll position. It is currently unused.
 

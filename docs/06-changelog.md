@@ -2,6 +2,13 @@
 
 Newest first.
 
+## 2026-11-03 (evening): "the whole screen shakes when a scroll stops" (FIXED: the smooth scroll now ends with ease out cubic, LOCAL, not pushed)
+
+- **Owner report:** on desktop, on every page, when a mouse-wheel scroll stops the whole screen shakes. Could be the smooth scrolling (Lenis), or the layers (`will-change`) added today, or something else.
+- **What I measured (live site, headless Chrome, real scrollbars):** the scroll position eases to a whole-pixel stop with a 1px-per-frame crawl for about 13 frames; the DRAWN picture moves exactly as far as the scroll says in every frame to the very end, the same with and without every `will-change`; nothing moves after the scroll has stopped. So it cannot be seen here, like the menu.
+- **Diagnostic switches to find it on the owner's screen** (`SmoothScroll.tsx`, to be removed afterwards): `?smooth=off` (no smooth scrolling) and `?layers=off` (every `will-change` off), alone or together (`?smooth=off&layers=off`); they last until the page is loaded again. Checked: each does what it says.
+- **Owner's result:** `?smooth=off` removes the shaking, so **it is the end of the smooth scroll (Lenis)**; but smooth scrolling is required. It is configured with an exponential ease-out over 1.15 s (`duration: 1.15`, Lenis' default easing), which ends in a very slow creep (single pixels over about 20 frames). Four other ways to end it were added to the same switch to find one that stops cleanly on the owner's screen (`SMOOTH_VARIANTS` in `SmoothScroll.tsx`): `?smooth=lerp` (Lenis' own default), `short` (the same curve over 0.7 s), `cubic` (ease out cubic over 1 s, the shortest creep: the last 2 px over about 6 frames) and `raf` (the shipped settings on Lenis' own frame loop, not GSAP's ticker). Each checked: smooth scrolling on, ends at the right place. **The owner picked `cubic`, and it is now the default** (`src/lib/smooth-scroll.ts`: ease out cubic over 1 s, 3 unit tests); all the switches (`?smooth=...`, `?layers=off`) were removed. Checked in the browser: smooth scrolling on, ends at the right place, the last 2 px in about 6 frames instead of about 20.
+
 ## 2026-11-03 (after the push): the Ecosystem tabs on a cold start (LOCAL, not pushed)
 
 - **Owner report:** on the first load, switching the Ecosystem tabs fast, the photos did not change until a refresh; and the photo shakes when it changes.
