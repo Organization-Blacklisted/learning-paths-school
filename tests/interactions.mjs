@@ -17,14 +17,33 @@ const near = (a, b, tolerance = 1.5) => Math.abs(a - b) <= tolerance;
 
 const ECO = 'section[aria-label="The ecosystem behind LPS 360"]';
 
-/** Scrolls to a page position with the mouse wheel (window.scrollTo fights the smooth scrolling). */
+/** Waits until the page has really stopped moving: the smooth scroll has finished its glide (its length and curve are not assumed). */
+async function scrollSettled(page, maxMs = 4000) {
+  let last = null;
+  let steady = 0;
+  for (let waited = 0; waited < maxMs && steady < 3; waited += 100) {
+    await page.waitForTimeout(100);
+    const y = await page.evaluate(() => Math.round(scrollY));
+    steady = y === last ? steady + 1 : 0;
+    last = y;
+  }
+}
+
+// Scrolls to a page position with the mouse wheel (window.scrollTo fights the smooth scrolling). The whole distance in one go (wheel events add up in the smooth scroll's target), then wait for the glide to finish; what is left is corrected the same
+// way. The first version sent the rest of the distance again 260 ms later, while the glide was still running, and how far that overshot depended on the
+// shape of the glide: it broke when the glide's curve was changed (the scene-position checks of section 7 failed on CI, 2026-11-03).
 async function scrollToY(page, y) {
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 12; i++) {
     const now = await page.evaluate(() => Math.round(scrollY));
-    const delta = y - now;
-    if (Math.abs(delta) <= 2) break;
-    await page.mouse.wheel(0, Math.max(-900, Math.min(900, delta)));
-    await page.waitForTimeout(260);
+    let left = y - now;
+    if (Math.abs(left) <= 2) break;
+    while (left !== 0) {
+      const step = Math.max(-900, Math.min(900, left));
+      await page.mouse.wheel(0, step);
+      left -= step;
+      await page.waitForTimeout(30);
+    }
+    await scrollSettled(page);
   }
   await page.waitForTimeout(1800);
 }

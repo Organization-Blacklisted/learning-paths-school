@@ -2,6 +2,13 @@
 
 Newest first.
 
+## 2026-11-03 (late evening): CI red twice after the pushes, both outdated tests (not the site)
+
+- **Run 1 (the Ecosystem commit):** "Ecosystem photo ... two layers for about 0.9 s" saw 1400 ms: the old photo now stays until the fade AND the zoom are done (1.4 s, on purpose); the check was updated (700 to 1300 ms became 1200 to 1700 ms). Fixed in `c7f48a7`.
+- **Run 2 (after the smooth-scroll change):** "tablet 768: scene 1 starts with the Vision panel centred (centre 371 of 768)", 13px off. Cause: the tests' own `scrollToY` helper sent a wheel scroll, waited 260 ms, and sent the REST of the distance again while the first glide was still running; how far that overshot depended on the shape of the glide (the old exponential glide had covered 79% of the way by then, the new cubic one 60%). It was tuned for the old curve. `scrollToY` now sends the whole distance at once, waits until the page has really stopped moving (`scrollSettled`: the position unchanged for 300 ms), and corrects what is left the same way, so it no longer depends on the glide. **Not a bug of the site**; it only shows on a slow CI machine and a CI-style build (the dev server hides the Courage section and cannot run those checks).
+- **Checked locally on a CI-style build** (the same build as CI: fake database, Courage shown): `qa` 41/41, `qa:interact` 243/243.
+- **A lesson:** a change of how the page scrolls or animates must be followed by a run of the browser suites on a CI-style build, because the tests assume the old timing. I did not run them for the smooth-scroll change (the owner asked to deploy without them), so CI found it.
+
 ## 2026-11-03 (evening): "the whole screen shakes when a scroll stops" (FIXED: the smooth scroll now ends with ease out cubic, LOCAL, not pushed)
 
 - **Owner report:** on desktop, on every page, when a mouse-wheel scroll stops the whole screen shakes. Could be the smooth scrolling (Lenis), or the layers (`will-change`) added today, or something else.
