@@ -8,7 +8,8 @@ import Photo from "@/components/ui/Photo";
 import SectionTitle from "@/components/ui/SectionTitle";
 import TabBar from "@/components/ui/TabBar";
 import { registerGsap } from "@/lib/gsap";
-import { prefersReducedMotion } from "@/lib/motion";
+import { PHONE, prefersReducedMotion } from "@/lib/motion";
+import { loadPhoto } from "@/lib/loadPhoto";
 import { useIdleReady } from "@/lib/useIdleReady";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import type { EcosystemSectionProps } from "./EcosystemSection.types";
@@ -48,24 +49,6 @@ import type { EcosystemSectionProps } from "./EcosystemSection.types";
 
 // The photo box is a stack of layers: [{ id, tab }, …], the last one on top. Layer 0 is the first photo (the entrance animation plays on it).
 type PhotoLayer = { id: number; tab: number };
-
-// How long to wait for a tab's photo before showing the tab anyway (a very slow connection): it then loads while it fades in.
-const PHOTO_WAIT_MS = 2000;
-
-/** Resolves when the browser has fetched `src` (or failed, or the wait ran out), so the cross-fade starts on a ready image. */
-function preloadPhoto(src: string): Promise<void> {
-  return new Promise((resolve) => {
-    const img = new window.Image();
-    const timer = window.setTimeout(resolve, PHOTO_WAIT_MS);
-    const done = () => {
-      window.clearTimeout(timer);
-      resolve();
-    };
-    img.onload = done;
-    img.onerror = done;
-    img.src = src;
-  });
-}
 
 export default function EcosystemSection({ content }: EcosystemSectionProps) {
   const { label, badge, titleLead, titleAccent, intro, tabsLabel, tabs } = content;
@@ -126,12 +109,36 @@ export default function EcosystemSection({ content }: EcosystemSectionProps) {
       setLayers((stack) => (prefersReducedMotion() ? [layer] : [...stack, layer]));
     };
     // Reduced motion: no fade, so no reason to wait for the photo either (it loads in place like before).
+    // Otherwise the tab's photo is waited for however long it takes (src/lib/loadPhoto.ts: no time limit, it is tried up to three times) and the old photo
+    // stays until it is there. Showing the tab early dropped the old photo and left an empty box, for good when the request failed: a cold serverless
+    // function has taken 15 seconds for one of these photos. If it cannot be had at all the old photo simply stays and a later click tries again.
     if (prefersReducedMotion()) show();
-    else preloadPhoto(tabs[active].photo.src).then(show);
+    else void loadPhoto(tabs[active].photo.src).then((ok) => ok && show());
     return () => {
       cancelled = true;
     };
   }, [active, tabs]);
+
+  // WARM-UP: once the section's own photo is on its way (photoReady), the other tabs' photos are fetched quietly, one at a time and at low priority, so a
+  // click finds them ready: on the live site they come through a serverless function that can be cold (one took 15 s), and a visitor who clicked
+  // through the tabs fast right after the page loaded got an empty box. Only in the normal case: not on a phone, not with "save data", not on 2G/3G (the
+  // same policy as useIdleReady), where a photo is fetched when its tab is chosen.
+  useEffect(() => {
+    if (!photoReady) return;
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    if (window.matchMedia(PHONE).matches || connection?.saveData || /(^|-)(2|3)g$/.test(connection?.effectiveType ?? "")) return;
+    let cancelled = false;
+    void (async () => {
+      for (const tab of tabs.slice(1)) {
+        await new Promise((resolve) => window.setTimeout(resolve, 400));
+        if (cancelled) return;
+        await loadPhoto(tab.photo.src, { lowPriority: true });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [photoReady, tabs]);
 
   // A tab change, step 2 (before the browser paints the new layer): the top layer fades in while it settles from a slight zoom. When it is
   // fully opaque the layers below it are dropped. The fades live in one GSAP context so a quick second click never snaps the first one.
@@ -144,22 +151,14 @@ export default function EcosystemSection({ content }: EcosystemSectionProps) {
     const { gsap } = registerGsap();
     fades.current ??= gsap.context(() => {}, panel);
     fades.current.add(() => {
+      // One timeline. The old photo is dropped only when BOTH the fade (0.9 s) and the settle (1.4 s) are done: dropping it while the new photo was still
+      // settling made the picture jump. The new photo keeps its own layer afterwards (taking it off at the end of the settle made the picture snap:
+      // docs/04-animation-guidelines.md); it goes with the layer when the next tab change drops it.
       gsap.set(el, { willChange: "transform, opacity" });
-      gsap.fromTo(
-        el,
-        { autoAlpha: 0 },
-        {
-          autoAlpha: 1,
-          duration: 0.9,
-          ease: "power1.inOut",
-          onComplete: () => setLayers((stack) => stack.filter((layer) => layer.id >= topLayer.id)),
-        },
-      );
-      gsap.fromTo(
-        el,
-        { scale: 1.08 },
-        { scale: 1, duration: 1.4, ease: "power2.out", onComplete: () => gsap.set(el, { willChange: "auto" }) },
-      );
+      gsap
+        .timeline({ onComplete: () => setLayers((stack) => stack.filter((layer) => layer.id >= topLayer.id)) })
+        .fromTo(el, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.9, ease: "power1.inOut" }, 0)
+        .fromTo(el, { scale: 1.08 }, { scale: 1, duration: 1.4, ease: "power2.out" }, 0);
     });
   }, [topLayer.id]);
 

@@ -2527,6 +2527,80 @@ for (const [label, width, height] of [
   await context.close();
 }
 
+// ---------------------------------------------------------------- 19. The Ecosystem tabs on a cold start: a slow or failing photo never leaves an empty box (owner, 2026-11-03)
+// "On the first load, switching tabs fast, the images do not change and I have to refresh." The photos of the tabs come through a serverless function that can be
+// cold (one took 15 s). The old code waited 2 s, then showed the tab anyway, dropped the old photo and left an empty box, for good when the request failed.
+// Now the old photo stays until the new one has loaded (src/lib/loadPhoto.ts: no time limit, three attempts). Here every photo of the section is held back
+// (slow) or fails twice before it works; the box must show a loaded photo at every moment after the first one, and end on the photo of the chosen tab.
+{
+  for (const mode of ["slow", "fails twice"]) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    const tries = new Map();
+    await page.route("**/*ecosystem*.avif*", async (route) => {
+      const url = route.request().url();
+      tries.set(url, (tries.get(url) ?? 0) + 1);
+      if (mode === "slow") await new Promise((r) => setTimeout(r, 4500));
+      else if (tries.get(url) <= 2) return route.abort("failed");
+      await route.continue();
+    });
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await page.mouse.move(720, 450);
+    for (let i = 0; i < 150; i++) {
+      const top = await page.evaluate(() => {
+        const s = [...document.querySelectorAll("section")].find((x) => /ecosystem/i.test(x.getAttribute("aria-label") ?? ""));
+        window.__eco = s;
+        return s ? s.getBoundingClientRect().top : 99999;
+      });
+      if (top < 120) break;
+      await page.mouse.wheel(0, 400);
+      await page.waitForTimeout(60);
+    }
+    // the first photo has to be there before the test starts (it is held back too)
+    const shown = () =>
+      page.evaluate(() => {
+        const layers = [...window.__eco.querySelectorAll("[data-eco-layer] img")];
+        return layers.some((img) => img.complete && img.naturalWidth > 0);
+      });
+    for (let i = 0; i < 80 && !(await shown()); i++) await page.waitForTimeout(250);
+    await page.waitForTimeout(1500);
+    // the last tab, clicked at once; then the box is looked at every 250 ms for a while
+    await page.evaluate(() => {
+      const tabs = [...window.__eco.querySelectorAll("[role=tab]")];
+      tabs[tabs.length - 1].click();
+    });
+    let emptyMoments = 0;
+    for (let i = 0; i < 48; i++) {
+      await page.waitForTimeout(250);
+      if (!(await shown())) emptyMoments++;
+    }
+    const end = await page.evaluate(() => {
+      const tabs = [...window.__eco.querySelectorAll("[role=tab]")];
+      const top = window.__eco.querySelector("[data-eco-photo] img");
+      const wanted = window.__eco.querySelector("[data-eco-row][data-active] h3")?.textContent ?? "";
+      return {
+        selected: tabs.findIndex((t) => t.getAttribute("aria-selected") === "true") === tabs.length - 1,
+        topLoaded: !!top && top.complete && top.naturalWidth > 0,
+        topSrc: top?.getAttribute("src")?.split("/").pop() ?? "",
+        title: wanted.slice(0, 24),
+        layers: window.__eco.querySelectorAll("[data-eco-layer]").length,
+      };
+    });
+    ok(
+      `ecosystem tabs (${mode} photos): the photo box is never empty while the new photo comes`,
+      emptyMoments === 0,
+      `${emptyMoments} empty moments of 48`,
+    );
+    ok(
+      `ecosystem tabs (${mode} photos): it ends on the chosen tab's photo, loaded, without a refresh`,
+      end.selected && end.topLoaded && end.layers === 1,
+      JSON.stringify(end),
+    );
+    await context.close();
+  }
+}
+
 console.log(fails ? `\n${fails} CHECK(S) FAILED` : "\nALL INTERACTION CHECKS PASSED");
 await browser.close();
 process.exitCode = fails ? 1 : 0;

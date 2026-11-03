@@ -2,6 +2,12 @@
 
 Newest first.
 
+## 2026-11-03 (after the push): the Ecosystem tabs on a cold start (LOCAL, not pushed)
+
+- **Owner report:** on the first load, switching the Ecosystem tabs fast, the photos did not change until a refresh; and the photo shakes when it changes.
+- **Cause (measured):** the other tabs' photos load only on a click, through a serverless function that can be cold (live: 0.2 to 0.8 s, and one 15.3 s). The code gave up waiting after 2 s, dropped the old photo and showed an empty box, for good when the request failed. Reproduced with a throttled network (the new top layer opaque with its image not loaded 9 s later). Fix, test and the owner's second point: [20-home-ecosystem.md](20-home-ecosystem.md), "Photos on a cold start". New: `src/lib/loadPhoto.ts` (8 unit tests), a quiet warm-up of the other photos on desktop, `tests/interactions.mjs` section 19 (a slow and a failing photo: the box is never empty, it ends on the right photo).
+- **Not verified by me:** the shaking of the picture itself (one timeline, the layer kept after the zoom): the owner is to check. Unit tests 345 pass; the full browser suites on a CI-style build have not been run on this change yet.
+
 ## 2026-11-03 (night, final): the same cause looked for on every other animation (LOCAL, not pushed)
 
 ### Audit of the site for text that moves without its own layer
