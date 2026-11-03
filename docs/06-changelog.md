@@ -2,9 +2,32 @@
 
 Newest first.
 
-## 2026-11-03 (latest): the Awards & Recognition page
+## 2026-11-03 (night): the admin login cookie is Secure and the CSRF list is set (LOCAL, not pushed)
 
-### Awards & Recognition page and the reusable awards section (LOCAL, not pushed)
+### Admin cookie and CSRF (audit item)
+- **Owner request:** "Admin cookie: make the admin login cookie Secure, and check CSRF settings."
+- **Checked (Payload 3.91 source and the running app):** the cookie is HttpOnly and SameSite=Lax by default, but **not Secure**; and `csrf` was **empty, which Payload reads as "accept the login cookie from any origin"**.
+- **Done** (`src/lib/auth-security.ts`, 10 unit tests; `Users.ts` and `payload.config.ts` use it): the cookie is **Secure** whenever the code runs on Vercel or `NEXT_PUBLIC_SITE_URL` is https (not tied to `NODE_ENV`, so a local production build on http still logs in); SameSite=Lax is written out; **`csrf` lists the site's own addresses**: `NEXT_PUBLIC_SITE_URL`, the three addresses Vercel gives a deployment, and the new optional `CSRF_EXTRA_ORIGINS`; it stays empty on a local setup.
+- **A mistake of mine, found by the test and fixed:** the first rule made the cookie Secure only when the site URL was https. The test (a server simulating Vercel) showed no `Secure`, because `.env.local` here sets `NEXT_PUBLIC_SITE_URL=http://localhost:3002`, which outranks Vercel's variables. Running on Vercel now forces `Secure`, whatever that variable says.
+- **Tested** with a throwaway admin (deleted afterwards): the cookie flags; the site's and the deployment's origins accepted; another origin, a lookalike host and `Sec-Fetch-Site: cross-site` refused; the `JWT` header from a script still works; a wrong password still refused; the local server unchanged. **In Chrome** (second dev server on port 3010 with its own build folder; the owner's server on 3000 and its `.next` untouched): login, dashboard, a page global, Save draft and logout all worked with the list on, and the browser kept the cookie as Secure, HttpOnly, Lax. The Partnerships draft the check saved was put back to the published text.
+- **Risk to know:** the admin must be opened at a listed address. Another domain or alias needs `CSRF_EXTRA_ORIGINS` (the symptom is a login that sends you back to the login); [25-deployment-vercel.md](25-deployment-vercel.md) has it in the custom-domain step. Not changed: the 2-hour session, no second factor, no HSTS or CSP header yet.
+- **Docs:** [10-payload-cms.md](10-payload-cms.md) "Admin login security", [25-deployment-vercel.md](25-deployment-vercel.md), [07-decisions.md](07-decisions.md), `.env.example`.
+- **A side effect to remember:** running a second `next dev` with another `NEXT_DIST_DIR` makes Next add that folder to `tsconfig.json` and reformat it. I reverted it; do the same if it happens again.
+
+## 2026-11-03 (evening): the seed scripts are guarded (LOCAL, not pushed)
+
+### Seed safety (audit item) and `.env.example`
+- **Owner request:** "guard the seed scripts further and update .env.example".
+- **What was weak:** each of the five seeds had its own copy of one check: `NEON_BRANCH === "production"` needs `SEED_PRODUCTION=1`. A missing `NEON_BRANCH` was let through as "(unknown branch)"; `SEED_PRODUCTION=1` worked on any branch; a pooled string of one database next to a direct string of another was not noticed; overwriting production had no extra confirmation; and a production seed ran in Payload's development mode, which leaves a `dev` row in the migrations table (the deploy of 2026-11-02 stopped on it), so the row had to be deleted by hand after every production seed.
+- **Done:** one guard for all five (`scripts/seed-guard.ts`, rules in `src/lib/seed-guard.ts`, 14 unit tests): it refuses in CI and on Vercel, without `NEON_BRANCH`, `SEED_PRODUCTION=1` on a branch other than `production` (and `production` without it), a pooled and a direct string that name different databases, a production seed without the direct string, and an overwrite of production without `SEED_CONFIRM=overwrite-production`. It prints one banner line (branch and mode) and never a connection string, a host or a key. **With `SEED_PRODUCTION=1` a seed now runs like a migration** (`PAYLOAD_MIGRATING=true`: the direct connection, no schema push), so it leaves no `dev` row and fails instead of changing the live schema when the tables are behind.
+- **Proved** on a throwaway copy of the production branch (created and deleted by me, expiry set as a safety net): the production-mode seed left the migrations table unchanged, an overwrite without the confirmation was refused and with it worked, and the same seed in development mode on the same copy left the `dev` row. The real `dev` branch was used for the refusals (each refused with its message, nothing written).
+- **`.env.example`:** added `NEON_BRANCH` (the seeds need it), the optional `HOME_SECTION_LIMIT` / `HOME_HIDDEN_SECTIONS`, and a block that names the switches that must never be put in a file (`SEED_PRODUCTION`, `SEED_OVERWRITE`, `SEED_CONFIRM`, `PAYLOAD_MIGRATING`) and the variables that belong to the test tools or are set by Vercel and GitHub.
+- **Docs:** [10-payload-cms.md](10-payload-cms.md) has a new section "Seeding safely" (the table of refusals, how to seed production), the scripts and environment tables are brought up to date (they still described only `seed:home`); the manual "delete the dev row" step is gone from [30-partnerships.md](30-partnerships.md) and [31-awards-recognition.md](31-awards-recognition.md); [07-decisions.md](07-decisions.md), [scripts/README.md](../scripts/README.md).
+- **Note:** `NEON_BRANCH` is now required by the seeds. `neon checkout` and `neon env pull` write it, so a normal setup is unaffected; a hand-written `.env.local` needs the line.
+
+## 2026-11-03 (late): the Awards & Recognition page
+
+### Awards & Recognition page and the reusable awards section (pushed and deployed 2026-11-03, seeded on production)
 - **Owner request:** implement Figma node `5893:1651` at `awards-recognition/` with Payload (header and footer excluded).
 - **Built:** route `/awards-recognition`; the hero is the **same text-only `PageHero`** as the Principal's and the Partnerships pages (nothing new); **one new reusable section, `AwardsSection`**: three blocks, each a 924 x 585 photo with, 62px under it, the blue slanted title and the paragraph, framed by a laurel on each side. The group under the photo is a size container (container query units of the designed 924px) and each block carries its own designed offsets, because the author nudged them by hand. From 640px the laurels frame the text and the text never reaches them; below it the laurels are left out. The page has no call to action and no photo strip (the design has none). The menu's "Awards & Recognition" link and the sitemap point to the page.
 - **Wired to Payload:** global `awards-recognition` (group Pages): tabs Hero (no photo field) and Awards (a **flexible list of 1 to 10 blocks**, each a photo, a title and a paragraph, sortable), SEO tab; drafts, Live Preview, publishing clears the tag `awards-recognition`; migration `20261103_050817_awards_recognition_page` (4 new tables, 2 enums, nothing existing changes); seed `npm run seed:awards-recognition`.
@@ -17,7 +40,7 @@ Newest first.
 
 ## 2026-11-03 (later): the Partnerships page
 
-### Partnerships page and the reusable partners section (LOCAL, not pushed)
+### Partnerships page and the reusable partners section (pushed and deployed 2026-11-03, seeded on production)
 - **Owner request:** implement Figma node `5748:505` at `/partnerships/` with Payload (header and footer excluded); reuse the call to action, the image gallery (the photo strip) and the hero.
 - **Built:** route `/partnerships`; the hero is the **same text-only `PageHero`** as the Principal's page (nothing new), the call to action and the photo strip are the existing `CtaSection` and `MarqueeSection` with `spacing="inner"`; **one new reusable section, `PartnersSection`**: an introduction and a grid of logo cards (3 + 3 + 2, the last row centred). A card scales as one piece (container query units of the designed 494px) and carries its own designed offsets, because the author of the design placed every logo by hand. The menu's "Partnerships" link and the sitemap point to the page.
 - **Wired to Payload:** global `partnerships` (group Pages): tabs Hero (no photo field) and Partners (the introduction and a **flexible list of 1 to 12 partners**, each a logo and a label, sortable), SEO tab; drafts, Live Preview, publishing clears the tag `partnerships` (the revalidate route and the media collection know it); migration `20261103_044102_partnerships_page` (4 new tables, 2 enums, nothing existing changes); seed `npm run seed:partnerships`.
@@ -28,7 +51,7 @@ Newest first.
 - **Two spelling slips of the design corrected** ("Guidence" is "Guidance", "Knowledge  Partner" has one space); tell me if they are wanted as drawn.
 - **Not done / open:** production has no content for this page until `SEED_PRODUCTION=1 npm run seed:partnerships` is run (until then the live page shows the defaults; after seeding, delete the leftover "dev" row of the migrations table, see the doc); the logos are low resolution (ask the school for SVG or high-resolution files). The Contact form fix of earlier today is also still unpushed. See [30-partnerships.md](30-partnerships.md).
 
-## 2026-11-03 (earlier): the Contact form no longer sticks out of a phone's screen (LOCAL, not pushed)
+## 2026-11-03 (earlier): the Contact form no longer sticks out of a phone's screen (pushed and deployed 2026-11-03)
 
 ### Contact form wider than the screen on phones (a real bug in the page built on 2026-11-02)
 - **Found by:** CI, which had been red for a day with exactly one failing check, `contact (360): no sideways overflow ... {"overflow":22,"formInside":false}`, and then confirmed by the owner on a real phone ("the contact form is not responsive, it sticks out of the container and causes a sideways scroll"). It passed on the Windows development machine because the bug depends on a device-specific default width of text fields. (CI could only be read after it was made to write failing checks as annotations, see the previous entries.)

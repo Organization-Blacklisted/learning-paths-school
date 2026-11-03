@@ -37,7 +37,7 @@ Vercel also provides **system variables** (`VERCEL_ENV`, `VERCEL_URL`, `VERCEL_P
    `QA_URL=https://<the-preview-address> npm run qa` and `npm run qa:interact` (the suite takes the address from `QA_URL`). This tests what the host actually serves: headers, caching, compression, fonts, the 404.
 4. Look at the canonical, `robots.txt` and `sitemap.xml` of the **production** deployment: they must show the real domain.
 5. Run Lighthouse on the live preview (mobile and desktop). The numbers in [16-production-readiness.md](16-production-readiness.md) were measured on a developer machine with an antivirus injecting scripts; the host numbers are the real ones.
-6. Add the custom domain in Vercel (DNS), choose the main address (www or the bare domain) and redirect the other to it, then set `NEXT_PUBLIC_SITE_URL` to it and redeploy.
+6. Add the custom domain in Vercel (DNS), choose the main address (www or the bare domain) and redirect the other to it, then set `NEXT_PUBLIC_SITE_URL` to it and redeploy. **That also lets the admin log in on the new domain**: Payload only accepts a logged-in admin's requests from the site's own addresses (`src/lib/auth-security.ts`, [10-payload-cms.md](10-payload-cms.md) "Admin login security"). If the admin is opened at an address that is neither `NEXT_PUBLIC_SITE_URL` nor one Vercel gives the deployment, add it to `CSRF_EXTRA_ORIGINS`, or the admin will send you back to the login.
 7. Open `/admin`, create the first user, upload a test image (it must land in the Neon bucket).
 
 ## Known issue (2026-10-27): automatic deployments from `git push` are blocked

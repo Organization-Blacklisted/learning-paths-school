@@ -32,7 +32,7 @@ Payload 3.91.0 runs **inside this Next.js app** (no separate server), backed by 
 | `npm run generate:types` | Regenerates `src/payload-types.ts`. Run after changing any collection or global. |
 | `npm run generate:importmap` | Regenerates `src/app/(payload)/admin/importMap.js`. Run after adding admin components, rich-text features or plugins that add admin components (including **enabling the S3 plugin**). |
 | `npm run payload` | Payload CLI (`payload run <script>`, migrations, ...). |
-| `npm run seed:home` | Puts today's home page (`src/data` and `public/images`) into the CMS. Refuses the `production` branch and a home page that already has content unless `SEED_PRODUCTION=1` / `SEED_OVERWRITE=1` is set. See `scripts/seed-home.ts`. |
+| `npm run seed:home`, `seed:contact`, `seed:principals-welcome`, `seed:partnerships`, `seed:awards-recognition` | Put the page as it is today (`src/data` and `public/images`) into the CMS, once per database. They never replace a page that already has content, and they refuse an unsafe environment: see **Seeding safely** below. |
 
 Both generate commands only read the config. They do not connect to a database.
 
@@ -51,7 +51,9 @@ See `.env.example`. Nothing is required to build the site, but the admin and API
 | --- | --- |
 | `PAYLOAD_SECRET` | Signs admin sessions. Required at runtime. Generate a random 64-character hex string. |
 | `DATABASE_URL` | Postgres connection string (Neon pooled URL). |
-| `DATABASE_URL_UNPOOLED` | Direct (unpooled) Neon URL, for migrations and tooling. Not read by the app yet. |
+| `DATABASE_URL_UNPOOLED` | Direct (unpooled) Neon URL, for migrations and tooling (`payload migrate`, and a production seed). The app itself uses the pooled one. |
+| `CSRF_EXTRA_ORIGINS` | Optional. Other addresses the admin is opened at (comma separated); see **Admin login security**. |
+| `NEON_BRANCH` | The name of the Neon branch the two strings belong to (`neon checkout` / `neon env pull` write it). **The seed scripts refuse to run without it.** |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION` | Neon Object Storage. When `AWS_ENDPOINT_URL_S3` and `AWS_ACCESS_KEY_ID` are empty the storage plugin is **off** and uploads go to the local, gitignored `/media` folder. |
 | `REVALIDATE_SECRET` | The secret of `POST /api/revalidate` (header `x-revalidate-secret`). Without it every call is refused. Production needs its own. |
 
@@ -79,6 +81,43 @@ No Neon project exists, so everything was tested against a **throwaway real Post
 - **Done 2026-10-28:** the production branch has its 35 tables (migration `20261028_111608_initial`), the Vercel Production variables are set, the home page is seeded and the live `/admin` works. See [26-cms-home-plan.md](26-cms-home-plan.md#h-go-live-done-2026-10-28-with-the-owners-go) and "Migrations" below.
 - `pg` warns that `sslmode=require` will change meaning in pg 9 (today it already behaves like `verify-full`). Harmless now; adding `sslmode=verify-full` to the connection string removes the warning.
 - Not tried: Payload's admin screens against Neon (only the API), and `attachDatabasePool` from `@vercel/functions` (the Neon skill suggests it on Vercel; Payload owns its pool).
+
+## Seeding safely (since 2026-11-03)
+
+A seed writes into whichever database the environment points at, so every `scripts/seed-*.ts` begins with the same guard (`scripts/seed-guard.ts`; the rules are in `src/lib/seed-guard.ts` and have unit tests). It fails closed: when something is unclear it refuses, and it never prints a connection string, a host or a key.
+
+| It refuses when | Because |
+| --- | --- |
+| it runs in CI or on Vercel | a seed is a deliberate act of a person on their own computer |
+| `DATABASE_URL` or `NEON_BRANCH` is not set | without the branch name nobody can tell which database it is: it is not guessed |
+| the branch is `production` and `SEED_PRODUCTION=1` is not set | the live site is seeded on purpose only |
+| `SEED_PRODUCTION=1` is set but the branch is not `production` | a stale `.env.local`, still on `dev`, must not pass for "the live site was seeded" |
+| `DATABASE_URL` and `DATABASE_URL_UNPOOLED` name different databases | a half-switched environment would read one and write the other |
+| `SEED_PRODUCTION=1` and `DATABASE_URL_UNPOOLED` is missing | a production seed uses the direct connection |
+| a page already has content and `SEED_OVERWRITE=1` is not set | an overwrite DISCARDS what the editors wrote |
+| `SEED_OVERWRITE=1` on production without `SEED_CONFIRM=overwrite-production` | a second, spelled-out confirmation for the one irreversible act |
+
+**A production seed runs like a migration** (`PAYLOAD_MIGRATING=true`, set by the guard when `SEED_PRODUCTION=1`): the direct connection and **no schema push**. In its normal (development) mode Payload changes the schema on its own and leaves a `dev` row in the migrations table; on production that row made the next deploy stop on an interactive question (2026-11-02), and until now it had to be deleted by hand after every production seed. Now a production seed leaves no row, and if the tables are behind the migration files it fails instead of changing the live schema (deploy first: `vercel-build` runs the migrations). **Proved on 2026-11-03 on a throwaway copy of the production branch** (deleted afterwards): the seed in production mode left the migrations table exactly as it was (no `dev` row), the refused cases were refused, an overwrite with the confirmation worked; the same seed in development mode on the same copy left the `dev` row.
+
+How to seed production (from a developer machine, only when the owner says): pull the production variables into a scratch file outside the repository (`neon env pull --branch production --file <scratch> --env DATABASE_URL,DATABASE_URL_UNPOOLED,NEON_BRANCH,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_ENDPOINT_URL_S3,AWS_REGION`), load them into the shell, run `SEED_PRODUCTION=1 npm run seed:<page>`, delete the scratch file. `.env.local` is never switched. The three switches are for one command, on its command line: never put them in a file (`.env.example` says so).
+
+## Admin login security (since 2026-11-03)
+
+The admin login is Payload's own: an HttpOnly cookie `payload-token` that holds a signed token (the session lasts 2 hours; 5 wrong passwords lock the account for 10 minutes: Payload's defaults, unchanged). Two things were at Payload's defaults and are now set (`src/lib/auth-security.ts`, unit tested; used by `src/collections/Users.ts` and `src/payload.config.ts`):
+
+| Setting | Was (Payload's default) | Now |
+| --- | --- | --- |
+| **Cookie `Secure`** | off: the cookie would also travel over plain http | **on whenever the site is served over https**: always on Vercel (whatever `NEXT_PUBLIC_SITE_URL` says: Vercel serves https only) and wherever `NEXT_PUBLIC_SITE_URL` is https. Off on a local http setup, so a local production build (`next start` on http://localhost) can still log in. It is not tied to `NODE_ENV` for that reason. |
+| **Cookie `SameSite`** | Lax | Lax, written out in `Users.ts` so it stays if Payload's default changes. (`HttpOnly` is always on.) |
+| **CSRF list** (`csrf` in `payload.config.ts`) | empty: a request with the login cookie was accepted from ANY origin | **the site's own addresses**: `NEXT_PUBLIC_SITE_URL`, and the addresses Vercel gives the deployment (`VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL`), plus `CSRF_EXTRA_ORIGINS`. Empty (as before) on a local setup, where there is no other site to protect from. |
+
+**How the CSRF list works** (Payload's `extractJWT`): a request that carries the cookie is accepted when its `Origin` is in the list; when the browser sends no `Origin` (a page load, a plain GET) it is accepted when `Sec-Fetch-Site` is `same-origin`, `same-site` or `none` (typing the address); a cookie from a client that says nothing at all is refused. A script that sends the token in the `Authorization: JWT` header is not affected (a header cannot be added by another site's form or link). SameSite=Lax already keeps the cookie off cross-site POSTs; the list is the second layer, for the cases Lax does not cover (another site on the same registrable domain, an old browser).
+
+**The one way this can lock the owner out, and what to do:** the admin is opened at an address that is not in the list (a custom domain before `NEXT_PUBLIC_SITE_URL` is set to it, a team alias of the project). The symptom: log in, and the admin sends you back to the login (the cookie is refused from that origin). **Fix: put the address in `CSRF_EXTRA_ORIGINS` (Vercel, Production) and redeploy, or set `NEXT_PUBLIC_SITE_URL` to it.** Checklist when the real domain is added: [25-deployment-vercel.md](25-deployment-vercel.md). The login itself never needs the list (a login carries no cookie), so the owner can always get back in once the address is fixed.
+
+**Tested on 2026-11-03** (a throwaway admin, deleted afterwards): on a dev server that simulates Vercel's variables the login cookie is `Secure; HttpOnly; SameSite=Lax`; the site's address and the deployment's address are accepted, another origin and a lookalike (`lps.vercel.app.evil.example`) are refused, `Sec-Fetch-Site: cross-site` and a cookie from a silent client are refused, the `JWT` header still works from a script, a wrong password is still refused; on the normal local server nothing changes (no `Secure`, no list). **In Chrome**, on the same simulated server, the admin UI logged in, opened the dashboard and a page global, saved a draft and logged out with no 401 or 403, and the browser kept the cookie as Secure, HttpOnly, Lax.
+
+**Not changed, for the owner to decide:** the 2-hour session; `/admin` has no second factor; the "create the first user" screen is open until the first account exists (it redirects to the login afterwards); no `Strict-Transport-Security` or Content-Security-Policy header yet ([25-deployment-vercel.md](25-deployment-vercel.md) and [07-decisions.md](07-decisions.md)).
 
 ## Migrations (since 2026-10-28)
 

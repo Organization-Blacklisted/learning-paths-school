@@ -12,6 +12,11 @@
 // already, and AVIF is stored byte for byte (src/collections/Media.ts), so they keep the quality they were made with.
 //
 // It never prints connection strings or keys.
+//
+// SAFETY (scripts/seed-guard.ts, rules in src/lib/seed-guard.ts): it refuses in CI and on Vercel, when NEON_BRANCH is not set, when the environment is
+// `production` without SEED_PRODUCTION=1 (or SEED_PRODUCTION=1 on another branch), when the pooled and the direct connection point at different
+// databases, and an overwrite of production without SEED_CONFIRM=overwrite-production. A production seed runs in migrating mode: no schema push, no "dev" row.
+import { guardSeed } from "./seed-guard"; // first: it must run before the config is loaded
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { getPayload } from "payload";
@@ -19,16 +24,8 @@ import config from "@payload-config";
 import { homeDocFromData, homePhotoPaths } from "../src/lib/api/home-seed";
 import { SITE_DESCRIPTION, SITE_NAME } from "../src/lib/site";
 
-const overwrite = process.env.SEED_OVERWRITE === "1";
-const production = process.env.SEED_PRODUCTION === "1";
-const branch = process.env.NEON_BRANCH ?? "(unknown branch)";
-
 async function main() {
-  if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set (run `neon checkout dev`, or fill .env.local).");
-  if (branch === "production" && !production) {
-    throw new Error("The Neon branch is `production`. Set SEED_PRODUCTION=1 to seed it on purpose.");
-  }
-  console.log(`Seeding the home page on Neon branch: ${branch}`);
+  const { overwrite } = guardSeed("the home page");
 
   const payload = await getPayload({ config });
 

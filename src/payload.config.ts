@@ -14,6 +14,7 @@ import { Contact } from "./globals/Contact";
 import { Home } from "./globals/Home";
 import { Partnerships } from "./globals/Partnerships";
 import { PrincipalsWelcome } from "./globals/PrincipalsWelcome";
+import { allowedOrigins } from "./lib/auth-security";
 import { SITE_DESCRIPTION, SITE_NAME } from "./lib/site";
 
 const filename = fileURLToPath(import.meta.url);
@@ -52,6 +53,8 @@ export default buildConfig({
   globals: [Home, Contact, PrincipalsWelcome, Partnerships, AwardsRecognition],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
+  // CSRF: a request with the login cookie is only accepted from these origins (empty on a local setup). See src/lib/auth-security.ts.
+  csrf: allowedOrigins(process.env),
   typescript: {
     outputFile: path.resolve(dirname, "payload-types.ts"),
   },

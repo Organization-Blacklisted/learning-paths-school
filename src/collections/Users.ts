@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { cookieSecure } from "../lib/auth-security";
 
 // Admin auth collection, required by Payload. Email and password come from `auth: true`.
 //
@@ -14,7 +15,9 @@ export const Users: CollectionConfig = {
     // Hidden from the nav for non-admins. This is UX only; the real protection is `access`.
     hidden: ({ user }) => user?.role !== "admin",
   },
-  auth: true,
+  // The login cookie: HttpOnly (Payload always), SameSite=Lax and, on an https site, Secure (src/lib/auth-security.ts, docs/10-payload-cms.md "Admin login security").
+  // The default session lasts 2 hours (tokenExpiration 7200 s).
+  auth: { cookies: { secure: cookieSecure(process.env), sameSite: "Lax" } },
   hooks: {
     // The first account (created on Payload's "create first user" screen) is always an admin.
     // Otherwise it would get the default `editor` role and nobody could manage users

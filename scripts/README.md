@@ -8,7 +8,8 @@ Tools for the site's images. They exist so that adding or replacing a photo is a
 | `check-images.mjs` | Audits `public/images` (format, weight, width). `npm run images:check`. Part of `npm run check`, the pre-commit hook and CI. |
 | `svgo.config.cjs` | The svgo settings used for the site's SVGs. |
 | `make-favicon.mjs` | One logo PNG (transparent background) in, the site's three icons out: `src/app/favicon.ico` (16/32/48px), `icon.png` (192px) and `apple-icon.png` (180px on white). `node scripts/make-favicon.mjs <logo.png>`. It trims the empty margin first, so the crest is as large as possible in a browser tab. |
-| `seed-home.ts` | Puts the current home page and its photos into the CMS (`npm run seed:home`, see [docs/26-cms-home-plan.md](../docs/26-cms-home-plan.md)). Not an image tool. |
+| `seed-home.ts`, `seed-contact.ts`, `seed-principals-welcome.ts`, `seed-partnerships.ts`, `seed-awards-recognition.ts` | Put a page as it is today, with its photos, into the CMS (`npm run seed:home` and so on, see [docs/10-payload-cms.md](../docs/10-payload-cms.md), "Seeding safely"). Not image tools. |
+| `seed-guard.ts` | The guard all the seeds import first: refuses an unsafe environment and makes a production seed run without a schema push. Rules and tests in `src/lib/seed-guard.ts`. |
 
 ## Replacing an image (do not reuse the file name)
 
