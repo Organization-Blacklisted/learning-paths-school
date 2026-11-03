@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import Photo from "@/components/ui/Photo";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import Photo, { photoSrc } from "@/components/ui/Photo";
 
 describe("Photo", () => {
   it("renders nothing until it is ready (the box around it keeps the space)", () => {
@@ -27,5 +27,24 @@ describe("Photo", () => {
   it("keeps an empty alt for decorative photos", () => {
     const { container } = render(<Photo src="/images/c.avif" alt="" width={10} height={10} />);
     expect(container.querySelector("img")?.getAttribute("alt")).toBe("");
+  });
+});
+
+describe("photoSrc", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("is the address the <img> of a Photo really uses, for a site file and for a media file", () => {
+    for (const src of ["/images/a.avif", "/api/media/file/home-ecosystem-sports.avif"]) {
+      const { getByAltText, unmount } = render(<Photo src={src} alt="x" fill />);
+      expect(photoSrc(src)).toBe(getByAltText("x").getAttribute("src"));
+      unmount();
+    }
+  });
+
+  it("is still the address the <img> uses when Vercel gives the deployment an id (Next.js then adds ?dpl=...: a preload of the bare address is another photo for the browser)", () => {
+    vi.stubEnv("NEXT_DEPLOYMENT_ID", "dpl_test123");
+    const src = "/api/media/file/home-ecosystem-sports.avif";
+    const { getByAltText } = render(<Photo src={src} alt="y" fill />);
+    expect(photoSrc(src)).toBe(getByAltText("y").getAttribute("src"));
   });
 });

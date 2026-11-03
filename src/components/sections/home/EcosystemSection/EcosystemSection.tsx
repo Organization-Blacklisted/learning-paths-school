@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Accent from "@/components/ui/Accent";
 import Badge from "@/components/ui/Badge";
 import BodyText from "@/components/ui/BodyText";
-import Photo from "@/components/ui/Photo";
+import Photo, { photoSrc } from "@/components/ui/Photo";
 import SectionTitle from "@/components/ui/SectionTitle";
 import TabBar from "@/components/ui/TabBar";
 import { registerGsap } from "@/lib/gsap";
@@ -113,7 +113,7 @@ export default function EcosystemSection({ content }: EcosystemSectionProps) {
     // stays until it is there. Showing the tab early dropped the old photo and left an empty box, for good when the request failed: a cold serverless
     // function has taken 15 seconds for one of these photos. If it cannot be had at all the old photo simply stays and a later click tries again.
     if (prefersReducedMotion()) show();
-    else void loadPhoto(tabs[active].photo.src).then((ok) => ok && show());
+    else void loadPhoto(photoSrc(tabs[active].photo.src)).then((ok) => ok && show());
     return () => {
       cancelled = true;
     };
@@ -132,7 +132,7 @@ export default function EcosystemSection({ content }: EcosystemSectionProps) {
       for (const tab of tabs.slice(1)) {
         await new Promise((resolve) => window.setTimeout(resolve, 400));
         if (cancelled) return;
-        await loadPhoto(tab.photo.src, { lowPriority: true });
+        await loadPhoto(photoSrc(tab.photo.src), { lowPriority: true });
       }
     })();
     return () => {
