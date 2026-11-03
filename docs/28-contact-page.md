@@ -79,3 +79,7 @@ Same rule as the home page: the defaults (`src/data/contact.ts`) are the base, t
 - Tablet and phone layouts are mine (only desktop is designed): the form first and the details under it below 1024px, the hero card narrower, the heading wrapping onto two lines on a phone.
 - The photos budget (`npm run images:check`) was raised from 6 MB to **10 MB** on 2026-11-02 (owner), because this page's photo left 0.2 MB. It is the whole site's total, not one page's: a visitor only loads the photos of the page they open. The rule that protects speed is the 400 KB limit per photo.
 - Production-readiness items that apply here too: no Content-Security-Policy, no Open Graph image.
+
+## Fix 2026-11-03: the form on a phone
+
+The form used to stick out of the screen on phones (a one-column grid never shrinks below the minimum content width of its items, and the phone row asked for more than a phone has). The outer grid is now `grid-cols-1` (`minmax(0, 1fr)`) below 1024px, the form and its fields are `min-w-0`, and the phone input is `w-0 min-w-0 flex-1`. A test widens the text fields to 20, 30 and 40 characters at 320, 360 and 390px and checks that nothing leaves the screen. See [06-changelog.md](06-changelog.md).

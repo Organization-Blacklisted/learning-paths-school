@@ -29,7 +29,9 @@ export default function ContactSection({ details }: Pick<ContactPageContent, "de
   const { emails, phones, location } = details;
   const headings = contactLabels.detailHeadings;
   return (
-    <div className="grid gap-[clamp(56px,6vw,80px)] lg:grid-cols-[452fr_784fr] lg:gap-x-[clamp(48px,14.84vw,285px)]">
+    // `grid-cols-1` is minmax(0, 1fr): a grid column's automatic width never shrinks below the minimum content width of what is in it, and the form's
+    // phone row (a fixed flag box and an input with its own default width) asked for more than a phone has, so the form stuck out of the page.
+    <div className="grid grid-cols-1 gap-[clamp(56px,6vw,80px)] lg:grid-cols-[452fr_784fr] lg:gap-x-[clamp(48px,14.84vw,285px)]">
       <address className="order-2 flex flex-col gap-[clamp(36px,2.66vw,51px)] not-italic lg:order-1">
         <Group title={headings.email}>
           <ul className={listClass}>

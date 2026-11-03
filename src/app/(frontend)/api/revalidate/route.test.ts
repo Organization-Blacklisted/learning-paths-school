@@ -35,10 +35,12 @@ describe("POST /api/revalidate", () => {
   it("clears every page with the right secret (no tag means the allowed ones)", async () => {
     const response = await call({ "x-revalidate-secret": "s3cret-value" });
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ revalidated: ["home", "contact", "principals-welcome"] });
+    expect(await response.json()).toEqual({ revalidated: ["home", "contact", "principals-welcome", "partnerships", "awards-recognition"] });
     expect(revalidateTag).toHaveBeenCalledWith("home", { expire: 0 });
     expect(revalidateTag).toHaveBeenCalledWith("contact", { expire: 0 });
     expect(revalidateTag).toHaveBeenCalledWith("principals-welcome", { expire: 0 });
+    expect(revalidateTag).toHaveBeenCalledWith("partnerships", { expire: 0 });
+    expect(revalidateTag).toHaveBeenCalledWith("awards-recognition", { expire: 0 });
   });
 
   it("clears one page when asked for it", async () => {

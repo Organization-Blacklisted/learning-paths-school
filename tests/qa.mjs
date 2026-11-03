@@ -360,6 +360,144 @@ const ok = (n, p, d = "") => {
     await context.close();
   }
 
+  // 9. The Partnerships page: head tags, landmarks, the sitemap, axe
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/partnerships", { waitUntil: "load" });
+    await page.waitForTimeout(1500);
+    const head = await page.evaluate(() => {
+      const meta = (sel) => document.querySelector(sel)?.getAttribute("content") ?? "";
+      return {
+        title: document.title,
+        description: meta('meta[name="description"]'),
+        canonical: document.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "",
+        ogUrl: meta('meta[property="og:url"]'),
+        lang: document.documentElement.lang,
+        h1: document.querySelectorAll("h1").length,
+        mains: document.querySelectorAll("main").length,
+        mainId: document.querySelector("main")?.id,
+        imgNoAlt: [...document.images].filter((i) => !i.hasAttribute("alt")).length,
+        logosNoName: [...document.querySelectorAll("[data-partner] img[alt]:not([alt=''])")].filter((i) => i.alt.trim().length < 3).length,
+      };
+    });
+    ok(
+      "partnerships: title, description, canonical and og:url are the page's own",
+      /Partnerships/.test(head.title) &&
+        head.description.length > 50 &&
+        /\/partnerships$/.test(head.canonical) &&
+        /\/partnerships$/.test(head.ogUrl),
+      JSON.stringify({ t: head.title, c: head.canonical }),
+    );
+    ok(
+      "partnerships: html lang=en, one h1, one main (the skip link's target), every img has an alt, every logo has a name",
+      head.lang === "en" &&
+        head.h1 === 1 &&
+        head.mains === 1 &&
+        head.mainId === "main-content" &&
+        head.imgNoAlt === 0 &&
+        head.logosNoName === 0,
+      JSON.stringify(head),
+    );
+    const sitemap = await (await page.request.get(BASE + "/sitemap.xml")).text();
+    ok("the sitemap lists the Partnerships page", /<loc>[^<]*\/partnerships<\/loc>/.test(sitemap));
+    try {
+      await page.addScriptTag({ url: "https://cdn.jsdelivr.net/npm/axe-core@4.10.2/axe.min.js" });
+      const res = await page.evaluate(async () => {
+        const r = await window.axe.run(document, {
+          runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"] },
+        });
+        return r.violations.map((v) => ({
+          id: v.id,
+          impact: v.impact,
+          nodes: v.nodes.length,
+          sample: v.nodes[0]?.target?.join(" ").slice(0, 90),
+        }));
+      });
+      console.log("partnerships axe violations:", JSON.stringify(res, null, 1));
+      const blocking = res.filter((v) => v.id !== "color-contrast");
+      ok(
+        "partnerships: axe finds no violations other than the known colour contrast",
+        blocking.length === 0,
+        res.map((v) => v.id + ":" + v.impact).join(", "),
+      );
+    } catch (e) {
+      console.log("axe unavailable:", String(e).slice(0, 100));
+    }
+    await context.close();
+  }
+
+  // 10. The Awards & Recognition page: head tags, landmarks, the sitemap, axe
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/awards-recognition", { waitUntil: "load" });
+    await page.waitForTimeout(1500);
+    const head = await page.evaluate(() => {
+      const meta = (sel) => document.querySelector(sel)?.getAttribute("content") ?? "";
+      return {
+        title: document.title,
+        description: meta('meta[name="description"]'),
+        canonical: document.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "",
+        ogUrl: meta('meta[property="og:url"]'),
+        lang: document.documentElement.lang,
+        h1: document.querySelectorAll("h1").length,
+        mains: document.querySelectorAll("main").length,
+        mainId: document.querySelector("main")?.id,
+        imgNoAlt: [...document.images].filter((i) => !i.hasAttribute("alt")).length,
+        photosNoName: [...document.querySelectorAll("[data-award-photo] img")].filter((i) => i.alt.trim().length < 3).length,
+        laurelsNamed: [...document.querySelectorAll("[data-award-laurel]")].filter(
+          (l) => l.getAttribute("aria-hidden") !== "true" || l.querySelector("img")?.alt !== "",
+        ).length,
+      };
+    });
+    ok(
+      "awards: title, description, canonical and og:url are the page's own",
+      /Awards & Recognition/.test(head.title) &&
+        head.description.length > 50 &&
+        /\/awards-recognition$/.test(head.canonical) &&
+        /\/awards-recognition$/.test(head.ogUrl),
+      JSON.stringify({ t: head.title, c: head.canonical }),
+    );
+    ok(
+      "awards: html lang=en, one h1, one main (the skip link's target), every img has an alt, every photo has a description, the laurels are decoration only",
+      head.lang === "en" &&
+        head.h1 === 1 &&
+        head.mains === 1 &&
+        head.mainId === "main-content" &&
+        head.imgNoAlt === 0 &&
+        head.photosNoName === 0 &&
+        head.laurelsNamed === 0,
+      JSON.stringify(head),
+    );
+    const sitemap = await (await page.request.get(BASE + "/sitemap.xml")).text();
+    ok("the sitemap lists the Awards & Recognition page", /<loc>[^<]*\/awards-recognition<\/loc>/.test(sitemap));
+    try {
+      await page.addScriptTag({ url: "https://cdn.jsdelivr.net/npm/axe-core@4.10.2/axe.min.js" });
+      const res = await page.evaluate(async () => {
+        const r = await window.axe.run(document, {
+          runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"] },
+        });
+        return r.violations.map((v) => ({
+          id: v.id,
+          impact: v.impact,
+          nodes: v.nodes.length,
+          sample: v.nodes[0]?.target?.join(" ").slice(0, 90),
+        }));
+      });
+      console.log("awards axe violations:", JSON.stringify(res, null, 1));
+      const blocking = res.filter((v) => v.id !== "color-contrast");
+      ok(
+        "awards: axe finds no violations other than the known colour contrast",
+        blocking.length === 0,
+        res.map((v) => v.id + ":" + v.impact).join(", "),
+      );
+    } catch (e) {
+      console.log("axe unavailable:", String(e).slice(0, 100));
+    }
+    await context.close();
+  }
+
   console.log(fails ? `\n${fails} CHECK(S) FAILED` : "\nALL CHECKS PASSED");
   await browser.close();
   process.exitCode = fails ? 1 : 0;

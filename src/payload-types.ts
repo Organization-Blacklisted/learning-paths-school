@@ -91,11 +91,15 @@ export interface Config {
     home: Home;
     contact: Contact;
     'principals-welcome': PrincipalsWelcome;
+    partnerships: Partnership;
+    'awards-recognition': AwardsRecognition;
   };
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
     contact: ContactSelect<false> | ContactSelect<true>;
     'principals-welcome': PrincipalsWelcomeSelect<false> | PrincipalsWelcomeSelect<true>;
+    partnerships: PartnershipsSelect<false> | PartnershipsSelect<true>;
+    'awards-recognition': AwardsRecognitionSelect<false> | AwardsRecognitionSelect<true>;
   };
   locale: null;
   widgets: {
@@ -812,6 +816,138 @@ export interface PrincipalsWelcome {
   createdAt?: string | null;
 }
 /**
+ * The heading, the introduction and the partner logos of the Partnerships page, and its search-engine settings (SEO tab).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "partnerships".
+ */
+export interface Partnership {
+  id: number;
+  hero: {
+    /**
+     * Shown in capitals, for example Contact us.
+     */
+    badge: string;
+    /**
+     * For example: Let’s Begin a
+     */
+    titleLead: string;
+    /**
+     * Shown in blue, slanted. For example: Conversation
+     */
+    titleAccent: string;
+    /**
+     * One short line.
+     */
+    subtitle: string;
+  };
+  partners: {
+    /**
+     * The paragraph above the partner cards.
+     */
+    intro: string;
+    /**
+     * One card each, shown in this order, three to a row (the last row is centred). Drag a row to move it.
+     */
+    items: {
+      /**
+       * The partner's logo on a transparent or white background, about 300 px wide. Choose one from the library or upload one: JPG, PNG or WebP are converted to AVIF automatically. Its alt text comes from the library (write the partner's name there).
+       */
+      logo: number | Media;
+      /**
+       * For example: Curriculum Partner
+       */
+      role: string;
+      id?: string | null;
+    }[];
+  };
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    /**
+     * Leave off for a normal public page.
+     */
+    noIndex?: boolean | null;
+    /**
+     * Only if another address is the main one for this page (a full address, https://...). Leave blank: the page's own address is used.
+     */
+    canonical?: string | null;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * The heading and the award blocks of the Awards & Recognition page, and its search-engine settings (SEO tab).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "awards-recognition".
+ */
+export interface AwardsRecognition {
+  id: number;
+  hero: {
+    /**
+     * Shown in capitals, for example Contact us.
+     */
+    badge: string;
+    /**
+     * For example: Let’s Begin a
+     */
+    titleLead: string;
+    /**
+     * Shown in blue, slanted. For example: Conversation
+     */
+    titleAccent: string;
+    /**
+     * One short line.
+     */
+    subtitle: string;
+  };
+  awards: {
+    /**
+     * One block each, shown in this order. Drag a row to move it.
+     */
+    items: {
+      /**
+       * A wide photo, 1848 x 1170 works best (it is shown 924 x 585 and a photo of another shape is cropped at its middle). Choose one from the library or upload one: JPG, PNG or WebP are converted to AVIF automatically. Its alt text comes from the library.
+       */
+      image: number | Media;
+      /**
+       * Shown in blue, slanted. For example: School Awards
+       */
+      title: string;
+      /**
+       * The text under the title, a few lines.
+       */
+      text: string;
+      id?: string | null;
+    }[];
+  };
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    /**
+     * Leave off for a normal public page.
+     */
+    noIndex?: boolean | null;
+    /**
+     * Only if another address is the main one for this page (a full address, https://...). Leave blank: the page's own address is used.
+     */
+    canonical?: string | null;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home_select".
  */
@@ -1082,6 +1218,84 @@ export interface PrincipalsWelcomeSelect<T extends boolean = true> {
             };
         signatoryName?: T;
         signatoryRole?: T;
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+        noIndex?: T;
+        canonical?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "partnerships_select".
+ */
+export interface PartnershipsSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        badge?: T;
+        titleLead?: T;
+        titleAccent?: T;
+        subtitle?: T;
+      };
+  partners?:
+    | T
+    | {
+        intro?: T;
+        items?:
+          | T
+          | {
+              logo?: T;
+              role?: T;
+              id?: T;
+            };
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+        noIndex?: T;
+        canonical?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "awards-recognition_select".
+ */
+export interface AwardsRecognitionSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        badge?: T;
+        titleLead?: T;
+        titleAccent?: T;
+        subtitle?: T;
+      };
+  awards?:
+    | T
+    | {
+        items?:
+          | T
+          | {
+              image?: T;
+              title?: T;
+              text?: T;
+              id?: T;
+            };
       };
   meta?:
     | T

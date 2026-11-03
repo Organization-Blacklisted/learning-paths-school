@@ -33,6 +33,8 @@ Single source of truth for the Learning Paths School website.
 27. [Mega menu](27-mega-menu.md)
 28. [Contact page and the reusable page hero](28-contact-page.md)
 29. [Principal's Welcome page, the text-only hero and the message section](29-principals-welcome.md)
+30. [Partnerships page and the reusable partners section](30-partnerships.md)
+31. [Awards & Recognition page and the reusable awards section](31-awards-recognition.md)
 
 ## Rules
 

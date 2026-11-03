@@ -1515,6 +1515,44 @@ for (const [label, width, height] of [
     await context.close();
   }
 
+  // The form must fit a phone whatever the browser's default width for a text field is (the `size` attribute: 20 characters, wider on some devices and
+  // systems). A grid column never shrinks below the minimum width of its content, so the phone row once pushed the whole form out of the page (owner,
+  // 2026-11-03: "the contact form is not responsive and causes a sideways scroll on my phone"; CI caught it, a Windows machine did not). Widening
+  // the fields here is that device.
+  for (const [width, height] of [
+    [320, 640],
+    [360, 740],
+    [390, 844],
+  ]) {
+    for (const size of [20, 30, 40]) {
+      const context = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: true });
+      const page = await context.newPage();
+      await page.goto(BASE + "/contact-us", { waitUntil: "load" });
+      await page.waitForTimeout(2000);
+      await page.evaluate(
+        (size) => document.querySelectorAll("form input").forEach((input) => input.setAttribute("size", String(size))),
+        size,
+      );
+      await page.waitForTimeout(300);
+      const fit = await page.evaluate(() => {
+        const form = document.querySelector("form").getBoundingClientRect();
+        const widest = Math.max(...[...document.querySelectorAll("form *")].map((el) => el.getBoundingClientRect().right));
+        return {
+          overflow: document.documentElement.scrollWidth - innerWidth,
+          formRight: Math.round(form.right),
+          widest: Math.round(widest),
+          screen: innerWidth,
+        };
+      });
+      ok(
+        `contact (${width}, text fields ${size} characters wide by default): the form and everything in it stays inside the screen`,
+        fit.overflow <= 0 && fit.formRight <= fit.screen && fit.widest <= fit.screen,
+        JSON.stringify(fit),
+      );
+      await context.close();
+    }
+  }
+
   // the menu's "Contact us" links lead here
   {
     const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
@@ -1931,6 +1969,462 @@ for (const [label, width, height] of [
     await context.close();
   }
   await real.close();
+}
+
+// ---------------------------------------------------------------- 15. The Partnerships page (owner, 2026-11-03): the text-only hero, the partner cards, the call to action and the photo strip
+{
+  const quiet = (errors, m) => {
+    if (["error", "warning"].includes(m.type()) && !/preloaded using link preload|Download the React/.test(m.text()))
+      errors.push(m.text().slice(0, 140));
+  };
+  const box = (page, selector) =>
+    page.evaluate((s) => {
+      const b = document.querySelector(s).getBoundingClientRect();
+      return { x: +b.left.toFixed(1), y: +(b.top + scrollY).toFixed(1), w: +b.width.toFixed(1), h: +b.height.toFixed(1) };
+    }, selector);
+  const HERO = "section[aria-label='Our partnerships']";
+
+  // Where Figma (node 5751:769) puts, inside each of the eight 494px cards: the logo box (x, y, w, h) and the label's top
+  const FIGMA_CARDS = [
+    { logo: [108, 35, 278, 46], label: 124 },
+    { logo: [118.5, 35, 257, 62], label: 133 },
+    { logo: [155, 35, 184, 72], label: 137 },
+    { logo: [143, 35, 208, 63.3], label: 137.5 },
+    { logo: [178, 21, 138, 94], label: 138 },
+    { logo: [123.5, 35, 247, 56], label: 131 },
+    { logo: [134, 23, 226, 78], label: 126.5 },
+    { logo: [159, 25, 176, 65], label: 122 },
+  ];
+
+  // desktop 1920 x 993: the geometry of the Figma frame (node 5748:505), measured from the page top (the header is the first 74px)
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => quiet(errors, m));
+    await page.goto(BASE + "/partnerships", { waitUntil: "load" });
+    await page.waitForTimeout(3500);
+
+    const pill = await box(page, `${HERO} p`);
+    const h1 = await box(page, "h1");
+    const rule = await box(page, `${HERO} [aria-hidden='true']`);
+    ok(
+      "partnerships (1920): the text-only hero: pill, heading on one line and the crest rule are where Figma has them",
+      near(pill.y, 166, 3) &&
+        near(pill.x + pill.w / 2, 960, 2) &&
+        near(h1.y, 215, 3) &&
+        near(h1.h, 58, 2) &&
+        near(rule.y, 377, 3) &&
+        near(rule.h, 46, 1),
+      JSON.stringify({ pill, h1, rule }),
+    );
+    ok(
+      "partnerships: the hero has no photo",
+      (await page.evaluate((s) => document.querySelectorAll(`${s} [data-hero-photo]`).length, HERO)) === 0,
+    );
+
+    await page.evaluate(() => window.scrollTo(0, 560));
+    await page.waitForTimeout(3200);
+    const intro = await box(page, "[data-partners-intro]");
+    ok(
+      "partnerships (1920): the introduction is 1520px wide, three lines, 489px from the top (36px under the hero)",
+      near(intro.x, 200, 2) && near(intro.w, 1520, 2) && near(intro.y, 489, 3) && near(intro.h, 81, 2),
+      JSON.stringify(intro),
+    );
+
+    const cards = await page.evaluate(() =>
+      [...document.querySelectorAll("[data-partner]")].map((card) => {
+        const c = card.getBoundingClientRect();
+        const rel = (el) => {
+          const b = el.getBoundingClientRect();
+          return [+(b.left - c.left).toFixed(1), +(b.top - c.top).toFixed(1), +b.width.toFixed(1), +b.height.toFixed(1)];
+        };
+        return {
+          x: +c.left.toFixed(1),
+          y: +(c.top + scrollY).toFixed(1),
+          w: +c.width.toFixed(1),
+          h: +c.height.toFixed(1),
+          logo: rel(card.querySelector("img[alt]:not([alt=''])").parentElement),
+          label: rel(card.querySelector("p"))[1],
+          loaded: [...card.querySelectorAll("img")].every((img) => img.complete && img.naturalWidth > 0),
+        };
+      }),
+    );
+    ok("partnerships (1920): eight cards", cards.length === 8, String(cards.length));
+    const rows = [630, 630, 630, 861, 861, 861, 1092, 1092];
+    const xs = [200, 712, 1224, 200, 712, 1224, 457, 969];
+    ok(
+      "partnerships (1920): the cards are 494 x 187, 3 + 3 + 2 (the last row centred), 18px across and 44px down, as Figma has them",
+      cards.every((c, i) => near(c.w, 494, 1.5) && near(c.h, 187, 1.5) && near(c.y, rows[i], 3) && near(c.x, xs[i], 3)),
+      JSON.stringify(cards.map((c) => [c.x, c.y, c.w, c.h])),
+    );
+    ok(
+      "partnerships (1920): every logo, and every label, sits inside its card where Figma puts it (within 2px)",
+      cards.every((c, i) => FIGMA_CARDS[i].logo.every((v, k) => near(c.logo[k], v, 2)) && near(c.label, FIGMA_CARDS[i].label, 2.5)),
+      JSON.stringify(cards.map((c, i) => ({ logo: c.logo, label: c.label, figma: FIGMA_CARDS[i] }))),
+    );
+    ok(
+      "partnerships: every logo and divider file has loaded",
+      cards.every((c) => c.loaded),
+      JSON.stringify(cards.map((c) => c.loaded)),
+    );
+
+    const cta = await box(page, "section[aria-label='Admissions']");
+    const strip = await page.evaluate(() => {
+      const b = document.querySelector("[data-marquee-list] li").getBoundingClientRect();
+      return { y: Math.round(b.top + scrollY), h: Math.round(b.height) };
+    });
+    ok(
+      "partnerships (1920): the call to action band starts 131px under the cards (y 1410) and is 335px high, the photo strip is 120px under it (y 1865)",
+      near(cta.y + 120, 1410, 3) && near(cta.h - 120, 335, 2) && near(strip.y, 1865, 3) && strip.h === 320,
+      JSON.stringify({ cta, strip }),
+    );
+    ok(
+      "partnerships (1920): no sideways overflow, no console errors or warnings",
+      (await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 0 && errors.length === 0,
+      JSON.stringify(errors.slice(0, 2)),
+    );
+
+    // a card lifts a little under the pointer
+    await page.evaluate(() => window.scrollTo(0, 560));
+    await page.waitForTimeout(800);
+    await page.locator("[data-partner-card]").first().hover();
+    await page.waitForTimeout(600);
+    const lifted = await page.evaluate(() => getComputedStyle(document.querySelector("[data-partner-card]")).translate);
+    ok("partnerships: a card lifts 4px under the pointer", /-4px/.test(lifted), lifted);
+    await context.close();
+  }
+
+  // every width: no sideways overflow, 3 cards a row from 1024px, 2 from 640px, 1 below; everything of a card stays inside it
+  for (const [width, height] of [
+    [320, 640],
+    [360, 740],
+    [390, 844],
+    [768, 1024],
+    [1024, 768],
+    [1280, 720],
+    [1536, 864],
+  ]) {
+    const context = await browser.newContext({ viewport: { width, height } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => quiet(errors, m));
+    await page.goto(BASE + "/partnerships", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    const layout = await page.evaluate(() => {
+      const cards = [...document.querySelectorAll("[data-partner]")];
+      const rects = cards.map((c) => c.getBoundingClientRect());
+      const rowTops = [...new Set(rects.map((r) => Math.round(r.top)))];
+      const perRow = rowTops.map((t) => rects.filter((r) => Math.round(r.top) === t));
+      const last = perRow[perRow.length - 1];
+      const lastLeft = Math.min(...last.map((r) => r.left));
+      const lastRight = Math.max(...last.map((r) => r.right));
+      const inside = cards.every((card, i) => {
+        const c = rects[i];
+        return [...card.querySelectorAll("img, p")].every((el) => {
+          const b = el.getBoundingClientRect();
+          return b.left >= c.left - 1 && b.right <= c.right + 1 && b.bottom <= c.bottom + 1;
+        });
+      });
+      const grid = document.querySelector("[data-partner]").parentElement.getBoundingClientRect();
+      return {
+        overflow: document.documentElement.scrollWidth - innerWidth,
+        perRow: perRow.map((r) => r.length),
+        lastCentred: Math.abs(lastLeft - grid.left - (grid.right - lastRight)) < 3,
+        inside,
+        cardW: Math.round(rects[0].width),
+        screen: innerWidth,
+      };
+    });
+    const per = width >= 1024 ? 3 : width >= 640 ? 2 : 1;
+    const expectedRows = [];
+    for (let left = 8; left > 0; left -= per) expectedRows.push(Math.min(per, left));
+    ok(
+      `partnerships (${width}): no sideways overflow, ${per} card${per > 1 ? "s" : ""} a row${per > 1 ? ", a short last row centred" : ""}, everything of a card inside it`,
+      layout.overflow <= 0 && JSON.stringify(layout.perRow) === JSON.stringify(expectedRows) && layout.lastCentred && layout.inside,
+      JSON.stringify(layout),
+    );
+    ok(`partnerships (${width}): no console errors or warnings`, errors.length === 0, JSON.stringify(errors.slice(0, 2)));
+    await context.close();
+  }
+
+  // reduced motion: nothing is hidden, nothing lifts
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 }, reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto(BASE + "/partnerships", { waitUntil: "load" });
+    await page.waitForTimeout(3000);
+    const state = await page.evaluate(() => ({
+      hidden: [...document.querySelectorAll("[data-partner], [data-partners-intro]")].filter(
+        (el) => Number(getComputedStyle(el).opacity) < 1,
+      ).length,
+      count: document.querySelectorAll("[data-partner]").length,
+    }));
+    ok(
+      "partnerships (reduced motion): every card and the introduction are shown at once",
+      state.count === 8 && state.hidden === 0,
+      JSON.stringify(state),
+    );
+    await context.close();
+  }
+
+  // the menu's "Partnerships" link leads here
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.waitForTimeout(2700);
+    const href = await page.evaluate(() =>
+      [...document.querySelectorAll("#site-menu a")].find((a) => /^partnerships$/i.test(a.textContent.trim()))?.getAttribute("href"),
+    );
+    ok('menu: "Partnerships" points to /partnerships', href === "/partnerships", String(href));
+    await page
+      .locator("#site-menu a", { hasText: /^Partnerships$/ })
+      .first()
+      .click();
+    await page.waitForTimeout(1500);
+    ok("menu: following it opens the Partnerships page", new URL(page.url()).pathname === "/partnerships", page.url());
+    await context.close();
+  }
+}
+
+// ---------------------------------------------------------------- 16. The Awards & Recognition page (owner, 2026-11-03): the text-only hero and the three award blocks
+{
+  // (the page is scrolled by script from block to block before any input, so the browser takes each new photo for the page's largest paint and Next.js warns that it is not eager: only a test artefact, the first photo is eager)
+  const quiet = (errors, m) => {
+    if (
+      ["error", "warning"].includes(m.type()) &&
+      !/preloaded using link preload|Download the React|Largest Contentful Paint/.test(m.text())
+    )
+      errors.push(m.text().slice(0, 140));
+  };
+  const box = (page, selector) =>
+    page.evaluate((s) => {
+      const b = document.querySelector(s).getBoundingClientRect();
+      return { x: +b.left.toFixed(1), y: +(b.top + scrollY).toFixed(1), w: +b.width.toFixed(1), h: +b.height.toFixed(1) };
+    }, selector);
+  const HERO = "section[aria-label='Awards and recognition']";
+
+  // desktop 1920 x 993: the geometry of the Figma frame (node 5893:1651), measured from the page top (the header is the first 74px)
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => quiet(errors, m));
+    await page.goto(BASE + "/awards-recognition", { waitUntil: "load" });
+    await page.waitForTimeout(3500);
+
+    const pill = await box(page, `${HERO} p`);
+    const h1 = await box(page, "h1");
+    const rule = await box(page, `${HERO} [aria-hidden='true']`);
+    ok(
+      "awards (1920): the text-only hero: pill, heading on one line (about 1131px) and the crest rule are where Figma has them",
+      near(pill.y, 166, 3) &&
+        near(pill.x + pill.w / 2, 960, 2) &&
+        near(h1.y, 215, 3) &&
+        near(h1.w, 1131, 14) &&
+        near(h1.h, 58, 2) &&
+        near(rule.y, 377, 3) &&
+        near(rule.h, 46, 1),
+      JSON.stringify({ pill, h1, rule }),
+    );
+    ok(
+      "awards: the hero has no photo",
+      (await page.evaluate((s) => document.querySelectorAll(`${s} [data-hero-photo]`).length, HERO)) === 0,
+    );
+
+    // measure each block while it is on the screen with its entrance finished (a block that scrolls out of view is put back to its hidden start)
+    const blocks = [];
+    for (let index = 0; index < 3; index++) {
+      await page.evaluate((i) => {
+        const top = document.querySelectorAll("article")[i].getBoundingClientRect().top + scrollY;
+        window.scrollTo(0, top - 80);
+      }, index);
+      await page.waitForTimeout(2600);
+      blocks.push(
+        await page.evaluate(
+          (i) =>
+            [document.querySelectorAll("article")[i]].map((article) => {
+              const rect = (el) => {
+                const b = el.getBoundingClientRect();
+                return [+b.left.toFixed(1), +(b.top + scrollY).toFixed(1), +b.width.toFixed(1), +b.height.toFixed(1)];
+              };
+              const title = article.querySelector("h2");
+              const text = article.querySelector("p");
+              const lines = Math.round(text.getBoundingClientRect().height / parseFloat(getComputedStyle(text).lineHeight));
+              return {
+                photo: rect(article.querySelector("[data-award-photo]")),
+                left: rect(article.querySelector("[data-award-laurel='left']")),
+                right: rect(article.querySelector("[data-award-laurel='right']")),
+                title: rect(title),
+                titleSize: getComputedStyle(title).fontSize,
+                titleSlant: getComputedStyle(title.firstElementChild).transform,
+                text: rect(text),
+                lines,
+                visible: [...article.querySelectorAll("[data-award-photo], [data-award-laurel], [data-award-text]")].every(
+                  (el) => Number(getComputedStyle(el).opacity) === 1,
+                ),
+                loaded: [...article.querySelectorAll("img")].every((img) => img.complete && img.naturalWidth > 0),
+              };
+            })[0],
+          index,
+        ),
+      );
+    }
+    ok("awards (1920): three blocks", blocks.length === 3, String(blocks.length));
+    const photoY = [543, 1478, 2401];
+    ok(
+      "awards (1920): each photo is 924 x 585, centred (x 498), at y 543, 1478 and 2401 (60px between the blocks), as Figma has them",
+      blocks.every(
+        (b, i) => near(b.photo[0], 498, 2) && near(b.photo[2], 924, 2) && near(b.photo[3], 585, 2) && near(b.photo[1], photoY[i], 3),
+      ),
+      JSON.stringify(blocks.map((b) => b.photo)),
+    );
+    const laurelY = [1202, 2125, 3048];
+    ok(
+      "awards (1920): the two laurels of each block are 78 x 216, 32px in from the photo's edges (x 530 and 1312), at the heights Figma has them",
+      blocks.every(
+        (b, i) =>
+          near(b.left[0], 530, 2) &&
+          near(b.right[0], 1312, 2) &&
+          near(b.left[2], 78, 1.5) &&
+          near(b.left[3], 216, 1.5) &&
+          near(b.left[1], laurelY[i], 3) &&
+          near(b.right[1], laurelY[i], 3),
+      ),
+      JSON.stringify(blocks.map((b) => [b.left, b.right])),
+    );
+    const titleY = [1190, 2138, 3055];
+    ok(
+      "awards (1920): the titles are 40px type, slanted, centred 7.5px right of the middle (x 469.5 + ...), at the heights Figma has them",
+      blocks.every(
+        (b, i) =>
+          b.titleSize === "40px" &&
+          b.titleSlant !== "none" &&
+          near(b.title[1], titleY[i], 3) &&
+          near(b.title[0] + b.title[2] / 2, 969.5, 4),
+      ),
+      JSON.stringify(blocks.map((b) => [b.title, b.titleSize, b.titleSlant])),
+    );
+    const textY = [1268.5, 2216.5, 3133.5];
+    ok(
+      "awards (1920): the paragraphs break their lines where the design's do (5, 3 and 4 lines), 643, 642 and 659px wide, 31px under the title",
+      JSON.stringify(blocks.map((b) => b.lines)) === JSON.stringify([5, 3, 4]) &&
+        near(blocks[0].text[2], 643, 2) &&
+        near(blocks[1].text[2], 642, 2) &&
+        near(blocks[2].text[2], 659, 2) &&
+        blocks.every((b, i) => near(b.text[1], textY[i], 3)),
+      JSON.stringify(blocks.map((b) => [b.lines, b.text])),
+    );
+    ok(
+      "awards: every photo and laurel has loaded, and every entrance has finished",
+      blocks.every((b) => b.loaded && b.visible),
+      JSON.stringify(blocks.map((b) => [b.loaded, b.visible])),
+    );
+    const footer = await page.evaluate(() => Math.round(document.querySelector("footer").getBoundingClientRect().top + scrollY));
+    ok("awards (1920): the footer starts at y 3375, 111px under the last block", near(footer, 3375, 4), String(footer));
+    ok(
+      "awards (1920): no sideways overflow, no console errors or warnings",
+      (await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 0 && errors.length === 0,
+      JSON.stringify(errors.slice(0, 2)),
+    );
+    await context.close();
+  }
+
+  // every width: no sideways overflow; from 640px the laurels frame the text and the text never reaches them; below it the laurels are left out
+  for (const [width, height] of [
+    [320, 640],
+    [360, 740],
+    [390, 844],
+    [768, 1024],
+    [1024, 768],
+    [1280, 720],
+    [1536, 864],
+  ]) {
+    const context = await browser.newContext({ viewport: { width, height } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => quiet(errors, m));
+    await page.goto(BASE + "/awards-recognition", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    const layout = await page.evaluate(() => {
+      const framed = innerWidth >= 640;
+      const blocks = [...document.querySelectorAll("article")].map((article) => {
+        const a = article.getBoundingClientRect();
+        const photo = article.querySelector("[data-award-photo]").getBoundingClientRect();
+        const text = article.querySelector("p").getBoundingClientRect();
+        const left = article.querySelector("[data-award-laurel='left']");
+        const right = article.querySelector("[data-award-laurel='right']");
+        const laurelsShown = getComputedStyle(left).display !== "none";
+        const l = left.getBoundingClientRect();
+        const r = right.getBoundingClientRect();
+        return {
+          shape: Math.abs(photo.width / photo.height - 924 / 585) < 0.01,
+          inside: photo.left >= -1 && photo.right <= innerWidth + 1 && text.left >= a.left - 1 && text.right <= a.right + 1,
+          laurels: framed
+            ? laurelsShown && l.left >= a.left - 1 && r.right <= a.right + 1 && text.left >= l.right - 1 && text.right <= r.left + 1
+            : !laurelsShown,
+        };
+      });
+      return { overflow: document.documentElement.scrollWidth - innerWidth, blocks };
+    });
+    ok(
+      `awards (${width}): no sideways overflow, the photos keep their shape, the text stays inside the block${width >= 640 ? " and between the laurels" : ", the laurels are left out"}`,
+      layout.overflow <= 0 && layout.blocks.length === 3 && layout.blocks.every((b) => b.shape && b.inside && b.laurels),
+      JSON.stringify(layout),
+    );
+    ok(`awards (${width}): no console errors or warnings`, errors.length === 0, JSON.stringify(errors.slice(0, 2)));
+    await context.close();
+  }
+
+  // reduced motion: nothing is hidden
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 }, reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto(BASE + "/awards-recognition", { waitUntil: "load" });
+    await page.waitForTimeout(3000);
+    const state = await page.evaluate(() => ({
+      hidden: [...document.querySelectorAll("[data-award-photo], [data-award-laurel], [data-award-text]")].filter(
+        (el) => Number(getComputedStyle(el).opacity) < 1 || getComputedStyle(el).clipPath !== "none",
+      ).length,
+      blocks: document.querySelectorAll("article").length,
+    }));
+    ok(
+      "awards (reduced motion): every photo, laurel and text is shown at once",
+      state.blocks === 3 && state.hidden === 0,
+      JSON.stringify(state),
+    );
+    await context.close();
+  }
+
+  // the menu's "Awards & Recognition" link leads here
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.waitForTimeout(2700);
+    const href = await page.evaluate(() =>
+      [...document.querySelectorAll("#site-menu a")]
+        .find((a) => /^awards\s*&\s*recognition$/i.test(a.textContent.trim()))
+        ?.getAttribute("href"),
+    );
+    ok('menu: "Awards & Recognition" points to /awards-recognition', href === "/awards-recognition", String(href));
+    await page
+      .locator("#site-menu a", { hasText: /^Awards & Recognition$/ })
+      .first()
+      .click();
+    await page.waitForTimeout(1500);
+    ok("menu: following it opens the Awards & Recognition page", new URL(page.url()).pathname === "/awards-recognition", page.url());
+    await context.close();
+  }
 }
 
 console.log(fails ? `\n${fails} CHECK(S) FAILED` : "\nALL INTERACTION CHECKS PASSED");

@@ -35,7 +35,7 @@ const labelClass =
 
 function Field({ id, label, error, children }: { id: string; label: string; error?: string; children: ReactNode }) {
   return (
-    <div>
+    <div className="min-w-0">
       <div className="relative">
         {children}
         <label htmlFor={id} className={labelClass}>
@@ -119,9 +119,9 @@ export default function ContactForm({ fallback }: { fallback: { email: string; p
       onSubmit={onSubmit}
       noValidate
       aria-label="Contact form"
-      className="relative order-1 flex w-full flex-col gap-8 lg:order-2 lg:max-w-[784px] lg:justify-self-end"
+      className="relative order-1 flex w-full min-w-0 flex-col gap-8 lg:order-2 lg:max-w-[784px] lg:justify-self-end"
     >
-      <div className="grid gap-8 sm:grid-cols-2 sm:gap-x-[26.667px]">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-x-[26.667px]">
         <Field id={id("firstName")} label={labels.firstName} error={shownError("firstName")}>
           <input
             {...a11y("firstName")}
@@ -190,7 +190,7 @@ export default function ContactForm({ fallback }: { fallback: { email: string; p
             maxLength={20}
             value={values.phone}
             onChange={change("phone")}
-            className="h-[53px] min-w-0 flex-1 bg-transparent pr-[21.333px] font-body text-px-18 tracking-[-0.01em] text-brand-navy outline-none"
+            className="h-[53px] w-0 min-w-0 flex-1 bg-transparent pr-[21.333px] font-body text-px-18 tracking-[-0.01em] text-brand-navy outline-none"
           />
         </div>
       </Field>

@@ -19,6 +19,8 @@ const revalidateMedia = () => {
     revalidateTag("home", { expire: 0 });
     revalidateTag("contact", { expire: 0 });
     revalidateTag("principals-welcome", { expire: 0 });
+    revalidateTag("partnerships", { expire: 0 });
+    revalidateTag("awards-recognition", { expire: 0 });
   } catch {
     // Not inside a Next request (a script, the seed): nothing to refresh.
   }
