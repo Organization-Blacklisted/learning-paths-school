@@ -36,7 +36,7 @@ When the visitor clicks the hamburger, a panel **comes in from the right and cov
 | Connect | News & Events, Careers, Contact Us |
 
 To change any of it: edit `src/data/menu.ts`.
-- **Every address is `#`** until the pages exist ([03-sitemap.md](03-sitemap.md)), **except five links**: the two "Contact us" links (the utility link at the top and the one under Connect) are `/contact-us` ([28-contact-page.md](28-contact-page.md)) "Principal’s Welcome" under About Us is `/principals-welcome` ([29-principals-welcome.md](29-principals-welcome.md)) and "Partnerships" under About Us is `/partnerships` ([30-partnerships.md](30-partnerships.md)) and "Awards & Recognition" under About Us is `/awards-recognition` ([31-awards-recognition.md](31-awards-recognition.md)).
+- **Every address is `#`** until the pages exist ([03-sitemap.md](03-sitemap.md)), **except seven links**: the two "Contact us" links (the utility link at the top and the one under Connect) are `/contact-us` ([28-contact-page.md](28-contact-page.md)) "Principal’s Welcome" under About Us is `/principals-welcome` ([29-principals-welcome.md](29-principals-welcome.md)) and "Partnerships" under About Us is `/partnerships` ([30-partnerships.md](30-partnerships.md)) and "Awards & Recognition" under About Us is `/awards-recognition` ([31-awards-recognition.md](31-awards-recognition.md)) and "Student Council" under About Us is `/student-council` ([32-student-council.md](32-student-council.md)) and "Signature Events" under About Us is `/signature-events` ([33-signature-events.md](33-signature-events.md)).
 
 ## Tablet and phone (my design: only desktop is in Figma)
 

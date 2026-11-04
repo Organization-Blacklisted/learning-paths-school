@@ -2,6 +2,40 @@
 
 Newest first.
 
+## 2026-11-04 (later): Our Learning Journey is a swipe row on tablets and phones (LOCAL, not pushed)
+
+- **Owner request:** "a slider here like we have for blog cards, as it'll be more premium on mobile" (a screenshot of the four stacked Journey columns at 448 x 858).
+- **Done:** below lg (1024px) the four stage columns are a row you swipe sideways, like the news cards: 330px columns (80% of the screen at most, so the next one peeks in), snapping to the column edges, bleeding to the screen edges. From lg nothing changes (the design's four columns). The row is a tab stop only while it scrolls, so keyboards and axe are fine. `src/components/sections/home/JourneySection/JourneySection.tsx`.
+- **Side effect (good):** the Journey panel is about 785px tall on a phone instead of 2408px, so the pinned scene no longer scrolls DOWN through a tall panel there (the suspect of the phone lag report of 2026-10-30). On a small phone (390 x 667) the scene scales the panel to 85% to fit, as for any panel taller than the screen.
+- **Tests:** `tests/interactions.mjs` section 7 (phone 390 and tablet 768): the old "last Journey column is on screen after the view went down" check is replaced by two: the whole Journey panel is on the screen at the end of the pan (first column showing, next one peeking in), and the row scrolls, snaps, is a tab stop and its last column can be reached. Docs: [14-home-journey.md](14-home-journey.md), [07-decisions.md](07-decisions.md).
+- **Open:** I could only test in a browser emulation, not a real phone.
+
+## 2026-11-04: the Signature Events page (LOCAL, not pushed)
+
+### Signature Events page and one new reusable section
+- **Owner request:** implement Figma node `5894:1875` at `/signature-events/` with Payload (header and footer excluded); reuse any pattern that repeats.
+- **Reused:** the text-only `PageHero`, `SectionTitle` and `Accent`, the shared reveal, `Section`, the CMS helpers (`pageHeroFields`, `list`, `photo`, `line`, `paragraph`), the seed guard, the whole page recipe of the Student Council page.
+- **New and reusable:** `AlternatingRowsSection` (rows of a big photo and a column of text, the sides alternating by position, the rows touching, each row scaled as one picture with container query units of the designed 1520px; each row's heading has the width the author set by hand).
+- **Wired to Payload:** global `signature-events` (group Pages): tabs Hero (no photo field) and Events (a **flexible list of 1 to 20**, sortable), SEO tab; drafts, Live Preview, publishing clears the tag `signature-events`; migration `20261104_050246_signature_events_page` (4 new tables, 2 enums, nothing existing changes); seed `npm run seed:signature-events`; the menu's "Signature Events" link and the sitemap point to the page.
+- **Photos:** nine, cut at their middle to the design's box (818 x 523) and converted with the project's tool to at least 45 dB; to stay under the 400 KB limit the busy ones are 1.17x to 1.22x, three sources are small (1.25x to 1.37x) and three are 2x. **The image budget of the site was raised from 10 to 11 MB (10.7 MB used).**
+- **Checked against Figma at 1920 x 993:** every position of the page matches (the list is in [33-signature-events.md](33-signature-events.md)): the nine photos, the headings' heights and breaks, the paragraphs' columns and lines, the footer at y 5357. **Two things found by the checks, both in my own first version and fixed:** (1) the first photo was the page's largest image and Chrome warned about it at every width: the page now loads it right away (`priority`); (2) the test's own expected heights had three typing mistakes (the page was right).
+- **Tests:** 24 new unit tests; 26 new browser checks (`tests/interactions.mjs` section 21) and 4 in `tests/qa.mjs` section 12 (head, landmarks, sitemap, axe). The page is served from the seeded CMS on the dev branch; the throwaway-admin edit test of the Student Council page was not repeated (same recipe).
+- **For the owner:** the text is as written in the design, including its placeholders (the Company Program paragraph is the Primary School Annual Show's and the Community service one is the World Scholars Cup's); an editor can change them. **The image budget was raised by 1 MB: say if you would rather lighten the photos instead.**
+- **Not done / open:** production has no content for this page until `SEED_PRODUCTION=1 npm run seed:signature-events` is run (until then the live page shows the defaults); not pushed or deployed. The full browser suites on a CI-style build have not been run on this page yet.
+
+## 2026-11-04: the Student Council page (LOCAL, not pushed)
+
+### Student Council page and two new reusable sections
+- **Owner request:** implement Figma node `5896:2063` at `/student-council/` with Payload (header and footer excluded); reuse any pattern that repeats.
+- **Reused:** the text-only `PageHero`, `SectionTitle` and `Accent`, the shared reveal, `Section`, the CMS helpers (`pageHeroFields`, `list`, `photo`, `line`, `paragraph`), the seed guard, the whole page recipe of the Awards page.
+- **New and reusable:** `PhotoBannerSection` (one wide photo with a two-tone title and an optional paragraph, the title above or under the photo: used twice) and `SplitFeaturesSection` (rows of a photo and a heading, a thin rule and a paragraph, scaled as one piece with container query units of the designed 1437px, each row with its own designed column).
+- **Wired to Payload:** global `student-council` (group Pages): tabs Hero (no photo field), Introduction, Rows (a **flexible list of 1 to 8**, sortable) and Group photo, SEO tab; drafts, Live Preview, publishing clears the tag `student-council`; migration `20261104_043334_student_council_page` (4 new tables, 2 enums, nothing existing changes); seed `npm run seed:student-council`; the menu's "Student Council" link and the sitemap point to the page.
+- **Photos:** five, cut at their middle to the design's boxes and converted with the project's tool to at least 45 dB; to stay under the 400 KB limit the group photo is 1720px wide (1.13x) and `voting` 1400px (1.8x), the others 2x or more. **The image budget of the site is now 8.5 of 10 MB.**
+- **Checked against Figma at 1920 x 993:** every position of the page matches (the list is in [32-student-council.md](32-student-council.md)). **Two things found by the checks, both in my own first version and fixed:** (1) everything was 30px too low, because the hero already brings 30px of space under its rule (the first section's own space is now 30px, not 60); (2) the thin rule was an `<Image>` with a width and a height of its own resized by CSS, which makes Next.js warn in the browser: it is now a box of the scaled size with the image filling it, as the Awards page's laurels.
+- **Tests:** 34 new unit tests; 31 new browser checks (`tests/interactions.mjs` section 20) and 4 in `tests/qa.mjs` section 11 (head, landmarks, sitemap, axe). The CMS was tested end to end on the dev branch with a throwaway admin (deleted afterwards): visitor read and refused write, an admin's edit (a new intro title, a renamed row, a fourth row, a new group title) live at once, an empty list and a row without a photo refused, the original restored.
+- **For the owner:** the text is as written in the design, including its oddities ("Head Boy and Head Girl And Student President", a last paragraph without a full stop); an editor can change them.
+- **Not done / open:** production has no content for this page until `SEED_PRODUCTION=1 npm run seed:student-council` is run (until then the live page shows the defaults); not pushed or deployed. The full browser suites on a CI-style build have not been run on this page yet.
+
 ## 2026-11-03 (late evening): CI red twice after the pushes, both outdated tests (not the site)
 
 - **Run 1 (the Ecosystem commit):** "Ecosystem photo ... two layers for about 0.9 s" saw 1400 ms: the old photo now stays until the fade AND the zoom are done (1.4 s, on purpose); the check was updated (700 to 1300 ms became 1200 to 1700 ms). Fixed in `c7f48a7`.

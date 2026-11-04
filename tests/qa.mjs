@@ -498,6 +498,146 @@ const ok = (n, p, d = "") => {
     await context.close();
   }
 
+  // 11. The Student Council page: head tags, landmarks, the sitemap, axe
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/student-council", { waitUntil: "load" });
+    await page.waitForTimeout(1500);
+    const head = await page.evaluate(() => {
+      const meta = (sel) => document.querySelector(sel)?.getAttribute("content") ?? "";
+      return {
+        title: document.title,
+        description: meta('meta[name="description"]'),
+        canonical: document.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "",
+        ogUrl: meta('meta[property="og:url"]'),
+        lang: document.documentElement.lang,
+        h1: document.querySelectorAll("h1").length,
+        mains: document.querySelectorAll("main").length,
+        mainId: document.querySelector("main")?.id,
+        imgNoAlt: [...document.images].filter((i) => !i.hasAttribute("alt")).length,
+        photosNoName: [...document.querySelectorAll("[data-banner-photo] img, [data-feature-photo] img")].filter(
+          (i) => i.alt.trim().length < 3,
+        ).length,
+        rulesHidden: [...document.querySelectorAll("span[aria-hidden='true'] img")].filter((i) => i.alt !== "").length,
+      };
+    });
+    ok(
+      "student council: title, description, canonical and og:url are the page's own",
+      /Student Council/.test(head.title) &&
+        head.description.length > 50 &&
+        /\/student-council$/.test(head.canonical) &&
+        /\/student-council$/.test(head.ogUrl),
+      JSON.stringify({ t: head.title, c: head.canonical }),
+    );
+    ok(
+      "student council: html lang=en, one h1, one main (the skip link's target), every img has an alt, every photo has a description, the thin rules are decoration only",
+      head.lang === "en" &&
+        head.h1 === 1 &&
+        head.mains === 1 &&
+        head.mainId === "main-content" &&
+        head.imgNoAlt === 0 &&
+        head.photosNoName === 0 &&
+        head.rulesHidden === 0,
+      JSON.stringify(head),
+    );
+    const sitemap = await (await page.request.get(BASE + "/sitemap.xml")).text();
+    ok("the sitemap lists the Student Council page", /<loc>[^<]*\/student-council<\/loc>/.test(sitemap));
+    try {
+      await page.addScriptTag({ url: "https://cdn.jsdelivr.net/npm/axe-core@4.10.2/axe.min.js" });
+      const res = await page.evaluate(async () => {
+        const r = await window.axe.run(document, {
+          runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"] },
+        });
+        return r.violations.map((v) => ({
+          id: v.id,
+          impact: v.impact,
+          nodes: v.nodes.length,
+          sample: v.nodes[0]?.target?.join(" ").slice(0, 90),
+        }));
+      });
+      console.log("student council axe violations:", JSON.stringify(res, null, 1));
+      const blocking = res.filter((v) => v.id !== "color-contrast");
+      ok(
+        "student council: axe finds no violations other than the known colour contrast",
+        blocking.length === 0,
+        res.map((v) => v.id + ":" + v.impact).join(", "),
+      );
+    } catch (e) {
+      console.log("axe unavailable:", String(e).slice(0, 100));
+    }
+    await context.close();
+  }
+
+  // 12. The Signature Events page: head tags, landmarks, the sitemap, axe
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/signature-events", { waitUntil: "load" });
+    await page.waitForTimeout(1500);
+    const head = await page.evaluate(() => {
+      const meta = (sel) => document.querySelector(sel)?.getAttribute("content") ?? "";
+      return {
+        title: document.title,
+        description: meta('meta[name="description"]'),
+        canonical: document.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "",
+        ogUrl: meta('meta[property="og:url"]'),
+        lang: document.documentElement.lang,
+        h1: document.querySelectorAll("h1").length,
+        mains: document.querySelectorAll("main").length,
+        mainId: document.querySelector("main")?.id,
+        imgNoAlt: [...document.images].filter((i) => !i.hasAttribute("alt")).length,
+        photosNoName: [...document.querySelectorAll("[data-row-photo] img")].filter((i) => i.alt.trim().length < 3).length,
+        photos: document.querySelectorAll("[data-row-photo] img").length,
+      };
+    });
+    ok(
+      "signature events: title, description, canonical and og:url are the page's own",
+      /Signature Events/.test(head.title) &&
+        head.description.length > 50 &&
+        /\/signature-events$/.test(head.canonical) &&
+        /\/signature-events$/.test(head.ogUrl),
+      JSON.stringify({ t: head.title, c: head.canonical }),
+    );
+    ok(
+      "signature events: html lang=en, one h1, one main (the skip link's target), every img has an alt, the nine photos are described",
+      head.lang === "en" &&
+        head.h1 === 1 &&
+        head.mains === 1 &&
+        head.mainId === "main-content" &&
+        head.imgNoAlt === 0 &&
+        head.photos === 9 &&
+        head.photosNoName === 0,
+      JSON.stringify(head),
+    );
+    const sitemap = await (await page.request.get(BASE + "/sitemap.xml")).text();
+    ok("the sitemap lists the Signature Events page", /<loc>[^<]*\/signature-events<\/loc>/.test(sitemap));
+    try {
+      await page.addScriptTag({ url: "https://cdn.jsdelivr.net/npm/axe-core@4.10.2/axe.min.js" });
+      const res = await page.evaluate(async () => {
+        const r = await window.axe.run(document, {
+          runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"] },
+        });
+        return r.violations.map((v) => ({
+          id: v.id,
+          impact: v.impact,
+          nodes: v.nodes.length,
+          sample: v.nodes[0]?.target?.join(" ").slice(0, 90),
+        }));
+      });
+      console.log("signature events axe violations:", JSON.stringify(res, null, 1));
+      const blocking = res.filter((v) => v.id !== "color-contrast");
+      ok(
+        "signature events: axe finds no violations other than the known colour contrast",
+        blocking.length === 0,
+        res.map((v) => v.id + ":" + v.impact).join(", "),
+      );
+    } catch (e) {
+      console.log("axe unavailable:", String(e).slice(0, 100));
+    }
+    await context.close();
+  }
+
   console.log(fails ? `\n${fails} CHECK(S) FAILED` : "\nALL CHECKS PASSED");
   await browser.close();
   process.exitCode = fails ? 1 : 0;

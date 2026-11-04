@@ -17,6 +17,8 @@
     "seed:principals-welcome": "payload run scripts/seed-principals-welcome.ts",
     "seed:partnerships": "payload run scripts/seed-partnerships.ts",
     "seed:awards-recognition": "payload run scripts/seed-awards-recognition.ts",
+    "seed:student-council": "payload run scripts/seed-student-council.ts",
+    "seed:signature-events": "payload run scripts/seed-signature-events.ts",
     "qa:serve": "node tests/serve-prod.mjs",
     "qa": "node tests/qa.mjs",
     "qa:snapshot:save": "node tests/snapshot.mjs --save",

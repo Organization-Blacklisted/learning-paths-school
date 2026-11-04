@@ -93,6 +93,8 @@ export interface Config {
     'principals-welcome': PrincipalsWelcome;
     partnerships: Partnership;
     'awards-recognition': AwardsRecognition;
+    'student-council': StudentCouncil;
+    'signature-events': SignatureEvent;
   };
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
@@ -100,6 +102,8 @@ export interface Config {
     'principals-welcome': PrincipalsWelcomeSelect<false> | PrincipalsWelcomeSelect<true>;
     partnerships: PartnershipsSelect<false> | PartnershipsSelect<true>;
     'awards-recognition': AwardsRecognitionSelect<false> | AwardsRecognitionSelect<true>;
+    'student-council': StudentCouncilSelect<false> | StudentCouncilSelect<true>;
+    'signature-events': SignatureEventsSelect<false> | SignatureEventsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -948,6 +952,170 @@ export interface AwardsRecognition {
   createdAt?: string | null;
 }
 /**
+ * The heading, the photos and the text of the Student Council page, and its search-engine settings (SEO tab).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "student-council".
+ */
+export interface StudentCouncil {
+  id: number;
+  hero: {
+    /**
+     * Shown in capitals, for example Contact us.
+     */
+    badge: string;
+    /**
+     * For example: Let’s Begin a
+     */
+    titleLead: string;
+    /**
+     * Shown in blue, slanted. For example: Conversation
+     */
+    titleAccent: string;
+    /**
+     * One short line.
+     */
+    subtitle: string;
+  };
+  intro: {
+    /**
+     * A wide photo, 2000 x 951 works best (it is shown 1520 x 723 and a photo of another shape is cropped at its middle). Choose one from the library or upload one: JPG, PNG or WebP are converted to AVIF automatically. Its alt text comes from the library.
+     */
+    image: number | Media;
+    /**
+     * The first words of the title: shown in blue, slanted.
+     */
+    titleAccent: string;
+    /**
+     * The rest of the title, on the same line: shown in grey.
+     */
+    titleRest: string;
+    /**
+     * The text under the title, a few lines.
+     */
+    text: string;
+  };
+  features: {
+    /**
+     * One row each, shown in this order. Drag a row to move it.
+     */
+    items: {
+      /**
+       * A photo about 4:3, 1554 x 1130 works best (it is shown 777 x 565 and a photo of another shape is cropped at its middle). Choose one from the library or upload one. Its alt text comes from the library.
+       */
+      image: number | Media;
+      /**
+       * Shown in blue, slanted, usually on two lines. For example: Voting for Voices, Electing Change
+       */
+      title: string;
+      /**
+       * The text under the heading and its thin rule, a few lines.
+       */
+      text: string;
+      id?: string | null;
+    }[];
+  };
+  gallery: {
+    /**
+     * The first words of the title: shown in blue, slanted.
+     */
+    titleAccent: string;
+    /**
+     * The rest of the title, on the same line: shown in grey.
+     */
+    titleRest: string;
+    /**
+     * A wide photo, 1840 x 947 works best (it is shown 1520 x 782 and a photo of another shape is cropped at its middle). Choose one from the library or upload one. Its alt text comes from the library.
+     */
+    image: number | Media;
+  };
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    /**
+     * Leave off for a normal public page.
+     */
+    noIndex?: boolean | null;
+    /**
+     * Only if another address is the main one for this page (a full address, https://...). Leave blank: the page's own address is used.
+     */
+    canonical?: string | null;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * The heading, the photos and the text of the Signature Events page, and its search-engine settings (SEO tab).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "signature-events".
+ */
+export interface SignatureEvent {
+  id: number;
+  hero: {
+    /**
+     * Shown in capitals, for example Contact us.
+     */
+    badge: string;
+    /**
+     * For example: Let’s Begin a
+     */
+    titleLead: string;
+    /**
+     * Shown in blue, slanted. For example: Conversation
+     */
+    titleAccent: string;
+    /**
+     * One short line.
+     */
+    subtitle: string;
+  };
+  events: {
+    /**
+     * One event each, shown in this order. Drag one to move it. The photo is on the right in the first, third, fifth... and on the left in the others.
+     */
+    items: {
+      /**
+       * A photo about 3:2, 1636 x 1046 works best (it is shown 818 x 523 and a photo of another shape is cropped at its middle). Choose one from the library or upload one: JPG, PNG or WebP are converted to AVIF automatically. Its alt text comes from the library.
+       */
+      image: number | Media;
+      /**
+       * Shown in blue, slanted, on one or two lines. For example: School Athletic Meet
+       */
+      title: string;
+      /**
+       * The text under the heading, a few lines.
+       */
+      text: string;
+      id?: string | null;
+    }[];
+  };
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    /**
+     * Leave off for a normal public page.
+     */
+    noIndex?: boolean | null;
+    /**
+     * Only if another address is the main one for this page (a full address, https://...). Leave blank: the page's own address is used.
+     */
+    canonical?: string | null;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home_select".
  */
@@ -1286,6 +1454,99 @@ export interface AwardsRecognitionSelect<T extends boolean = true> {
         subtitle?: T;
       };
   awards?:
+    | T
+    | {
+        items?:
+          | T
+          | {
+              image?: T;
+              title?: T;
+              text?: T;
+              id?: T;
+            };
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+        noIndex?: T;
+        canonical?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "student-council_select".
+ */
+export interface StudentCouncilSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        badge?: T;
+        titleLead?: T;
+        titleAccent?: T;
+        subtitle?: T;
+      };
+  intro?:
+    | T
+    | {
+        image?: T;
+        titleAccent?: T;
+        titleRest?: T;
+        text?: T;
+      };
+  features?:
+    | T
+    | {
+        items?:
+          | T
+          | {
+              image?: T;
+              title?: T;
+              text?: T;
+              id?: T;
+            };
+      };
+  gallery?:
+    | T
+    | {
+        titleAccent?: T;
+        titleRest?: T;
+        image?: T;
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+        noIndex?: T;
+        canonical?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "signature-events_select".
+ */
+export interface SignatureEventsSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        badge?: T;
+        titleLead?: T;
+        titleAccent?: T;
+        subtitle?: T;
+      };
+  events?:
     | T
     | {
         items?:

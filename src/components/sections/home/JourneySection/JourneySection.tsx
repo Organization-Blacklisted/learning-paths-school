@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSceneTimeline } from "@/components/layouts/HorizontalScene";
 import Accent from "@/components/ui/Accent";
 import Badge from "@/components/ui/Badge";
@@ -22,7 +22,9 @@ import type { JourneySectionProps } from "./JourneySection.types";
 //
 // LAYOUT. From lg (1024px) the four columns sit in a row, exactly as in the design. The column height follows the
 // screen height (590px, shrinking down to 520px on short screens) so the whole panel fits in the pinned scene.
-// Below lg the design has no version, so this is my interpretation: two columns from md, one on a phone.
+// Below lg the design has no version, so this is my interpretation (owner, 2026-11-04): the four columns become a row you swipe sideways, like the
+// news cards (NewsSection): each column 330px wide (80% of the screen at most, so the next one peeks in), snapping to the column edges, the list bleeding
+// to the screen edges. It was a 2 x 2 grid from md and a stack of four on a phone (2400px tall, which the scene scrolled down through).
 //
 // ANIMATION (owner: a highly interactive homepage). Desktop: scroll-driven on the scene's timeline. The pill, heading
 // and paragraph rise and fade in as they come into view, then each column in turn: its colour grows up from the
@@ -46,6 +48,18 @@ export default function JourneySection({ content }: JourneySectionProps) {
   const rootRef = useRef<HTMLElement>(null);
   // The photos are requested once the page has loaded and the browser is idle (see useIdleReady); each box keeps its size.
   const photosReady = useIdleReady(800, rootRef);
+  // The slider below lg is a scrollable region: it is a tab stop only while it really scrolls (a keyboard user then moves it with the arrow keys).
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const [scrolls, setScrolls] = useState(false);
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    const measure = () => setScrolls(slider.scrollWidth > slider.clientWidth + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(slider);
+    return () => observer.disconnect();
+  }, []);
 
   // Desktop: ride the sideways scroll. Each part starts as it comes into view from the right edge of the screen.
   useSceneTimeline((tl, { stageWidth, distance, progressAt }) => {
@@ -105,14 +119,19 @@ export default function JourneySection({ content }: JourneySectionProps) {
           </BodyText>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[330fr_330fr_330fr_329fr]">
+        {/* The columns: a row to swipe below lg (the list bleeds to the screen edges by one gutter), the design’s four columns from lg */}
+        <div
+          ref={sliderRef}
+          {...(scrolls ? { tabIndex: 0, role: "group", "aria-label": `${label}, swipe sideways` } : {})}
+          className="-mx-gutter mt-12 flex snap-x snap-mandatory scroll-px-gutter gap-3 overflow-x-auto px-gutter pb-3 [scrollbar-width:none] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-blue lg:mx-0 lg:grid lg:snap-none lg:grid-cols-[330fr_330fr_330fr_329fr] lg:gap-0 lg:overflow-visible lg:px-0 lg:pb-0 [&::-webkit-scrollbar]:hidden"
+        >
           {stages.map((stage) => {
             const tone = TONES[stage.tone];
             return (
               <div
                 key={stage.id}
                 data-col
-                className={`relative flex items-center justify-center overflow-clip py-10 lg:h-[clamp(520px,calc(100svh-220px),590px)] lg:py-0 ${tone.text}`}
+                className={`relative flex w-[min(330px,80vw)] shrink-0 snap-start items-center justify-center overflow-clip py-10 lg:h-[clamp(520px,calc(100svh-220px),590px)] lg:w-auto lg:py-0 ${tone.text}`}
               >
                 <div data-col-bg className={`absolute inset-0 ${tone.bg}`} />
                 {/* 171px wide, centred (0.5px left of centre in the design). Its own `translate` does not clash with

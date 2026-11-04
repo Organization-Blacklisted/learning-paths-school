@@ -4,7 +4,7 @@ import type { MenuContent, MenuLink, MenuSection } from "@/types/menu";
 //
 // The eight main items and every link under them are the owner's final list (2026-10-29). Spelling and capitals are the owner's, as given.
 //
-// TODO: every `href` is "#" until the pages exist (docs/03-sitemap.md); then they become the real addresses. "Contact us" (twice) is /contact-us and "Principal’s Welcome" is /principals-welcome "Partnerships" is /partnerships and "Awards & Recognition" is /awards-recognition since 2026-11-02.
+// TODO: every `href` is "#" until the pages exist (docs/03-sitemap.md); then they become the real addresses. "Contact us" (twice) is /contact-us and "Principal’s Welcome" is /principals-welcome "Partnerships" is /partnerships, "Awards & Recognition" is /awards-recognition "Student Council" is /student-council and "Signature Events" is /signature-events.
 
 const link = (id: string, label: string): MenuLink => ({ id, label, href: "#" });
 
@@ -18,8 +18,8 @@ const sections: MenuSection[] = [
       { ...link("partnerships", "Partnerships"), href: "/partnerships" },
       link("campus", "Campus Experience"),
       { ...link("awards", "Awards & Recognition"), href: "/awards-recognition" },
-      link("signature-events", "Signature Events"),
-      link("student-council", "Student Council"),
+      { ...link("signature-events", "Signature Events"), href: "/signature-events" },
+      { ...link("student-council", "Student Council"), href: "/student-council" },
       link("information-desk", "Information Desk"),
     ],
   },

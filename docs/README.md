@@ -35,6 +35,8 @@ Single source of truth for the Learning Paths School website.
 29. [Principal's Welcome page, the text-only hero and the message section](29-principals-welcome.md)
 30. [Partnerships page and the reusable partners section](30-partnerships.md)
 31. [Awards & Recognition page and the reusable awards section](31-awards-recognition.md)
+32. [Student Council page and the reusable photo banner and split features sections](32-student-council.md)
+33. [Signature Events page and the reusable alternating rows section](33-signature-events.md)
 
 ## Rules
 

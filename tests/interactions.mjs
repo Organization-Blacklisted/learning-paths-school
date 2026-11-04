@@ -528,7 +528,7 @@ for (const [width, height, label] of [
 }
 
 // ---------------------------------------------------------------- 7. The sideways scenes on a PHONE and a TABLET (owner, 2026-10-22: same scroll effect as desktop)
-// Scroll down, the view pans sideways across the panels, and a panel taller than the screen (Journey on a phone) is then scrolled DOWN through.
+// Scroll down and the view pans sideways across the panels; the Journey panel ends the pan whole on the screen (its four columns are a row to swipe, owner 2026-11-04).
 for (const [label, width, height] of [
   ["phone 390", 390, 844],
   ["tablet 768", 768, 1024],
@@ -612,27 +612,68 @@ for (const [label, width, height] of [
     `centre ${visionCentre} of ${width}`,
   );
 
-  // the whole scene scrolled through: sideways, then down through the last panel, then the pin ends
+  // the whole scene scrolled through: sideways to the Journey panel, then the pin ends
   await scrollToY(page, found[0].top + found[0].length);
   const end = await page.evaluate(() => {
     const columns = [...document.querySelectorAll("[data-col]")];
-    const last = columns[columns.length - 1].getBoundingClientRect();
+    const first = columns[0].getBoundingClientRect();
+    const second = columns[1].getBoundingClientRect();
+    const section = columns[0].closest("section").getBoundingClientRect();
     // the Courage heading is shown in full: typewriter variant = every typed character is on; rotate variant = the rotating word is on the page
     const chars = [...document.querySelectorAll("[data-char]")];
     const headingShown = chars.length
       ? chars.every((c) => +c.style.opacity === 1)
       : document.querySelectorAll("[data-rotating-word]").length >= 2;
     return {
-      lastBottom: Math.round(last.bottom),
-      lastTop: Math.round(last.top),
+      firstLeft: Math.round(first.left),
+      firstWidth: Math.round(first.width),
+      secondLeft: Math.round(second.left),
+      sectionBottom: Math.round(section.bottom),
       headingShown,
       overflow: document.documentElement.scrollWidth - innerWidth,
     };
   });
   ok(
-    `${label}: at the end of scene 1 the LAST Journey column is on screen (the view went down through the tall panel), the Courage heading is shown in full`,
-    end.lastBottom <= height + 3 && end.lastBottom > height - 140 && end.lastTop < height && end.headingShown,
+    `${label}: at the end of scene 1 the Journey panel is whole on the screen (the first column showing, the next one peeking in), the Courage heading is shown in full`,
+    end.firstLeft >= 0 &&
+      end.firstLeft < width / 2 &&
+      end.secondLeft < width - 20 &&
+      end.secondLeft > end.firstLeft + 100 &&
+      end.sectionBottom <= height + 3 &&
+      end.headingShown,
     JSON.stringify(end),
+  );
+  // the four columns are a row to swipe: it scrolls, snaps to the columns, and the last column can be reached
+  const swipe = await page.evaluate(async () => {
+    const slider = document.querySelector("[data-col]").parentElement;
+    const style = getComputedStyle(slider);
+    const before = slider.scrollLeft;
+    slider.scrollLeft = slider.scrollWidth;
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    const columns = [...slider.children];
+    const last = columns[columns.length - 1].getBoundingClientRect();
+    const result = {
+      scrollable: style.overflowX === "auto" && slider.scrollWidth > slider.clientWidth,
+      snaps: style.scrollSnapType.includes("mandatory"),
+      focusable: slider.getAttribute("tabindex") === "0",
+      columns: columns.length,
+      startedAtZero: before === 0,
+      lastRight: Math.round(last.right),
+      lastLeft: Math.round(last.left),
+    };
+    slider.scrollLeft = 0;
+    return result;
+  });
+  ok(
+    `${label}: the Journey columns are a row to swipe (four columns, snapping, a tab stop for the keyboard) and the last one can be reached`,
+    swipe.scrollable &&
+      swipe.snaps &&
+      swipe.focusable &&
+      swipe.columns === 4 &&
+      swipe.startedAtZero &&
+      swipe.lastRight <= width + 1 &&
+      swipe.lastLeft >= 0,
+    JSON.stringify(swipe),
   );
   ok(`${label}: no horizontal overflow anywhere in the scene`, end.overflow <= 0, String(end.overflow));
 
@@ -2617,6 +2658,538 @@ for (const [label, width, height] of [
       end.selected && end.topLoaded && end.layers === 1,
       JSON.stringify(end),
     );
+    await context.close();
+  }
+}
+
+// ---------------------------------------------------------------- 20. The Student Council page (owner, 2026-11-04): the text-only hero, the wide photo, the three rows and the group photo
+{
+  const quiet = (errors, m) => {
+    if (["error", "warning"].includes(m.type()) && !/preloaded using link preload|Download the React/.test(m.text()))
+      errors.push(m.text().slice(0, 140));
+  };
+  const box = (page, selector) =>
+    page.evaluate((s) => {
+      const b = document.querySelector(s).getBoundingClientRect();
+      return { x: +b.left.toFixed(1), y: +(b.top + scrollY).toFixed(1), w: +b.width.toFixed(1), h: +b.height.toFixed(1) };
+    }, selector);
+  const HERO = "section[aria-label='Student council']";
+  const INTRO = "section[aria-label='Early leadership']";
+  const ROWS = "section[aria-label='How the Student Council works']";
+  const GALLERY = "section[aria-label='The Student Council']";
+
+  // desktop 1920 x 993: the geometry of the Figma frame (node 5896:2063), measured from the page top (the header is the first 74px)
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => quiet(errors, m));
+    await page.goto(BASE + "/student-council", { waitUntil: "load" });
+    await page.waitForTimeout(3500);
+
+    const pill = await box(page, `${HERO} p`);
+    const h1 = await box(page, "h1");
+    const rule = await box(page, `${HERO} [aria-hidden='true']`);
+    ok(
+      "student council (1920): the text-only hero: pill, heading on one line and the crest rule are where Figma has them",
+      near(pill.y, 166, 3) &&
+        near(pill.x + pill.w / 2, 960, 2) &&
+        near(h1.y, 215, 3) &&
+        near(h1.h, 58, 2) &&
+        near(rule.y, 377, 3) &&
+        near(rule.h, 46, 1),
+      JSON.stringify({ pill, h1, rule }),
+    );
+    ok(
+      "student council: the hero has no photo",
+      (await page.evaluate((s) => document.querySelectorAll(`${s} [data-hero-photo]`).length, HERO)) === 0,
+    );
+
+    // each part is measured while it is on the screen with its entrance finished (a part that scrolls out of view is put back to its hidden start)
+    const measure = async (selector, fn, arg) => {
+      await page.evaluate((s) => {
+        const top = document.querySelector(s).getBoundingClientRect().top + scrollY;
+        window.scrollTo(0, top - 80);
+      }, selector);
+      await page.waitForTimeout(2600);
+      return page.evaluate(fn, arg);
+    };
+
+    const intro = await measure(
+      INTRO,
+      (s) => {
+        const rect = (el) => {
+          const b = el.getBoundingClientRect();
+          return [+b.left.toFixed(1), +(b.top + scrollY).toFixed(1), +b.width.toFixed(1), +b.height.toFixed(1)];
+        };
+        const root = document.querySelector(s);
+        const p = root.querySelector("p");
+        return {
+          photo: rect(root.querySelector("[data-banner-photo]")),
+          title: rect(root.querySelector("h2")),
+          titleSize: getComputedStyle(root.querySelector("h2")).fontSize,
+          slant: getComputedStyle(root.querySelector("h2 span")).transform,
+          text: rect(p),
+          lines: Math.round(p.getBoundingClientRect().height / parseFloat(getComputedStyle(p).lineHeight)),
+          visible: [...root.querySelectorAll("[data-banner-photo], [data-banner-text]")].every(
+            (el) => Number(getComputedStyle(el).opacity) === 1,
+          ),
+          loaded: [...root.querySelectorAll("img")].every((img) => img.complete && img.naturalWidth > 0),
+        };
+      },
+      INTRO,
+    );
+    ok(
+      "student council (1920): the wide photo is 1520 x 723 at x 200, y 483, as Figma has it",
+      near(intro.photo[0], 200, 2) && near(intro.photo[1], 483, 3) && near(intro.photo[2], 1520, 2) && near(intro.photo[3], 723, 2),
+      JSON.stringify(intro.photo),
+    );
+    ok(
+      "student council (1920): under it the title (40px, 60px below the photo, blue part slanted) and a 1221px paragraph of 3 lines, 16px under the title, centred",
+      intro.titleSize === "40px" &&
+        intro.slant !== "none" &&
+        near(intro.title[1], 1266, 3) &&
+        near(intro.title[3], 48, 2) &&
+        near(intro.text[1], 1330, 3) &&
+        near(intro.text[2], 1221, 2) &&
+        near(intro.text[0], 349.5, 2) &&
+        intro.lines === 3,
+      JSON.stringify({ title: intro.title, text: intro.text, lines: intro.lines }),
+    );
+    ok(
+      "student council: the wide photo and the text have appeared and the photo has loaded",
+      intro.visible && intro.loaded,
+      JSON.stringify([intro.visible, intro.loaded]),
+    );
+
+    // the three rows
+    const rows = [];
+    for (let i = 0; i < 3; i++) {
+      rows.push(
+        await measure(
+          `${ROWS} article:nth-of-type(${i + 1})`,
+          ([s, i]) => {
+            const rect = (el) => {
+              const b = el.getBoundingClientRect();
+              return [+b.left.toFixed(1), +(b.top + scrollY).toFixed(1), +b.width.toFixed(1), +b.height.toFixed(1)];
+            };
+            const row = document.querySelectorAll(`${s} article`)[i];
+            const p = row.querySelector("p");
+            return {
+              photo: rect(row.querySelector("[data-feature-photo]")),
+              title: rect(row.querySelector("h2")),
+              titleSize: getComputedStyle(row.querySelector("h2")).fontSize,
+              slant: getComputedStyle(row.querySelector("h2 span")).transform,
+              rule: rect(row.querySelector("span[aria-hidden='true']")),
+              text: rect(p),
+              lines: Math.round(p.getBoundingClientRect().height / parseFloat(getComputedStyle(p).lineHeight)),
+              visible: [...row.querySelectorAll("[data-feature-photo], [data-feature-text]")].every(
+                (el) => Number(getComputedStyle(el).opacity) === 1,
+              ),
+              loaded: [...row.querySelectorAll("img")].every((img) => img.complete && img.naturalWidth > 0),
+            };
+          },
+          [ROWS, i],
+        ),
+      );
+    }
+    const photoY = [1531, 2156, 2781];
+    ok(
+      "student council (1920): each row's photo is 777 x 565 at x 241.5, at y 1531, 2156 and 2781 (60px between the rows), as Figma has them",
+      rows.every(
+        (r, i) => near(r.photo[0], 241.5, 2) && near(r.photo[2], 777, 2) && near(r.photo[3], 565, 2) && near(r.photo[1], photoY[i], 3),
+      ),
+      JSON.stringify(rows.map((r) => r.photo)),
+    );
+    const titleY = [1664.5, 2276, 2901];
+    const ruleY = [1793.5, 2405, 3030];
+    const textY = [1827.5, 2439, 3064];
+    const textX = [1099.5, 1099.5, 1106.5];
+    const textW = [532, 532, 572];
+    ok(
+      "student council (1920): the headings are 40px type, slanted, in a two-line box (95px), at the heights Figma has them",
+      rows.every((r, i) => r.titleSize === "40px" && r.slant !== "none" && near(r.title[1], titleY[i], 3) && near(r.title[3], 95, 3)),
+      JSON.stringify(rows.map((r) => [r.title, r.titleSize])),
+    );
+    ok(
+      "student council (1920): the thin rule is 517px wide, 34px under the heading box, and the paragraph 34px under the rule, at the places Figma has them",
+      rows.every(
+        (r, i) => near(r.rule[2], 517, 2) && near(r.rule[1], ruleY[i], 3) && near(r.text[1], textY[i], 3) && near(r.rule[0], textX[i], 2),
+      ),
+      JSON.stringify(rows.map((r) => [r.rule, r.text[1]])),
+    );
+    ok(
+      "student council (1920): the text columns are 532, 532 and 572px wide, 81, 81 and 88px from the photo, and the paragraphs break into 5, 6 and 6 lines like the design's",
+      rows.every((r, i) => near(r.text[2], textW[i], 2) && near(r.text[0], textX[i], 2)) &&
+        JSON.stringify(rows.map((r) => r.lines)) === JSON.stringify([5, 6, 6]),
+      JSON.stringify(rows.map((r) => [r.text[0], r.text[2], r.lines])),
+    );
+    ok(
+      "student council: every row's photo has loaded and every entrance has finished",
+      rows.every((r) => r.loaded && r.visible),
+      JSON.stringify(rows.map((r) => [r.loaded, r.visible])),
+    );
+
+    const gallery = await measure(
+      GALLERY,
+      (s) => {
+        const rect = (el) => {
+          const b = el.getBoundingClientRect();
+          return [+b.left.toFixed(1), +(b.top + scrollY).toFixed(1), +b.width.toFixed(1), +b.height.toFixed(1)];
+        };
+        const root = document.querySelector(s);
+        const title = root.querySelector("h2");
+        return {
+          title: rect(title),
+          titleCentre: Math.round(title.getBoundingClientRect().left + title.getBoundingClientRect().width / 2),
+          photo: rect(root.querySelector("[data-banner-photo]")),
+          visible: [...root.querySelectorAll("[data-banner-photo], [data-banner-text]")].every(
+            (el) => Number(getComputedStyle(el).opacity) === 1,
+          ),
+          loaded: [...root.querySelectorAll("img")].every((img) => img.complete && img.naturalWidth > 0),
+        };
+      },
+      GALLERY,
+    );
+    ok(
+      "student council (1920): the title is centred at y 3466 and the group photo is 1520 x 782 at y 3543, 29px under it, as Figma has it",
+      near(gallery.title[1], 3466, 3) &&
+        near(gallery.title[3], 48, 2) &&
+        near(gallery.titleCentre, 960, 3) &&
+        near(gallery.photo[0], 200, 2) &&
+        near(gallery.photo[1], 3543, 3) &&
+        near(gallery.photo[2], 1520, 2) &&
+        near(gallery.photo[3], 782, 2),
+      JSON.stringify(gallery),
+    );
+    ok(
+      "student council: the group photo has loaded and appeared",
+      gallery.visible && gallery.loaded,
+      JSON.stringify([gallery.visible, gallery.loaded]),
+    );
+    const footer = await page.evaluate(() => Math.round(document.querySelector("footer").getBoundingClientRect().top + scrollY));
+    ok("student council (1920): the footer starts at y 4445, 120px under the group photo", near(footer, 4445, 4), String(footer));
+    ok(
+      "student council (1920): no sideways overflow, no console errors or warnings",
+      (await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 0 && errors.length === 0,
+      JSON.stringify(errors.slice(0, 2)),
+    );
+    await context.close();
+  }
+
+  // every width: no sideways overflow; the photos keep their shape; from 1024px the rows are a photo and a column of text side by side, below it the text is under the photo
+  for (const [width, height] of [
+    [320, 640],
+    [360, 740],
+    [390, 844],
+    [768, 1024],
+    [1024, 768],
+    [1280, 720],
+    [1536, 864],
+  ]) {
+    // (reduced motion: no hidden start positions, so the layout itself is measured)
+    const context = await browser.newContext({ viewport: { width, height }, reducedMotion: "reduce" });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => quiet(errors, m));
+    await page.goto(BASE + "/student-council", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    const layout = await page.evaluate(() => {
+      const side = innerWidth >= 1024;
+      const rows = [...document.querySelectorAll("article")].map((row) => {
+        const photo = row.querySelector("[data-feature-photo]").getBoundingClientRect();
+        const title = row.querySelector("h2").getBoundingClientRect();
+        const text = row.querySelector("p").getBoundingClientRect();
+        const a = row.getBoundingClientRect();
+        return {
+          shape: Math.abs(photo.width / photo.height - 777 / 565) < 0.01,
+          inside:
+            photo.left >= -1 &&
+            photo.right <= innerWidth + 1 &&
+            text.left >= a.left - 1 &&
+            text.right <= a.right + 1 &&
+            title.right <= a.right + 1,
+          arrangement: side
+            ? text.left >= photo.right - 1 && Math.abs(photo.top + photo.height / 2 - (title.top + (text.bottom - title.top) / 2)) < 4
+            : text.top >= photo.bottom - 1,
+        };
+      });
+      const banners = [...document.querySelectorAll("[data-banner-photo]")].map((photo) => {
+        const b = photo.getBoundingClientRect();
+        return { shape: b.width / b.height > 1.9 && b.width / b.height < 2.2, inside: b.left >= -1 && b.right <= innerWidth + 1 };
+      });
+      return { overflow: document.documentElement.scrollWidth - innerWidth, rows, banners };
+    });
+    ok(
+      `student council (${width}): no sideways overflow, the photos keep their shape, ${width >= 1024 ? "each row is a photo with its text beside it, centred on it" : "each row's text is under its photo"}`,
+      layout.overflow <= 0 &&
+        layout.rows.length === 3 &&
+        layout.banners.length === 2 &&
+        layout.rows.every((r) => r.shape && r.inside && r.arrangement) &&
+        layout.banners.every((b) => b.shape && b.inside),
+      JSON.stringify(layout),
+    );
+    ok(`student council (${width}): no console errors or warnings`, errors.length === 0, JSON.stringify(errors.slice(0, 2)));
+    await context.close();
+  }
+
+  // reduced motion: nothing is hidden
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 }, reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto(BASE + "/student-council", { waitUntil: "load" });
+    await page.waitForTimeout(3000);
+    const state = await page.evaluate(() => ({
+      hidden: [...document.querySelectorAll("[data-banner-photo], [data-banner-text], [data-feature-photo], [data-feature-text]")].filter(
+        (el) => Number(getComputedStyle(el).opacity) < 1 || getComputedStyle(el).clipPath !== "none",
+      ).length,
+      parts: document.querySelectorAll("[data-banner-photo], [data-feature-photo]").length,
+    }));
+    ok(
+      "student council (reduced motion): every photo and text is shown at once",
+      state.parts === 5 && state.hidden === 0,
+      JSON.stringify(state),
+    );
+    await context.close();
+  }
+
+  // the menu's "Student Council" link leads here
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.waitForTimeout(2700);
+    const href = await page.evaluate(() =>
+      [...document.querySelectorAll("#site-menu a")].find((a) => /^student council$/i.test(a.textContent.trim()))?.getAttribute("href"),
+    );
+    ok('menu: "Student Council" points to /student-council', href === "/student-council", String(href));
+    await page
+      .locator("#site-menu a", { hasText: /^Student Council$/ })
+      .first()
+      .click();
+    await page.waitForTimeout(1500);
+    ok("menu: following it opens the Student Council page", new URL(page.url()).pathname === "/student-council", page.url());
+    await context.close();
+  }
+}
+
+// ---------------------------------------------------------------- 21. The Signature Events page (owner, 2026-11-04): the text-only hero and the nine events, the photo changing sides
+{
+  const quiet = (errors, m) => {
+    if (["error", "warning"].includes(m.type()) && !/preloaded using link preload|Download the React/.test(m.text()))
+      errors.push(m.text().slice(0, 140));
+  };
+  const box = (page, selector) =>
+    page.evaluate((s) => {
+      const b = document.querySelector(s).getBoundingClientRect();
+      return { x: +b.left.toFixed(1), y: +(b.top + scrollY).toFixed(1), w: +b.width.toFixed(1), h: +b.height.toFixed(1) };
+    }, selector);
+  const HERO = "section[aria-label='Signature events']";
+  const EVENTS = "section[aria-label='The signature events of Learning Paths School']";
+
+  // desktop 1920 x 993: the geometry of the Figma frame (node 5894:1875), measured from the page top (the header is the first 74px)
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => quiet(errors, m));
+    await page.goto(BASE + "/signature-events", { waitUntil: "load" });
+    await page.waitForTimeout(3500);
+
+    const pill = await box(page, `${HERO} p`);
+    const h1 = await box(page, "h1");
+    const rule = await box(page, `${HERO} [aria-hidden='true']`);
+    ok(
+      "signature events (1920): the text-only hero: pill, heading on one line and the crest rule are where Figma has them",
+      near(pill.y, 166, 3) &&
+        near(pill.x + pill.w / 2, 960, 2) &&
+        near(h1.y, 215, 3) &&
+        near(h1.h, 58, 2) &&
+        near(rule.y, 377, 3) &&
+        near(rule.h, 46, 1),
+      JSON.stringify({ pill, h1, rule }),
+    );
+    ok(
+      "signature events: the hero has no photo",
+      (await page.evaluate((s) => document.querySelectorAll(`${s} [data-hero-photo]`).length, HERO)) === 0,
+    );
+
+    // each row is measured while it is on the screen with its entrance finished (a part that scrolls out of view is put back to its hidden start)
+    const rows = [];
+    for (let i = 0; i < 9; i++) {
+      await page.evaluate(
+        ([s, i]) => {
+          const top = document.querySelectorAll(`${s} article`)[i].getBoundingClientRect().top + scrollY;
+          window.scrollTo(0, top - 80);
+        },
+        [EVENTS, i],
+      );
+      await page.waitForTimeout(2600);
+      rows.push(
+        await page.evaluate(
+          ([s, i]) => {
+            const rect = (el) => {
+              const b = el.getBoundingClientRect();
+              return [+b.left.toFixed(1), +(b.top + scrollY).toFixed(1), +b.width.toFixed(1), +b.height.toFixed(1)];
+            };
+            const row = document.querySelectorAll(`${s} article`)[i];
+            const p = row.querySelector("p");
+            const h2 = row.querySelector("h2");
+            return {
+              photo: rect(row.querySelector("[data-row-photo]")),
+              title: rect(h2),
+              titleSize: getComputedStyle(h2).fontSize,
+              slant: getComputedStyle(h2.querySelector("span")).transform,
+              text: rect(p),
+              lines: Math.round(p.getBoundingClientRect().height / parseFloat(getComputedStyle(p).lineHeight)),
+              visible: [...row.querySelectorAll("[data-row-photo], [data-row-text]")].every(
+                (el) => Number(getComputedStyle(el).opacity) === 1,
+              ),
+              loaded: [...row.querySelectorAll("img")].every((img) => img.complete && img.naturalWidth > 0),
+            };
+          },
+          [EVENTS, i],
+        ),
+      );
+    }
+    ok(
+      "signature events (1920): nine photos of 818 x 523, touching, from y 523, on the right in the first row and then alternating, as Figma has them",
+      rows.every(
+        (r, i) =>
+          near(r.photo[0], i % 2 === 0 ? 902 : 200, 2) &&
+          near(r.photo[2], 818, 2) &&
+          near(r.photo[3], 523, 2) &&
+          near(r.photo[1], 523 + 523 * i, 3),
+      ),
+      JSON.stringify(rows.map((r) => r.photo)),
+    );
+    const groupTop = [682.2, 1195, 1704.5, 2251.2, 2764, 3297.2, 3833.7, 4343.2, 4825.7];
+    const titleLines = [1, 2, 2, 1, 2, 1, 1, 1, 1];
+    ok(
+      "signature events (1920): the headings are 40px type, slanted, one or two lines (48 or 95px) as Figma breaks them, at the heights Figma has them",
+      rows.every(
+        (r, i) =>
+          r.titleSize === "40px" && r.slant !== "none" && near(r.title[1], groupTop[i], 3) && near(r.title[3], titleLines[i] * 47.5, 3),
+      ),
+      JSON.stringify(rows.map((r) => [r.title, r.titleSize])),
+    );
+    const textX = [200, 1156, 200, 1156, 200, 1156, 200, 1156, 200];
+    const paragraphLines = [5, 4, 5, 5, 4, 5, 4, 5, 8];
+    ok(
+      "signature events (1920): the paragraphs are 564px wide, 22px under the heading, in the column beside the photo (138px away), and break into 5, 4, 5, 5, 4, 5, 4, 5 and 8 lines like the design's",
+      rows.every((r, i) => near(r.text[2], 564, 2) && near(r.text[0], textX[i], 2) && near(r.text[1], r.title[1] + r.title[3] + 22, 3)) &&
+        JSON.stringify(rows.map((r) => r.lines)) === JSON.stringify(paragraphLines),
+      JSON.stringify(rows.map((r) => [r.text[0], r.text[2], r.lines])),
+    );
+    ok(
+      "signature events (1920): each column of text is centred on its photo's height",
+      rows.every((r) => Math.abs(r.photo[1] + r.photo[3] / 2 - (r.title[1] + (r.text[1] + r.text[3] - r.title[1]) / 2)) < 3),
+      JSON.stringify(rows.map((r) => [r.photo[1] + r.photo[3] / 2, r.title[1] + (r.text[1] + r.text[3] - r.title[1]) / 2])),
+    );
+    ok(
+      "signature events: every photo has loaded and every entrance has finished",
+      rows.every((r) => r.loaded && r.visible),
+      JSON.stringify(rows.map((r) => [r.loaded, r.visible])),
+    );
+
+    const footer = await page.evaluate(() => Math.round(document.querySelector("footer").getBoundingClientRect().top + scrollY));
+    ok("signature events (1920): the footer starts at y 5357, 127px under the last photo", near(footer, 5357, 4), String(footer));
+    ok(
+      "signature events (1920): no sideways overflow, no console errors or warnings",
+      (await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 0 && errors.length === 0,
+      JSON.stringify(errors.slice(0, 2)),
+    );
+    await context.close();
+  }
+
+  // every width: no sideways overflow; the photos keep their shape; from 1024px the rows are a photo and a column of text side by side, alternating, below it the text is under the photo
+  for (const [width, height] of [
+    [320, 640],
+    [360, 740],
+    [390, 844],
+    [768, 1024],
+    [1024, 768],
+    [1280, 720],
+    [1536, 864],
+  ]) {
+    const context = await browser.newContext({ viewport: { width, height }, reducedMotion: "reduce" });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => quiet(errors, m));
+    await page.goto(BASE + "/signature-events", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    const layout = await page.evaluate(() => {
+      const side = innerWidth >= 1024;
+      const rows = [...document.querySelectorAll("article")].map((row, i) => {
+        const photo = row.querySelector("[data-row-photo]").getBoundingClientRect();
+        const title = row.querySelector("h2").getBoundingClientRect();
+        const text = row.querySelector("p").getBoundingClientRect();
+        const a = row.getBoundingClientRect();
+        const photoRight = i % 2 === 0;
+        return {
+          shape: Math.abs(photo.width / photo.height - 818 / 523) < 0.01,
+          inside: photo.left >= -1 && photo.right <= innerWidth + 1 && text.left >= a.left - 1 && text.right <= a.right + 1,
+          arrangement: side
+            ? (photoRight ? photo.left >= text.right - 1 : text.left >= photo.right - 1) &&
+              Math.abs(photo.top + photo.height / 2 - (title.top + (text.bottom - title.top) / 2)) < 4
+            : text.top >= photo.bottom - 1,
+        };
+      });
+      return { overflow: document.documentElement.scrollWidth - innerWidth, rows };
+    });
+    ok(
+      `signature events (${width}): no sideways overflow, the photos keep their shape, ${width >= 1024 ? "each row is a photo with its text beside it (sides alternating), centred on it" : "each row's text is under its photo"}`,
+      layout.overflow <= 0 && layout.rows.length === 9 && layout.rows.every((r) => r.shape && r.inside && r.arrangement),
+      JSON.stringify(layout),
+    );
+    ok(`signature events (${width}): no console errors or warnings`, errors.length === 0, JSON.stringify(errors.slice(0, 2)));
+    await context.close();
+  }
+
+  // reduced motion: nothing is hidden
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 }, reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto(BASE + "/signature-events", { waitUntil: "load" });
+    await page.waitForTimeout(3000);
+    const state = await page.evaluate(() => ({
+      hidden: [...document.querySelectorAll("[data-row-photo], [data-row-text]")].filter(
+        (el) => Number(getComputedStyle(el).opacity) < 1 || getComputedStyle(el).clipPath !== "none",
+      ).length,
+      parts: document.querySelectorAll("[data-row-photo]").length,
+    }));
+    ok(
+      "signature events (reduced motion): every photo and text is shown at once",
+      state.parts === 9 && state.hidden === 0,
+      JSON.stringify(state),
+    );
+    await context.close();
+  }
+
+  // the menu's "Signature Events" link leads here
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.waitForTimeout(2700);
+    const href = await page.evaluate(() =>
+      [...document.querySelectorAll("#site-menu a")].find((a) => /^signature events$/i.test(a.textContent.trim()))?.getAttribute("href"),
+    );
+    ok('menu: "Signature Events" points to /signature-events', href === "/signature-events", String(href));
+    await page
+      .locator("#site-menu a", { hasText: /^Signature Events$/ })
+      .first()
+      .click();
+    await page.waitForTimeout(1500);
+    ok("menu: following it opens the Signature Events page", new URL(page.url()).pathname === "/signature-events", page.url());
     await context.close();
   }
 }
