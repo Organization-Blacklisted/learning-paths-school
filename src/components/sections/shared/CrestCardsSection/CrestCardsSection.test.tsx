@@ -30,8 +30,13 @@ describe("CrestCardsSection", () => {
     render(<CrestCardsSection content={content} />);
     const heading = screen.getAllByRole("heading", { level: 2 })[0];
     expect(heading.firstElementChild?.className).toContain("text-brand-blue");
-    expect(heading.className).toContain("-translate-x-1/2");
     expect(heading.className).toContain("text-center");
+    // centred by a flex wrapper, never by a transform (GSAP would freeze a transform's percentages in pixels, and a resize would leave the title off centre)
+    expect(heading.className).not.toContain("translate");
+    const line = heading.parentElement as HTMLElement;
+    expect(line.className).toContain("justify-center");
+    expect(line.className).toContain("items-center");
+    expect(line.className).toContain("h-0");
   });
 
   it("keeps the crest in its 365 : 313 shape and makes it a size container, so the title's box follows it", () => {

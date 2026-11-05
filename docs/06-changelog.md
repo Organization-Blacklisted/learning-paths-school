@@ -2,6 +2,14 @@
 
 Newest first.
 
+## 2026-11-05 (later): the Vision and Mission titles were off centre after a resize (fixed, pushed and deployed)
+
+- **Owner report:** on a 360px screen the title of the Mission card ("Our Mission") was not centred over its crest (a screenshot of the live site in Chrome's device mode, resized from a wide window).
+- **Cause (found by measuring the title's transform at 7 widths):** the title was centred with `left-1/2 -translate-x-1/2 -translate-y-1/2`, and GSAP moves the same element in the entrance (`y`). GSAP turns a transform's percentages into pixels of the width the box had at that moment, so after the window changed size (a resize, a phone turned sideways) the pixels were stale: -100px stayed where -72px was right, 28px off centre at 360px. Not visible on a page that is loaded at its final width, which is why my earlier checks did not show it.
+- **Fix** (`CrestCardsSection.tsx`): the title is centred by a flex wrapper (a line of no height at 61.5% of the crest, `justify-center items-center`), with no transform on it, so GSAP has nothing to freeze. Measured after resizing from 1920 to 360, 320, 390, 800 and 1200: 0px off centre at all of them.
+- **Tests:** the unit test now requires the wrapper and no transform on the title; a new browser check in `tests/interactions.mjs` section 22 loads the page at 1920, lets the entrance play, resizes to five widths and measures the offset (within 1.5px). I searched the other new components for the same pattern: none.
+- **Rule for later** ([04-animation-guidelines.md](04-animation-guidelines.md)): never centre an element with a percentage translate when GSAP also animates it.
+
 ## 2026-11-05: the real story slides of the Welcome to LPS page (pushed, deployed and seeded)
 
 - **Owner request:** the story's 2nd and 3rd slides get their real photos (Figma `6983:584` and `6983:587`) and texts ("2016–2021" and "2021–Onwards").

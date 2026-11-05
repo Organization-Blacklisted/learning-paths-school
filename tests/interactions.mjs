@@ -3345,6 +3345,37 @@ for (const [label, width, height] of [
       JSON.stringify(crests),
     );
 
+    // the entrance moves the titles (GSAP): a resize AFTER it must leave them centred over their crests (an earlier version centred them with a transform, whose
+    // percentages GSAP froze in pixels at the first width: 28px off centre at 360px after the window had been wider)
+    {
+      const wideContext = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+      const wide = await wideContext.newPage();
+      await wide.goto(BASE + "/welcome-to-lps", { waitUntil: "load" });
+      await wide.evaluate((s) => document.querySelector(s).scrollIntoView(), CRESTS);
+      await wide.waitForTimeout(2500);
+      const off = [];
+      for (const width of [360, 320, 390, 800, 1200]) {
+        await wide.setViewportSize({ width, height: 700 });
+        await wide.waitForTimeout(1500);
+        const offsets = await wide.evaluate(
+          (s) =>
+            [...document.querySelectorAll(`${s} [data-crest]`)].map((crest) => {
+              const c = crest.getBoundingClientRect();
+              const t = crest.querySelector("[data-crest-text]").getBoundingClientRect();
+              return +(t.left + t.width / 2 - (c.left + c.width / 2)).toFixed(1);
+            }),
+          CRESTS,
+        );
+        off.push({ width, offsets });
+      }
+      await wideContext.close();
+      ok(
+        "welcome: after a resize from 1920 to 360, 320, 390, 800 and 1200 the titles of Vision and Mission are still centred over their crests (within 1.5px)",
+        off.every((o) => o.offsets.length === 2 && o.offsets.every((v) => Math.abs(v) <= 1.5)),
+        JSON.stringify(off),
+      );
+    }
+
     await show(WELCOME);
     const welcome = await page.evaluate((s) => {
       const root = document.querySelector(s);

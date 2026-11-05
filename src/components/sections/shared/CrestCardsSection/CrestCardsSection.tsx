@@ -77,13 +77,17 @@ export default function CrestCardsSection({ content, spacing = "inner", classNam
                   draggable={false}
                   className="select-none"
                 />
-                <SectionTitle
-                  data-crest-text
-                  className="absolute top-[61.5%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center leading-[1.2] capitalize"
-                  style={{ width: `calc(${card.design.titleWidth} * 100cqw / ${CREST_WIDTH})` }}
-                >
-                  <Accent className="tracking-[-0.01em]">{card.title}</Accent>
-                </SectionTitle>
+                {/* The title is centred by a flex wrapper (a line of no height at 61.5% of the crest), NOT by a transform: GSAP moves the title (the entrance) and
+                    turns a transform's percentages into pixels of the width it had at that moment, so after a resize or a rotation the title sat off centre. */}
+                <div data-crest-title-line className="absolute inset-x-0 top-[61.5%] flex h-0 items-center justify-center">
+                  <SectionTitle
+                    data-crest-text
+                    className="shrink-0 text-center leading-[1.2] capitalize"
+                    style={{ width: `calc(${card.design.titleWidth} * 100cqw / ${CREST_WIDTH})` }}
+                  >
+                    <Accent className="tracking-[-0.01em]">{card.title}</Accent>
+                  </SectionTitle>
+                </div>
               </div>
               <p
                 data-crest-text

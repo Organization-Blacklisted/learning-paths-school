@@ -104,6 +104,8 @@ As written in the design, including "others –friends" in the first value (no s
 - **Also run on a CI-style production build** (default content, as CI builds it): section 22 (50 of 50), sections 20, 21 and 7 (the pages and scenes that use the shared components I touched) and `qa` sections 11 to 13 all pass.
 - **Found by the checks and fixed:** (1) my first expectation of the second paragraph (5 lines) was wrong: it is 4 lines, and the design's 60px gap to the photo is right, not the 35px I had first (the page is 25px shorter than I made it); (2) at 320px the second heading line (`w-max`) made the welcome 6px wider than the screen: it may wrap now; (3) a collapsed value on a phone still showed 12px of padding: the padding moved inside the clipped box; (4) a banner with no title made GSAP warn about a tween with no target.
 
+**Crest titles and resizing (fixed 2026-11-05):** each title is centred by a flex wrapper (`data-crest-title-line`, a line of no height at 61.5% of the crest), not by a transform: GSAP moves the title in the entrance and froze a transform's `-50%` as pixels, so after a resize (or a phone turned) it sat up to 28px off centre. A browser check in section 22 resizes after the entrance and measures it.
+
 ## Going live
 
 **Done on 2026-11-05 (the owner's word): pushed (`e67cd64`), deployed, and the production CMS seeded; the page is live.** What the steps were:
