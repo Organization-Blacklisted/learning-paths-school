@@ -74,3 +74,7 @@ Same rule as the other pages: the defaults (`src/data/principals-welcome.ts`) ar
 - The accessible names (the section's name and the portrait's description) are mine.
 - Tablet and phone layouts are mine (only desktop is designed).
 - The image budget is 10 MB (6.0 MB used).
+
+## The welcome variant (2026-11-04)
+
+`MessageSection` has a second look, `variant="welcome"`, for the Welcome to LPS page: a white band, the portrait 859 x 902, a 512px column with the heading on two lines, a crooked 493px rule and a 515px paragraph. The default (`letter`) is this page's design and did not change. See [34-welcome-to-lps.md](34-welcome-to-lps.md).

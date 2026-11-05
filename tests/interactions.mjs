@@ -3194,6 +3194,626 @@ for (const [label, width, height] of [
   }
 }
 
+// ---------------------------------------------------------------- 22. The Welcome to LPS page (owner, 2026-11-04): the photo hero, the introduction, the wide photo, Vision and Mission, the Principal's welcome, the values (active on hover), the pinned story
+{
+  const quiet = (errors, m) => {
+    if (["error", "warning"].includes(m.type()) && !/preloaded using link preload|Download the React/.test(m.text()))
+      errors.push(m.text().slice(0, 140));
+  };
+  const rectOf = (page, selector, inside) =>
+    page.evaluate(
+      ([s, i]) => {
+        const root = i ? document.querySelector(i) : document;
+        const b = root.querySelector(s).getBoundingClientRect();
+        return { x: +b.left.toFixed(1), y: +(b.top + scrollY).toFixed(1), w: +b.width.toFixed(1), h: +b.height.toFixed(1) };
+      },
+      [selector, inside ?? null],
+    );
+  const HERO = "section[aria-label='About us']";
+  const INTRO = "section[aria-label='About Learning Paths School']";
+  const BANNER = "section[aria-label='The LPS community']";
+  const CRESTS = "section[aria-label='Our vision and mission']";
+  const WELCOME = "section[aria-label='Welcome to Learning Paths School']";
+  const VALUES = "section[aria-label='Our values']";
+  const STORY = "section[aria-label='Our story']";
+  // the Figma frame (node 5688:14367) has its hero photo at y 72, this site's under the 74px header: every y below is the design's + 2
+  const Y0 = 2;
+
+  // desktop 1920 x 993: the geometry of the Figma frame
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => quiet(errors, m));
+    await page.goto(BASE + "/welcome-to-lps", { waitUntil: "load" });
+    await page.waitForTimeout(3500);
+
+    // each part is measured while it is on the screen with its entrance finished (a part that scrolls out of view is put back to its hidden start)
+    const show = async (selector) => {
+      await page.evaluate((s) => window.scrollTo(0, document.querySelector(s).getBoundingClientRect().top + scrollY - 80), selector);
+      await page.waitForTimeout(2600);
+    };
+
+    const photo = await rectOf(page, "[data-hero-photo]", HERO);
+    const pill = await rectOf(page, "p", HERO);
+    const h1 = await rectOf(page, "h1", HERO);
+    const rule = await rectOf(page, "[aria-hidden='true']", HERO);
+    ok(
+      "welcome (1920): the hero photo is 1920 x 736 under the header, the pill, the heading (one line) and the crest rule are where Figma has them",
+      near(photo.x, 0) &&
+        near(photo.y, 74, 2) &&
+        near(photo.w, 1920) &&
+        near(photo.h, 736, 2) &&
+        near(pill.y, 728 + Y0, 3) &&
+        near(pill.x + pill.w / 2, 960, 2) &&
+        near(h1.y, 776 + Y0, 3) &&
+        near(h1.h, 58, 2) &&
+        near(rule.y, 933 + Y0, 3) &&
+        near(rule.h, 46, 1),
+      JSON.stringify({ photo, pill, h1, rule }),
+    );
+    const card = await rectOf(page, ".bg-brand-snow", HERO);
+    ok(
+      "welcome (1920): the hero's card is the roomy one: 371px high, 60px under the rule",
+      near(card.h, 371, 2.5) && near(card.y + card.h - (rule.y + rule.h), 60, 2),
+      JSON.stringify({ card, rule }),
+    );
+
+    await show(INTRO);
+    const paragraphs = await page.evaluate(
+      (s) =>
+        [...document.querySelectorAll(`${s} p`)].map((p) => {
+          const b = p.getBoundingClientRect();
+          return {
+            x: +b.left.toFixed(1),
+            y: +(b.top + scrollY).toFixed(1),
+            w: +b.width.toFixed(1),
+            h: +b.height.toFixed(1),
+            opacity: getComputedStyle(p).opacity,
+          };
+        }),
+      INTRO,
+    );
+    ok(
+      "welcome (1920): the two paragraphs are 1185px wide, centred, at y 1099 and 1165, 2 and 4 lines (54px and 108px)",
+      paragraphs.length === 2 &&
+        paragraphs.every((p) => near(p.w, 1185, 2) && near(p.x + p.w / 2, 960, 2) && p.opacity === "1") &&
+        near(paragraphs[0].y, 1099 + Y0, 3) &&
+        near(paragraphs[1].y, 1165 + Y0, 3) &&
+        near(paragraphs[0].h, 54, 2) &&
+        near(paragraphs[1].h, 108, 2),
+      JSON.stringify(paragraphs),
+    );
+
+    await show(BANNER);
+    const banner = await rectOf(page, "[data-banner-photo]", BANNER);
+    ok(
+      "welcome (1920): the wide photo is 1520 x 737 at x 200, y 1335, 60px under the text, with no title under it",
+      near(banner.x, 200, 2) &&
+        near(banner.y, 1335 + Y0, 3) &&
+        near(banner.w, 1520, 2) &&
+        near(banner.h, 737, 2) &&
+        (await page.evaluate((s) => document.querySelectorAll(`${s} h2, ${s} p`).length, BANNER)) === 0,
+      JSON.stringify(banner),
+    );
+
+    await show(CRESTS);
+    const crests = await page.evaluate(
+      (s) =>
+        [...document.querySelectorAll(`${s} li`)].map((li) => {
+          const rect = (el) => {
+            const b = el.getBoundingClientRect();
+            return { x: +b.left.toFixed(1), y: +(b.top + scrollY).toFixed(1), w: +b.width.toFixed(1), h: +b.height.toFixed(1) };
+          };
+          const h2 = li.querySelector("h2");
+          return {
+            li: rect(li),
+            crest: rect(li.querySelector("[data-crest]")),
+            h2: rect(h2),
+            p: rect(li.querySelector("p")),
+            size: getComputedStyle(h2).fontSize,
+            slant: getComputedStyle(h2.querySelector("span")).transform,
+            loaded: [...li.querySelectorAll("img")].every((img) => img.complete && img.naturalWidth > 0),
+          };
+        }),
+      CRESTS,
+    );
+    ok(
+      "welcome (1920): Our Vision and Our Mission are cards 485px wide, 138px apart, with the crest 365 x 313 (x 466 and 1089, y 2192), the title centred over it on two lines (40px, slanted, 95px box) and the paragraph 24px under it",
+      crests.length === 2 &&
+        crests.every(
+          (c) =>
+            near(c.li.w, 485, 2) &&
+            near(c.crest.w, 365, 2) &&
+            near(c.crest.h, 313, 2) &&
+            near(c.crest.y, 2192 + Y0, 3) &&
+            c.size === "40px" &&
+            c.slant !== "none" &&
+            near(c.h2.h, 95, 3) &&
+            near(c.p.y, c.crest.y + 313 + 24, 3) &&
+            c.loaded,
+        ) &&
+        near(crests[0].crest.x, 466, 2.5) &&
+        near(crests[1].crest.x, 1089, 2.5) &&
+        near(crests[0].h2.y, 2192 + Y0 + 145, 3) &&
+        near(crests[0].h2.w, 132.4, 2) &&
+        near(crests[1].h2.w, 200.8, 2) &&
+        near(crests[0].p.w, 423, 2) &&
+        near(crests[1].p.w, 365, 2) &&
+        near(crests[0].p.h, 81, 2),
+      JSON.stringify(crests),
+    );
+
+    await show(WELCOME);
+    const welcome = await page.evaluate((s) => {
+      const root = document.querySelector(s);
+      const rect = (el) => {
+        const b = el.getBoundingClientRect();
+        return { x: +b.left.toFixed(1), y: +(b.top + scrollY).toFixed(1), w: +b.width.toFixed(1), h: +b.height.toFixed(1) };
+      };
+      const h2 = root.querySelector("h2");
+      return {
+        section: rect(root),
+        bg: getComputedStyle(root).backgroundColor,
+        photo: rect(root.querySelector("[data-message-photo]")),
+        h2: rect(h2),
+        accent: rect(h2.firstElementChild),
+        rule: rect(root.querySelector("[aria-hidden='true']")),
+        p: rect(root.querySelector("p")),
+        name: rect(root.querySelector("p.italic")),
+        loaded: [...root.querySelectorAll("img")].every((img) => img.complete && img.naturalWidth > 0),
+      };
+    }, WELCOME);
+    ok(
+      "welcome (1920): the Principal's welcome is a white band 1142px high (y 2730), the portrait 859 x 902 at y 2850, the 512px column 147px from it, centred on it",
+      near(welcome.section.y, 2730 + Y0, 3) &&
+        near(welcome.section.h, 1142, 2.5) &&
+        welcome.bg === "rgb(255, 255, 255)" &&
+        near(welcome.photo.y, 2850 + Y0, 3) &&
+        near(welcome.photo.w, 859, 2) &&
+        near(welcome.photo.h, 902, 2) &&
+        near(welcome.h2.x - (welcome.photo.x + welcome.photo.w), 147, 2) &&
+        near(welcome.h2.w, 512, 2) &&
+        welcome.loaded,
+      JSON.stringify(welcome),
+    );
+    ok(
+      "welcome (1920): in the column: the heading on two lines (y 3113), the 493px rule 47px under it, the 515px paragraph 47px under that (3 lines), the name 35px under the paragraph",
+      near(welcome.h2.y, 3113.2 + Y0, 3) &&
+        near(welcome.h2.h, 108.5, 3) &&
+        near(welcome.accent.y - (welcome.h2.y + 48), 13, 3) &&
+        near(welcome.rule.w, 493, 1.5) &&
+        near(welcome.rule.y + 2 - (welcome.h2.y + welcome.h2.h), 47, 3) &&
+        near(welcome.p.y - (welcome.rule.y + 2), 47, 3) &&
+        near(welcome.p.w, 515, 3) &&
+        near(welcome.p.h, 81, 2) &&
+        near(welcome.name.y - (welcome.p.y + welcome.p.h), 35, 2),
+      JSON.stringify(welcome),
+    );
+
+    // the values: the band is 131px high at y 3872 with "Guided by", the first value active on it, the others listed under it
+    await show(VALUES);
+    const readValues = () =>
+      page.evaluate((s) => {
+        const root = document.querySelector(s);
+        const rect = (el) => {
+          const b = el.getBoundingClientRect();
+          return { x: +b.left.toFixed(1), y: +(b.top + scrollY).toFixed(1), w: +b.width.toFixed(1), h: +b.height.toFixed(1) };
+        };
+        const band = root.querySelector(".bg-brand-navy");
+        const rows = [...root.querySelectorAll("li")].map((li) => {
+          const button = li.querySelector("button");
+          const text = document.getElementById(button.getAttribute("aria-controls"));
+          const line = li.querySelector("span[aria-hidden='true']");
+          return {
+            button: rect(button),
+            color: getComputedStyle(button).color,
+            expanded: button.getAttribute("aria-expanded"),
+            text: rect(text.firstElementChild),
+            textOpacity: getComputedStyle(text).opacity,
+            lineOpacity: getComputedStyle(line).opacity,
+          };
+        });
+        return { section: rect(root), band: rect(band), label: rect(root.querySelector("h2")), rows };
+      }, VALUES);
+    // wait for the band's slide (0.5 s) and the colours (0.3 s) to end
+    const settle = (ms = 800) => page.waitForTimeout(ms);
+    let v = await readValues();
+    ok(
+      "welcome (1920): the navy band is 131px high at y 3872 and the first value is the active one on it: white, its text 544px wide at the right (y 3897), no line under it",
+      near(v.band.y, 3872 + Y0, 3) &&
+        near(v.band.h, 131, 1) &&
+        near(v.band.w, 1920, 1) &&
+        near(v.label.x, 200, 2) &&
+        v.rows[0].expanded === "true" &&
+        v.rows[0].color === "rgb(255, 255, 255)" &&
+        v.rows[0].textOpacity === "1" &&
+        v.rows[0].lineOpacity === "0" &&
+        near(v.rows[0].text.w, 544, 2) &&
+        near(v.rows[0].text.x + v.rows[0].text.w, 1720, 2) &&
+        near(v.rows[0].text.y, 3897 + Y0, 3) &&
+        v.rows
+          .slice(1)
+          .every((r) => r.expanded === "false" && r.textOpacity === "0" && r.lineOpacity === "1" && r.color === "rgb(18, 59, 122)"),
+      JSON.stringify(v),
+    );
+    const titleY = [3914, 4063, 4218.5, 4374];
+    ok(
+      "welcome (1920): the values are 40px titles 393px in (x 593), 48px high, at y 3914, 4063, 4218.5 and 4374, the list ending 597.6px under the band's top",
+      v.rows.every((r, i) => near(r.button.y, titleY[i] + Y0, 3) && near(r.button.x, 593, 2.5) && near(r.button.h, 48, 1.5)) &&
+        near(v.section.h, 597.6, 3),
+      JSON.stringify(v.rows.map((r) => r.button)),
+    );
+
+    // hovering a value (a mouse): the band slides to it, it turns white, its text shows beside it, the first one goes back to blue with its line
+    await page.mouse.move(960, 5);
+    await page.locator(`${VALUES} li`).nth(2).hover();
+    await settle();
+    v = await readValues();
+    ok(
+      "welcome (1920): hovering 'Courage & Excellence' makes it the active one: the band is centred on it (y 4176.5), it is white, its text shows at the right (y 4201.5), the first value is blue again with its line",
+      v.rows[2].expanded === "true" &&
+        v.rows[0].expanded === "false" &&
+        near(v.band.y, 4218.5 + Y0 - 42, 4) &&
+        near(v.band.h, 131, 1) &&
+        v.rows[2].color === "rgb(255, 255, 255)" &&
+        v.rows[2].textOpacity === "1" &&
+        near(v.rows[2].text.y, 4201.5 + Y0, 3) &&
+        v.rows[0].color === "rgb(18, 59, 122)" &&
+        v.rows[0].textOpacity === "0" &&
+        v.rows[0].lineOpacity === "1" &&
+        v.rows[2].lineOpacity === "0",
+      JSON.stringify({ band: v.band, rows: v.rows.map((r) => [r.expanded, r.color, r.textOpacity]) }),
+    );
+    await page.locator(`${VALUES} li`).nth(3).hover();
+    await settle();
+    v = await readValues();
+    ok(
+      "welcome (1920): hovering the last value moves the band to it (y 4332) and leaving the list keeps it active",
+      near(v.band.y, 4374 + Y0 - 42, 4) && v.rows[3].expanded === "true",
+      JSON.stringify(v.band),
+    );
+    await page.mouse.move(960, 5);
+    await settle(500);
+    v = await readValues();
+    ok(
+      "welcome (1920): the pointer leaving the list changes nothing",
+      v.rows[3].expanded === "true" && near(v.band.y, 4374 + Y0 - 42, 4),
+      JSON.stringify(v.band),
+    );
+
+    // the keyboard: focus makes a value active, ArrowUp and ArrowDown move between them
+    await page.locator(`${VALUES} li button`).nth(1).focus();
+    await page.keyboard.press("ArrowDown");
+    await settle(600);
+    v = await readValues();
+    ok(
+      "welcome (1920): focusing a value makes it active, ArrowDown moves the focus (and the band) to the next one",
+      v.rows[2].expanded === "true" && v.rows[1].expanded === "false" && near(v.band.y, 4218.5 + Y0 - 42, 4),
+      JSON.stringify(v.rows.map((r) => r.expanded)),
+    );
+
+    // the story, in its place before the pin: the Figma geometry
+    const storyTop = await page.evaluate((s) => document.querySelector(s).getBoundingClientRect().top + scrollY, STORY);
+    await page.evaluate((y) => window.scrollTo(0, y), storyTop - 700);
+    await page.waitForTimeout(2200);
+    const story = await page.evaluate((s) => {
+      const root = document.querySelector(s);
+      const rect = (el) => {
+        const b = el.getBoundingClientRect();
+        return { x: +b.left.toFixed(1), y: +(b.top + scrollY).toFixed(1), w: +b.width.toFixed(1), h: +b.height.toFixed(1) };
+      };
+      const first = root.querySelector("[data-slide]");
+      const h2 = root.querySelector("h2");
+      const lines = [...root.querySelectorAll("[data-slide]")].map(
+        (li) =>
+          +(
+            // the laid-out width (the entrance may be scaling the line from its previous step)
+            (li.querySelector("[data-slide-fill]").offsetWidth / li.querySelector("[data-slide-fill]").parentElement.offsetWidth).toFixed(3)
+          ),
+      );
+      const p = first.querySelector("p");
+      return {
+        section: rect(root),
+        bg: getComputedStyle(root).backgroundColor,
+        h2: rect(h2),
+        h2Centre: Math.round(h2.getBoundingClientRect().left + h2.getBoundingClientRect().width / 2 - 0),
+        titleCentre: Math.round(
+          (() => {
+            const r = document.createRange();
+            r.selectNodeContents(h2);
+            const b = r.getBoundingClientRect();
+            return b.left + b.width / 2;
+          })(),
+        ),
+        photo: rect(first.querySelector("[data-slide-photo]")),
+        year: rect(first.querySelector("h3")),
+        yearColor: getComputedStyle(first.querySelector("h3")).color,
+        p: rect(p),
+        tallest: Math.max(...[...root.querySelectorAll("[data-slide-text]")].map((el) => el.getBoundingClientRect().bottom + scrollY)),
+        lines,
+        slides: root.querySelectorAll("[data-slide]").length,
+        pinned: Boolean(root.querySelector(".pin-spacer")),
+        loaded: [...first.querySelectorAll("img")].every((img) => img.complete && img.naturalWidth > 0),
+      };
+    }, STORY);
+    ok(
+      "welcome (1920): the story is a white band at y 4589.6 with the heading at y 4709.6 centred over the slide (about 1071), the photo 840 x 450 at x 200 (its bottom level with the tallest story), the first story column as in the design",
+      near(story.section.y, 4589.6 + Y0, 3) &&
+        story.bg === "rgb(255, 255, 255)" &&
+        near(story.h2.y, 4709.6 + Y0, 3) &&
+        near(story.titleCentre, 1071, 16) &&
+        near(story.photo.x, 200, 2) &&
+        near(story.photo.y + story.photo.h, story.tallest, 3) &&
+        near(story.photo.w, 840, 2) &&
+        near(story.photo.h, 450, 2) &&
+        near(story.year.x, 1104, 3) &&
+        near(story.year.y, 4869.6 + Y0, 3) &&
+        story.yearColor === "rgb(51, 136, 69)" &&
+        near(story.p.x, 1094, 3) &&
+        near(story.p.y, 5024.6 + Y0, 3) &&
+        near(story.p.w, 760, 3) &&
+        near(story.p.h, 243, 3) &&
+        story.loaded,
+      JSON.stringify(story),
+    );
+    ok(
+      "welcome: the green part of each slide's timeline is its step of the whole: a third, two thirds, the whole (of three slides)",
+      story.slides === 3 && near(story.lines[0], 1 / 3, 0.01) && near(story.lines[1], 2 / 3, 0.01) && near(story.lines[2], 1, 0.01),
+      JSON.stringify(story.lines),
+    );
+
+    // the pin: the stage is held in the middle of the screen and does NOT move; the photo and the story change in place and the green part of the line grows
+    const pin = await page.evaluate((s) => {
+      const spacer = document.querySelector(`${s} .pin-spacer`);
+      const stage = spacer?.firstElementChild;
+      if (!spacer || !stage) return null;
+      return {
+        top: Math.round(spacer.getBoundingClientRect().top + scrollY),
+        length: spacer.offsetHeight - stage.offsetHeight,
+        stage: stage.offsetHeight,
+      };
+    }, STORY);
+    ok(
+      "welcome (1920): from lg the story is pinned (a pin spacer, about a screen of scrolling per step)",
+      Boolean(pin) && pin.length > 1500,
+      JSON.stringify(pin),
+    );
+    if (pin) {
+      const start = pin.top - Math.round((993 - pin.stage) / 2);
+      const at = async (y) => {
+        await page.evaluate((v) => window.scrollTo(0, v), y);
+        await page.waitForTimeout(1800);
+        return page.evaluate((s) => {
+          const root = document.querySelector(s);
+          const stage = root.querySelector(".pin-spacer").firstElementChild;
+          const slides = [...root.querySelectorAll("[data-slide]")].map((li) => {
+            const photo = li.querySelector("[data-slide-photo]");
+            const body = li.querySelector("[data-slide-body]");
+            const box = photo.getBoundingClientRect();
+            const shown = (el) => (getComputedStyle(el).visibility === "hidden" ? 0 : Number(getComputedStyle(el).opacity));
+            return { x: Math.round(box.left), bottom: Math.round(box.bottom), photo: shown(photo), body: shown(body) };
+          });
+          const fill = root.querySelector("[data-slide-fill]");
+          const bar = stage.getBoundingClientRect();
+          return {
+            fixed: getComputedStyle(stage).position === "fixed",
+            top: Math.round(bar.top),
+            height: Math.round(bar.height),
+            fill: fill.getBoundingClientRect().width / fill.parentElement.getBoundingClientRect().width,
+            slides,
+          };
+        }, STORY);
+      };
+      const first = await at(start + 40);
+      ok(
+        "welcome (1920): at the start of the pin the stage is held in the middle of the screen (97px from the top and the bottom), only the first slide's photo and story show, the line is a third green",
+        first.fixed &&
+          near(first.top, (993 - pin.stage) / 2, 3) &&
+          first.slides[0].photo > 0.9 &&
+          first.slides[0].body > 0.7 &&
+          first.slides[1].photo < 0.15 &&
+          first.slides[2].photo === 0 &&
+          near(first.fill, 1 / 3, 0.03),
+        JSON.stringify(first),
+      );
+      const half = await at(start + pin.length / 2);
+      ok(
+        "welcome (1920): half way the second slide's photo and story show (the first's are gone), the line is two thirds green, and the stage and the photos have not moved",
+        half.fixed &&
+          half.top === first.top &&
+          half.slides[1].photo > 0.95 &&
+          half.slides[1].body > 0.95 &&
+          half.slides[0].photo === 0 &&
+          half.slides[0].body === 0 &&
+          half.slides[2].photo < 0.05 &&
+          near(half.fill, 2 / 3, 0.03) &&
+          half.slides.every((slide, i) => slide.x === first.slides[i].x && slide.bottom === first.slides[i].bottom),
+        JSON.stringify(half),
+      );
+      const end = await at(start + pin.length);
+      ok(
+        "welcome (1920): at the end the third slide's photo and story show, the others are gone, the whole line is green, nothing has moved",
+        end.slides[2].photo > 0.95 &&
+          end.slides[2].body > 0.95 &&
+          end.slides[0].photo === 0 &&
+          end.slides[1].photo === 0 &&
+          near(end.fill, 1, 0.03) &&
+          end.slides.every((slide, i) => slide.x === first.slides[i].x && slide.bottom === first.slides[i].bottom),
+        JSON.stringify(end),
+      );
+      const after = await at(start + pin.length + 700);
+      ok(
+        "welcome (1920): after the last slide the pin is released and the page goes on",
+        !after.fixed && after.top < 0,
+        JSON.stringify(after),
+      );
+      const back = await at(start + 40);
+      ok(
+        "welcome (1920): scrolling back puts the first slide back, with its story, and the line a third green",
+        back.fixed && back.slides[0].photo > 0.9 && back.slides[0].body > 0.7 && back.slides[2].photo === 0 && near(back.fill, 1 / 3, 0.03),
+        JSON.stringify(back),
+      );
+    }
+    const calls = await page.evaluate(() => ({
+      cta: Boolean(document.querySelector("section[aria-label='Admissions']")),
+      overflow: document.documentElement.scrollWidth - innerWidth,
+    }));
+    ok(
+      "welcome (1920): the standard call to action follows the story, no sideways overflow, no console errors or warnings",
+      calls.cta && calls.overflow <= 0 && errors.length === 0,
+      JSON.stringify({ calls, errors: errors.slice(0, 2) }),
+    );
+    await context.close();
+  }
+
+  // every width (reduced motion, so that nothing is mid-entrance): no overflow; the arrangements; the values open on a tap; the story is a swipe row below 1024px and stacked from it
+  for (const [width, height] of [
+    [320, 640],
+    [360, 740],
+    [390, 844],
+    [768, 1024],
+    [1024, 768],
+    [1280, 720],
+    [1536, 864],
+  ]) {
+    const context = await browser.newContext({ viewport: { width, height }, reducedMotion: "reduce", hasTouch: width < 1024 });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e).slice(0, 140)));
+    page.on("console", (m) => quiet(errors, m));
+    await page.goto(BASE + "/welcome-to-lps", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    const side = width >= 1024;
+    const layout = await page.evaluate(
+      ([side, S]) => {
+        const rect = (el) => el.getBoundingClientRect();
+        const crests = [...document.querySelectorAll(`${S.crests} li`)].map(rect);
+        const welcome = document.querySelector(S.welcome);
+        const photo = rect(welcome.querySelector("[data-message-photo]"));
+        const text = rect(welcome.querySelector("h2"));
+        const values = document.querySelector(S.values);
+        const band = rect(values.querySelector(".bg-brand-navy"));
+        const firstRow = rect(values.querySelector("li button"));
+        const slider = document.querySelector(`${S.story} [data-slide]`).closest("div[class*='overflow']");
+        const slides = [...document.querySelectorAll(`${S.story} [data-slide]`)].map(rect);
+        const hero = rect(document.querySelector(`${S.hero} [data-hero-photo]`));
+        return {
+          overflow: document.documentElement.scrollWidth - innerWidth,
+          hero: { w: Math.round(hero.width), inside: hero.left >= -1 && hero.right <= innerWidth + 1 },
+          crestsRow: side
+            ? crests[1].left >= crests[0].right - 1 && Math.abs(crests[0].top - crests[1].top) < 2
+            : crests[1].top >= crests[0].bottom - 1,
+          crestsInside: crests.every((c) => c.left >= -1 && c.right <= innerWidth + 1),
+          welcomeArrangement: side
+            ? text.left >= photo.right - 1 &&
+              Math.abs(
+                photo.top +
+                  photo.height / 2 -
+                  (text.top + ([...welcome.querySelectorAll("p")].at(-1).getBoundingClientRect().bottom - text.top) / 2),
+              ) < 6
+            : text.top >= photo.bottom - 1,
+          bandOnTop: side ? band.height > 129 && band.height < 133 : firstRow.top >= band.bottom - 1,
+          sliderScrolls: slider.scrollWidth > slider.clientWidth + 1,
+          sliderTab: slider.getAttribute("tabindex"),
+          sliderOverflow: getComputedStyle(slider).overflowX,
+          slidesInRow: side
+            ? slides[1].top >= slides[0].bottom - 1
+            : Math.abs(slides[0].top - slides[1].top) < 2 && slides[1].left >= slides[0].right - 1,
+          slideWidth: Math.round(slides[0].width),
+        };
+      },
+      [side, { crests: CRESTS, welcome: WELCOME, values: VALUES, story: STORY, hero: HERO }],
+    );
+    ok(
+      `welcome (${width}): no sideways overflow, the hero photo within the screen, the cards ${side ? "side by side" : "stacked"}, the welcome ${side ? "beside its portrait" : "under its portrait"}, the values ${side ? "on the band" : "listed under the band"}`,
+      layout.overflow <= 0 &&
+        layout.hero.inside &&
+        layout.crestsRow &&
+        layout.crestsInside &&
+        layout.welcomeArrangement &&
+        layout.bandOnTop,
+      JSON.stringify(layout),
+    );
+    ok(
+      `welcome (${width}): the story is ${side ? "stacked, one slide under the other (reduced motion)" : "a row to swipe: snapping, a tab stop, each slide at most 86% of the screen wide"}`,
+      layout.slidesInRow &&
+        (side
+          ? layout.sliderOverflow !== "auto" || !layout.sliderScrolls
+          : layout.sliderScrolls && layout.sliderTab === "0" && layout.slideWidth <= Math.round(width * 0.86) + 1),
+      JSON.stringify({ slidesInRow: layout.slidesInRow, scrolls: layout.sliderScrolls, tab: layout.sliderTab, w: layout.slideWidth }),
+    );
+    if (!side) {
+      // a tap on a value opens it (and closes the one that was open)
+      const before = await page.evaluate((s) => document.querySelector(`${s} li button[aria-expanded="true"]`)?.textContent, VALUES);
+      await page.locator(`${VALUES} li button`).nth(2).scrollIntoViewIfNeeded();
+      await page.locator(`${VALUES} li button`).nth(2).tap();
+      await page.waitForTimeout(700);
+      const after = await page.evaluate((s) => {
+        const buttons = [...document.querySelectorAll(`${s} li button`)];
+        const text = (b) => document.getElementById(b.getAttribute("aria-controls")).firstElementChild.getBoundingClientRect().height;
+        return { expanded: buttons.map((b) => b.getAttribute("aria-expanded")), heights: buttons.map((b) => Math.round(text(b))) };
+      }, VALUES);
+      ok(
+        `welcome (${width}): the first value is open at the start, a tap opens another and closes it (its text opens under its title)`,
+        before === "Courage & Commitment" &&
+          after.expanded[2] === "true" &&
+          after.expanded[0] === "false" &&
+          after.heights[2] > 20 &&
+          after.heights[0] === 0,
+        JSON.stringify(after),
+      );
+    }
+    ok(`welcome (${width}): no console errors or warnings`, errors.length === 0, JSON.stringify(errors.slice(0, 2)));
+    await context.close();
+  }
+
+  // reduced motion at 1920: nothing pinned, nothing hidden
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 }, reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto(BASE + "/welcome-to-lps", { waitUntil: "load" });
+    await page.waitForTimeout(3000);
+    const state = await page.evaluate(() => ({
+      pins: document.querySelectorAll(".pin-spacer").length,
+      hidden: [
+        ...document.querySelectorAll(
+          "[data-hero-item], [data-intro-item], [data-banner-photo], [data-crest], [data-crest-text], [data-message-item], [data-value-row], [data-slide-text]",
+        ),
+      ].filter((el) => Number(getComputedStyle(el).opacity) < 1 || getComputedStyle(el).clipPath !== "none").length,
+      parts: document.querySelectorAll("[data-crest], [data-value-row], [data-slide]").length,
+    }));
+    ok(
+      "welcome (reduced motion): nothing is pinned or hidden, every part is shown at once",
+      state.pins === 0 && state.hidden === 0 && state.parts === 9,
+      JSON.stringify(state),
+    );
+    await context.close();
+  }
+
+  // the menu's "Welcome to LPS" link (under About Us) leads here
+  {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 993 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/", { waitUntil: "load" });
+    await page.waitForTimeout(2500);
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.waitForTimeout(2700);
+    const href = await page.evaluate(() =>
+      [...document.querySelectorAll("#site-menu a")].find((a) => /^welcome to lps$/i.test(a.textContent.trim()))?.getAttribute("href"),
+    );
+    ok('menu: "Welcome to LPS" points to /welcome-to-lps', href === "/welcome-to-lps", String(href));
+    await page
+      .locator("#site-menu a", { hasText: /^Welcome to LPS$/ })
+      .first()
+      .click();
+    await page.waitForTimeout(1500);
+    ok("menu: following it opens the Welcome to LPS page", new URL(page.url()).pathname === "/welcome-to-lps", page.url());
+    await context.close();
+  }
+}
+
 console.log(fails ? `\n${fails} CHECK(S) FAILED` : "\nALL INTERACTION CHECKS PASSED");
 await browser.close();
 process.exitCode = fails ? 1 : 0;

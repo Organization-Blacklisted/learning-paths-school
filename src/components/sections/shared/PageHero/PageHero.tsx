@@ -23,15 +23,17 @@ import type { PageHeroProps } from "./PageHero.types";
 // WITHOUT A PHOTO: the card starts 32px under the header, with the same 60px of room, pill, heading and line of text, then 66px (not 45) to the
 //    rule with the crest and 30px (not 51) under it, 347px in all. The pill is SemiBold here (Bold with a photo): that is how the two designs draw it.
 //  - the crest is the Figma vector, kept at its own proportions between two CSS rules (the exported rule + crest SVG stretches).
+//  - `roomy` (the Welcome to LPS page, node 5688:14367) is the photo look with 60px (not 45) above the rule and 60px (not 51) under it: the card is 371px.
 // Neither look is a slideshow or pinned: the page scrolls through them like any other.
 //
 // ANIMATION (owner: a highly interactive site), once, when the card comes into view (right away on landing): the pill, the heading, the line of
 // text and the rule rise in one after the other, and a photo settles from a slight zoom. Reduced motion: nothing moves, all is shown.
 // Everything is only hidden by JS, so without it all is visible.
 
-export default function PageHero({ content }: PageHeroProps) {
+export default function PageHero({ content, roomy = false }: PageHeroProps) {
   const { label, badge, titleLead, titleAccent, subtitle, image } = content;
   const withPhoto = Boolean(image);
+  const roomyPhoto = withPhoto && roomy;
   const rootRef = useRef<HTMLElement>(null);
 
   useScrollReveal(
@@ -72,7 +74,11 @@ export default function PageHero({ content }: PageHeroProps) {
       <Container className={withPhoto ? "relative -mt-[clamp(72px,7.2396vw,139px)]" : ""}>
         <div
           className={`flex flex-col items-center bg-brand-snow pt-[clamp(32px,3.125vw,60px)] text-center ${
-            withPhoto ? "pb-[clamp(32px,2.65625vw,51px)]" : "pb-[clamp(20px,1.5625vw,30px)]"
+            withPhoto
+              ? roomyPhoto
+                ? "pb-[clamp(32px,3.125vw,60px)]"
+                : "pb-[clamp(32px,2.65625vw,51px)]"
+              : "pb-[clamp(20px,1.5625vw,30px)]"
           }`}
         >
           <Badge size={withPhoto ? "eyebrow" : "eyebrow-semibold"} data-hero-item>
@@ -96,7 +102,7 @@ export default function PageHero({ content }: PageHeroProps) {
             data-hero-item
             aria-hidden="true"
             className={`flex h-[46px] w-full items-center gap-[21px] ${
-              withPhoto ? "mt-[clamp(28px,2.34vw,45px)]" : "mt-[clamp(40px,3.4375vw,66px)]"
+              withPhoto ? (roomyPhoto ? "mt-[clamp(32px,3.125vw,60px)]" : "mt-[clamp(28px,2.34vw,45px)]") : "mt-[clamp(40px,3.4375vw,66px)]"
             }`}
           >
             <span className="h-px flex-1 bg-brand-blue" />

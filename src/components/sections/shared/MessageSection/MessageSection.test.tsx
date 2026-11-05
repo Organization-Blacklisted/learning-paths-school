@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import MessageSection from "@/components/sections/shared/MessageSection";
 import { defaultPrincipalsWelcome } from "@/data/principals-welcome";
+import { defaultWelcomeToLps } from "@/data/welcome-to-lps";
 
 // The entrance animation (GSAP) is checked in a real browser; here it does nothing.
 vi.mock("@/lib/useScrollReveal", () => ({ useScrollReveal: () => {} }));
@@ -67,5 +68,39 @@ describe("MessageSection", () => {
     expect(screen.getByText("One.")).toBeTruthy();
     expect(screen.getByText("Two.")).toBeTruthy();
     expect(screen.getByText("Mr. Chair")).toBeTruthy();
+  });
+});
+
+describe("MessageSection, the welcome variant (Welcome to LPS page)", () => {
+  const welcome = defaultWelcomeToLps.welcome;
+
+  it("shows the heading on two lines (the lead, then the blue slanted words as a block) and keeps the same text content", () => {
+    render(<MessageSection content={welcome} variant="welcome" />);
+    const heading = screen.getByRole("heading", { level: 2 });
+    expect(heading.textContent).toBe(`${welcome.titleLead} ${welcome.titleAccent}`);
+    expect(heading.firstElementChild?.className).toContain("block");
+    expect(heading.firstElementChild?.className).toContain("mt-[13px]");
+  });
+
+  it("is a white band of its own, with the portrait 859 : 902, not preloaded (it is down the page)", () => {
+    const { container } = render(<MessageSection content={welcome} variant="welcome" />);
+    expect(container.querySelector("section")?.className).toContain("bg-white");
+    expect(container.querySelector("[data-message-photo]")?.className).toContain("aspect-[859/902]");
+    expect(container.querySelector("img")?.getAttribute("loading")).toBe("lazy");
+  });
+
+  it("draws the 493px rule a little crooked, and keeps the paragraph at the design's 515px", () => {
+    const { container } = render(<MessageSection content={welcome} variant="welcome" />);
+    const rule = container.querySelector('[aria-hidden="true"].bg-brand-blue');
+    expect(rule?.className).toContain("max-w-[493px]");
+    expect(rule?.className).toContain("-rotate-[0.35deg]");
+    expect(container.querySelector("p")?.parentElement?.className).toContain("max-w-[515px]");
+  });
+
+  it("leaves the letter variant as it was (the default): preloaded portrait 777 : 816 and the 551px rule", () => {
+    const { container } = render(<MessageSection content={defaultPrincipalsWelcome.message} />);
+    expect(container.querySelector("[data-message-photo]")?.className).toContain("aspect-[777/816]");
+    expect(container.querySelector("img")?.getAttribute("loading")).not.toBe("lazy");
+    expect(container.querySelector('[aria-hidden="true"].bg-brand-blue')?.className).toContain("max-w-[551px]");
   });
 });

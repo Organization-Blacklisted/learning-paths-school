@@ -59,7 +59,7 @@ AVIF, 4:4:4 colour, effort 6, quality 85 to 95, 45 to 48 dB against the source, 
 
 ## Limits checked by `images:check`
 
-All photos AVIF (the Open Graph preview in `public/images/og/` is the one exception: social sites do not read AVIF, use a 1200 x 630 JPG or PNG); at most 400 KB per photo; 11 MB for all photos together (10.7 MB now); at most 2400px wide; SVGs at most 150 KB. The numbers are at the top of `check-images.mjs`: raise one only with a reason, and write the reason in `docs/24-qa-suite.md`.
+All photos AVIF (the Open Graph preview in `public/images/og/` is the one exception: social sites do not read AVIF, use a 1200 x 630 JPG or PNG); at most 400 KB per photo; 13 MB for all photos together (11.8 MB now); at most 2400px wide; SVGs at most 150 KB. The numbers are at the top of `check-images.mjs`: raise one only with a reason, and write the reason in `docs/24-qa-suite.md`.
 
 ## SVGs
 

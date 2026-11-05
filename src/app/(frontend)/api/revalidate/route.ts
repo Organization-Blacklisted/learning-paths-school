@@ -15,6 +15,7 @@ export const ALLOWED_TAGS = [
   "awards-recognition",
   "student-council",
   "signature-events",
+  "welcome-to-lps",
 ] as const;
 
 function sameSecret(given: string | null, expected: string): boolean {

@@ -8,7 +8,7 @@
 //      preview picture in public/images/og/, because social sites do not read AVIF.
 //   2. One photo weighs at most MAX_PHOTO_KB. The heaviest today is the Ecosystem coscholastic photo, 382 KB.
 //   3. All photos together weigh at most MAX_TOTAL_KB (10 MB since 2026-11-02, owner: it was 6 MB and the Contact page's photo left 0.2 MB; 11 MB since
-//      2026-11-04: the Signature Events page has nine photos, 2.2 MB, kept at 45 dB and under rule 2). This is the whole site, not one page: a visitor
+//      2026-11-04: the Signature Events page has nine photos, 2.2 MB, kept at 45 dB and under rule 2; 13 MB since 2026-11-04: the Welcome to LPS page has six photos, 1.1 MB). This is the whole site, not one page: a visitor
 //      only loads the photos of the page they open. The limit that protects speed is rule 2.
 //   4. A photo is at most MAX_WIDTH pixels wide: more is wasted bytes (the design's widest photo is 1920px).
 //   5. An SVG weighs at most MAX_SVG_KB (the logo is 90 KB: if the designer sends a cleaner export, lower it).
@@ -18,7 +18,7 @@ import sharp from "sharp";
 
 const ROOT = "public/images";
 const MAX_PHOTO_KB = 400;
-const MAX_TOTAL_KB = 11 * 1024;
+const MAX_TOTAL_KB = 13 * 1024;
 const MAX_WIDTH = 2400;
 const MAX_SVG_KB = 150;
 const OG_FOLDER = `public${sep}images${sep}og${sep}`;

@@ -95,6 +95,7 @@ export interface Config {
     'awards-recognition': AwardsRecognition;
     'student-council': StudentCouncil;
     'signature-events': SignatureEvent;
+    'welcome-to-lps': WelcomeToLps;
   };
   globalsSelect: {
     home: HomeSelect<false> | HomeSelect<true>;
@@ -104,6 +105,7 @@ export interface Config {
     'awards-recognition': AwardsRecognitionSelect<false> | AwardsRecognitionSelect<true>;
     'student-council': StudentCouncilSelect<false> | StudentCouncilSelect<true>;
     'signature-events': SignatureEventsSelect<false> | SignatureEventsSelect<true>;
+    'welcome-to-lps': WelcomeToLpsSelect<false> | WelcomeToLpsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1116,6 +1118,174 @@ export interface SignatureEvent {
   createdAt?: string | null;
 }
 /**
+ * The heading, the photos and the text of the Welcome to LPS page, and its search-engine settings (SEO tab).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "welcome-to-lps".
+ */
+export interface WelcomeToLps {
+  id: number;
+  hero: {
+    /**
+     * Shown in capitals, for example Contact us.
+     */
+    badge: string;
+    /**
+     * For example: Let’s Begin a
+     */
+    titleLead: string;
+    /**
+     * Shown in blue, slanted. For example: Conversation
+     */
+    titleAccent: string;
+    /**
+     * One short line.
+     */
+    subtitle: string;
+    /**
+     * 1920 x 736 works best (a wide photo; its middle is what shows on a narrow screen). Choose one from the library or upload one: JPG, PNG or WebP are converted to AVIF automatically.
+     */
+    image: number | Media;
+  };
+  intro: {
+    /**
+     * One paragraph each, shown in this order. Drag one to move it.
+     */
+    paragraphs: {
+      /**
+       * A few lines.
+       */
+      text: string;
+      id?: string | null;
+    }[];
+  };
+  banner: {
+    /**
+     * A wide photo, 1800 x 873 works best (it is shown 1520 x 737 and a photo of another shape is cropped at its middle). Choose one from the library or upload one: JPG, PNG or WebP are converted to AVIF automatically. Its alt text comes from the library.
+     */
+    image: number | Media;
+  };
+  crests: {
+    /**
+     * One card each, shown in this order.
+     */
+    cards: {
+      /**
+       * The picture of the crest, 730 x 626 (a shield between two laurel branches with an empty middle: the title is written over it). Choose one from the library or upload one. Its alt text comes from the library.
+       */
+      image: number | Media;
+      /**
+       * Shown in blue, slanted, over the middle of the crest. For example: Our Vision
+       */
+      title: string;
+      /**
+       * The text under the crest, two or three lines.
+       */
+      text: string;
+      id?: string | null;
+    }[];
+  };
+  welcome: {
+    /**
+     * A portrait photo, about 1203 x 1263 (it is shown 859 x 902 with rounded corners). Choose one from the library or upload one. Its alt text comes from the library.
+     */
+    image: number | Media;
+    /**
+     * Shown in grey. For example: Welcome To
+     */
+    titleLead: string;
+    /**
+     * Shown in blue, slanted. For example: Learning Paths School
+     */
+    titleAccent: string;
+    /**
+     * One paragraph each, shown in this order.
+     */
+    paragraphs: {
+      /**
+       * A line break (Enter) inside a paragraph starts a new line without the space between paragraphs.
+       */
+      text: string;
+      id?: string | null;
+    }[];
+    /**
+     * Shown in blue, bold italic.
+     */
+    signatoryName: string;
+    /**
+     * For example: Principal
+     */
+    signatoryRole: string;
+  };
+  values: {
+    /**
+     * For example: Guided by
+     */
+    title: string;
+    /**
+     * One value each, shown in this order. The text shows beside the value that is active (hovered, focused or tapped).
+     */
+    items: {
+      /**
+       * Shown in blue, slanted. For example: Courage & Respect
+       */
+      title: string;
+      /**
+       * Two or three lines.
+       */
+      text: string;
+      id?: string | null;
+    }[];
+  };
+  story: {
+    /**
+     * The first words of the heading: shown in grey.
+     */
+    titleLead: string;
+    /**
+     * The last words of the heading: shown in blue, slanted.
+     */
+    titleAccent: string;
+    /**
+     * One slide each, shown in this order. The green line over a slide's period is its step of the whole story (the third of three slides has it full).
+     */
+    slides: {
+      /**
+       * A photo about 28:15, 1260 x 675 works best (it is shown 840 x 450 and a photo of another shape is cropped at its middle). Choose one from the library or upload one. Its alt text comes from the library.
+       */
+      image: number | Media;
+      /**
+       * Shown in green over the timeline. For example: 2008–2016
+       */
+      period: string;
+      /**
+       * A line break (Enter) starts a new line without the space between paragraphs.
+       */
+      text: string;
+      id?: string | null;
+    }[];
+  };
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    /**
+     * Leave off for a normal public page.
+     */
+    noIndex?: boolean | null;
+    /**
+     * Only if another address is the main one for this page (a full address, https://...). Leave blank: the page's own address is used.
+     */
+    canonical?: string | null;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home_select".
  */
@@ -1554,6 +1724,102 @@ export interface SignatureEventsSelect<T extends boolean = true> {
           | {
               image?: T;
               title?: T;
+              text?: T;
+              id?: T;
+            };
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+        noIndex?: T;
+        canonical?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "welcome-to-lps_select".
+ */
+export interface WelcomeToLpsSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        badge?: T;
+        titleLead?: T;
+        titleAccent?: T;
+        subtitle?: T;
+        image?: T;
+      };
+  intro?:
+    | T
+    | {
+        paragraphs?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+      };
+  banner?:
+    | T
+    | {
+        image?: T;
+      };
+  crests?:
+    | T
+    | {
+        cards?:
+          | T
+          | {
+              image?: T;
+              title?: T;
+              text?: T;
+              id?: T;
+            };
+      };
+  welcome?:
+    | T
+    | {
+        image?: T;
+        titleLead?: T;
+        titleAccent?: T;
+        paragraphs?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        signatoryName?: T;
+        signatoryRole?: T;
+      };
+  values?:
+    | T
+    | {
+        title?: T;
+        items?:
+          | T
+          | {
+              title?: T;
+              text?: T;
+              id?: T;
+            };
+      };
+  story?:
+    | T
+    | {
+        titleLead?: T;
+        titleAccent?: T;
+        slides?:
+          | T
+          | {
+              image?: T;
+              period?: T;
               text?: T;
               id?: T;
             };

@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import PhotoBannerSection from "@/components/sections/shared/PhotoBannerSection";
 import { defaultStudentCouncil } from "@/data/student-council";
+import { defaultWelcomeToLps } from "@/data/welcome-to-lps";
 
 // The entrance animation (GSAP) is checked in a real browser; here it does nothing.
 vi.mock("@/lib/useScrollReveal", () => ({ useScrollReveal: () => {} }));
@@ -59,5 +60,17 @@ describe("PhotoBannerSection", () => {
     expect(container.querySelector("img")?.getAttribute("loading")).not.toBe("lazy");
     rerender(<PhotoBannerSection content={intro} />);
     expect(container.querySelector("img")?.getAttribute("loading")).toBe("lazy");
+  });
+});
+
+describe("PhotoBannerSection with no title (the Welcome to LPS page's wide photo)", () => {
+  const banner = defaultWelcomeToLps.banner;
+
+  it("shows only the photo: no heading, no paragraph, still in the shape of its design box", () => {
+    const { container } = render(<PhotoBannerSection content={banner} />);
+    expect(screen.queryByRole("heading")).toBeNull();
+    expect(container.querySelector("p")).toBeNull();
+    expect(screen.getByRole("img", { name: banner.image.alt })).toBeTruthy();
+    expect(container.querySelector<HTMLElement>("[data-banner-photo]")?.style.aspectRatio).toBe("1520 / 737");
   });
 });

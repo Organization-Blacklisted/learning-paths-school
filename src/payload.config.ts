@@ -16,6 +16,7 @@ import { Partnerships } from "./globals/Partnerships";
 import { PrincipalsWelcome } from "./globals/PrincipalsWelcome";
 import { SignatureEvents } from "./globals/SignatureEvents";
 import { StudentCouncil } from "./globals/StudentCouncil";
+import { WelcomeToLps } from "./globals/WelcomeToLps";
 import { allowedOrigins } from "./lib/auth-security";
 import { SITE_DESCRIPTION, SITE_NAME } from "./lib/site";
 
@@ -52,7 +53,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Media],
-  globals: [Home, Contact, PrincipalsWelcome, Partnerships, AwardsRecognition, StudentCouncil, SignatureEvents],
+  globals: [Home, Contact, PrincipalsWelcome, Partnerships, AwardsRecognition, StudentCouncil, SignatureEvents, WelcomeToLps],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   // CSRF: a request with the login cookie is only accepted from these origins (empty on a local setup). See src/lib/auth-security.ts.
@@ -76,7 +77,16 @@ export default buildConfig({
     // The SEO tab of the pages (a Global or a collection listed here gets one): title, description and share image with length
     // counters, a search-result preview and "generate" buttons, plus two fields the plugin lacks. Read by generateMetadata (src/lib/metadata.ts).
     seoPlugin({
-      globals: ["home", "contact", "principals-welcome", "partnerships", "awards-recognition", "student-council", "signature-events"],
+      globals: [
+        "home",
+        "contact",
+        "principals-welcome",
+        "partnerships",
+        "awards-recognition",
+        "student-council",
+        "signature-events",
+        "welcome-to-lps",
+      ],
       uploadsCollection: "media",
       tabbedUI: true,
       generateTitle: () => SITE_NAME,

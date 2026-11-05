@@ -12,5 +12,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/awards-recognition`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/student-council`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/signature-events`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/welcome-to-lps`, changeFrequency: "monthly", priority: 0.7 },
   ];
 }

@@ -85,3 +85,7 @@ As written in the design, including its oddities (an editor can change them in t
 1. **Deploy runs the migration** (`vercel-build` applies `src/migrations`): 4 new tables and 2 enums for this global; no existing table changes.
 2. **Production has no content for this page until it is seeded** (`SEED_PRODUCTION=1 npm run seed:student-council`, only when the owner says; the recipe is in [10-payload-cms.md](10-payload-cms.md), "Seeding safely"). Until then the live page shows the defaults (the same text, the photos from `/public`). A production seed runs in migrating mode (no schema push), so it leaves no "dev" row.
 3. Open: the oddities of the text above (the owner may want them corrected); the photos' resolution (the group photo and `voting` are below 2x because of the 400 KB limit).
+
+## The photo banner's title is optional now (2026-11-04)
+
+`PhotoBannerContent.titleAccent` and `titleRest` are optional: with neither the banner is only the photo (the Welcome to LPS page's wide photo, [34-welcome-to-lps.md](34-welcome-to-lps.md)). The Student Council page is unchanged.

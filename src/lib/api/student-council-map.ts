@@ -43,16 +43,16 @@ export function mapStudentCouncil(
     intro: {
       ...defaults.intro,
       image: photoFromMedia(intro?.image, defaults.intro.image),
-      titleAccent: text(intro?.titleAccent, defaults.intro.titleAccent),
-      titleRest: text(intro?.titleRest, defaults.intro.titleRest),
+      titleAccent: text(intro?.titleAccent, defaults.intro.titleAccent ?? ""),
+      titleRest: text(intro?.titleRest, defaults.intro.titleRest ?? ""),
       text: text(intro?.text, defaults.intro.text ?? ""),
     },
     features: { ...defaults.features, rows: rows.length ? rows : defaults.features.rows },
     gallery: {
       ...defaults.gallery,
       image: photoFromMedia(gallery?.image, defaults.gallery.image),
-      titleAccent: text(gallery?.titleAccent, defaults.gallery.titleAccent),
-      titleRest: text(gallery?.titleRest, defaults.gallery.titleRest),
+      titleAccent: text(gallery?.titleAccent, defaults.gallery.titleAccent ?? ""),
+      titleRest: text(gallery?.titleRest, defaults.gallery.titleRest ?? ""),
     },
   };
 }

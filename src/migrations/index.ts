@@ -5,6 +5,7 @@ import * as migration_20261103_044102_partnerships_page from './20261103_044102_
 import * as migration_20261103_050817_awards_recognition_page from './20261103_050817_awards_recognition_page';
 import * as migration_20261104_043334_student_council_page from './20261104_043334_student_council_page';
 import * as migration_20261104_050246_signature_events_page from './20261104_050246_signature_events_page';
+import * as migration_20261104_122630_welcome_to_lps_page from './20261104_122630_welcome_to_lps_page';
 
 export const migrations = [
   {
@@ -40,6 +41,11 @@ export const migrations = [
   {
     up: migration_20261104_050246_signature_events_page.up,
     down: migration_20261104_050246_signature_events_page.down,
-    name: '20261104_050246_signature_events_page'
+    name: '20261104_050246_signature_events_page',
+  },
+  {
+    up: migration_20261104_122630_welcome_to_lps_page.up,
+    down: migration_20261104_122630_welcome_to_lps_page.down,
+    name: '20261104_122630_welcome_to_lps_page'
   },
 ];

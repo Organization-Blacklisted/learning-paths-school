@@ -9,7 +9,7 @@ import { useScrollReveal } from "@/lib/useScrollReveal";
 import type { PhotoBannerSectionProps } from "./PhotoBannerSection.types";
 
 // The reusable "photo banner" section: one wide photo, 1520px in the design, with a two-tone title (the first words blue and slanted, the rest grey) and,
-// when there is one, a paragraph. Figma "Frame 1618876665" (node 5896:2257: the photo, then the title and a paragraph under it) and "Frame 1618876660" (node
+// when there is one, a paragraph (or, with no title and no paragraph, only the photo: the Welcome to LPS page). Figma "Frame 1618876665" (node 5896:2257: the photo, then the title and a paragraph under it) and "Frame 1618876660" (node
 // 5896:2252: the title, then the photo) of the Student Council page. Any page can use it for a group photo, a campus view, a ceremony:
 //
 //   <PhotoBannerSection content={studentCouncil.intro} priority />                    title and paragraph under the photo
@@ -38,12 +38,14 @@ export default function PhotoBannerSection({ content, spacing = "inner", classNa
       const words = q("[data-banner-text]");
       gsap.set(photo, { clipPath: "inset(0% 100% 0% 0%)" });
       gsap.set(photoImage, { scale: 1.12 });
-      gsap.set(words, { autoAlpha: 0, y: 24 });
-      return gsap
+      // a photo with no title and no paragraph has no words to move (GSAP warns about a tween with no target)
+      if (words.length) gsap.set(words, { autoAlpha: 0, y: 24 });
+      const timeline = gsap
         .timeline({ paused: true, defaults: { ease: "power2.out" } })
         .to(photo, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.0, ease: "power3.inOut" }, 0)
-        .to(photoImage, { scale: 1, duration: 1.4 }, 0)
-        .to(words, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.12 }, 0.6);
+        .to(photoImage, { scale: 1, duration: 1.4 }, 0);
+      if (words.length) timeline.to(words, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.12 }, 0.6);
+      return timeline;
     },
     { start: "top 78%" },
   );
@@ -63,11 +65,13 @@ export default function PhotoBannerSection({ content, spacing = "inner", classNa
     </div>
   );
 
-  const title = (
-    <SectionTitle data-banner-text className="text-center capitalize">
-      <Accent className="tracking-[-0.01em]">{titleAccent}</Accent> {titleRest}
-    </SectionTitle>
-  );
+  // The title is optional: with neither part there is only the photo (the Welcome to LPS page's wide photo).
+  const title =
+    titleAccent || titleRest ? (
+      <SectionTitle data-banner-text className="text-center capitalize">
+        <Accent className="tracking-[-0.01em]">{titleAccent}</Accent> {titleRest}
+      </SectionTitle>
+    ) : null;
 
   return (
     <Section label={label} spacing={spacing} className={className}>
@@ -79,14 +83,16 @@ export default function PhotoBannerSection({ content, spacing = "inner", classNa
       ) : (
         <div ref={rootRef} className="flex flex-col items-center gap-[clamp(24px,3.125vw,60px)]">
           {photoBox}
-          <div className="flex w-full max-w-[1221px] flex-col items-center gap-[clamp(12px,0.8333vw,16px)]">
-            {title}
-            {text && (
-              <p data-banner-text className="text-center font-body text-body-lg leading-[1.5] tracking-[-0.01em] text-brand-navy/80">
-                {text}
-              </p>
-            )}
-          </div>
+          {title || text ? (
+            <div className="flex w-full max-w-[1221px] flex-col items-center gap-[clamp(12px,0.8333vw,16px)]">
+              {title}
+              {text && (
+                <p data-banner-text className="text-center font-body text-body-lg leading-[1.5] tracking-[-0.01em] text-brand-navy/80">
+                  {text}
+                </p>
+              )}
+            </div>
+          ) : null}
         </div>
       )}
     </Section>
