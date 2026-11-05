@@ -2,16 +2,16 @@
 
 Newest first.
 
-## 2026-11-05: the real story slides of the Welcome to LPS page (LOCAL, not pushed)
+## 2026-11-05: the real story slides of the Welcome to LPS page (pushed, deployed and seeded)
 
 - **Owner request:** the story's 2nd and 3rd slides get their real photos (Figma `6983:584` and `6983:587`) and texts ("2016–2021" and "2021–Onwards").
 - **Changed:** `src/data/welcome-to-lps.ts` (the two slides, with new photo descriptions), `public/images/welcome/story-2016.avif` (212 KB) and `story-2021.avif` (163 KB), both 1260 x 675 at 45 dB or more; the unit tests (periods, eight photos). The placeholders are gone from the code, the docs and the decisions.
 - **Found by looking at it:** the 2016–2021 text is the longest slide and ran 76 to 104px under the bottom of a 1024 x 768 or 1280 x 720 screen (cut off while pinned). **Fixed:** a `short:` variant (screens from lg up to 860px high, `globals.css`) tightens the story's padding, gaps and line height; measured at seven sizes, the longest slide now ends inside the screen at all of them.
 - **Animation corrected (owner: "animations are wrong, the section will be fixed and only the content and images update and the progress bar's active state moves"):** the pinned story no longer pans sideways. The slides lie on top of each other in one place; while pinned, the photo, the period and the story change in place (cross-fade, the new photo settles from a slight zoom) and the green part of the one timeline grows a third at a time. One step is 90% of the screen's height of scrolling. `StorySwipeSection.tsx` (CSS grid cell, later slides hidden by CSS until GSAP shows them, `data-slide-period` / `data-slide-body`), a new unit test, and the browser checks of section 22 (the stage and the photos do not move between the start, the middle and the end of the pin; only the right slide shows; the line is a third, two thirds, the whole). The photos' bottom edges are now level at the bottom of the tallest slide, so slide 1 is at the design's position only when it is the tallest. Below lg and with reduced motion nothing changed.
 - **Image budget:** 12.2 MB of 13.
-- **Not done:** still not pushed, deployed or seeded (the owner said to wait).
+- **Went live on the owner's word (2026-11-05):** commit `e67cd64` pushed to `main`, `npx vercel --prod --yes` (the build applied the migration `20261104_122630_welcome_to_lps_page`), then the production CMS was seeded with `SEED_PRODUCTION=1 npm run seed:welcome-to-lps` (8 photos uploaded, the page published; the temporary env file was deleted). `/welcome-to-lps`, `/signature-events`, `/student-council` and `/` answer 200 on `learning-paths-school.vercel.app`, and the live Welcome page shows the real 2016–2021 and 2021–Onwards slides.
 
-## 2026-11-04 (evening): the Welcome to LPS page (LOCAL, not pushed)
+## 2026-11-04 (evening): the Welcome to LPS page (built the same evening; live since 2026-11-05)
 
 ### Welcome to LPS page and four new reusable sections
 - **Owner request:** implement Figma node `5688:14367` at `/welcome-to-lps/` (header and footer excluded; reuse repeating patterns; build the whole page with Payload). The owner's brief for the animations the design does not show: **the "Guided by" values are one active at a time (the first at the start, the others on hover)** and **the story is a swipe section that is pinned with GSAP: the page pins and scrolling shows the next slides; same images and dummy content for the other slides for now**. Three screenshots sent with it: the active state of the values, the other values' texts (the current website's) and the story's first slide.
@@ -23,7 +23,7 @@ Newest first.
 - **Checked against Figma at 1920 x 993:** every position of the page matches (the list is in [34-welcome-to-lps.md](34-welcome-to-lps.md)). **Found by the checks and fixed, all in my first version:** the gap above the wide photo is 60px (I had 35 from a wrong line count); the second heading line made the welcome 6px wider than a 320px screen; a collapsed value on a phone kept 12px of padding; a title-less banner made GSAP warn.
 - **Tests:** 54 new unit tests; 50 new browser checks (`tests/interactions.mjs` section 22) and 4 in `tests/qa.mjs` section 13; also run on a CI-style production build together with sections 20, 21 and 7 and `qa` 11 to 13: all pass.
 - **For the owner:** "others –friends" is as in the design and "dedicate pursue excellence" as on the website; the hero and the wide photo are about 1x to stay under the 400 KB limit.
-- **Not done / open:** production has no content for this page until `SEED_PRODUCTION=1 npm run seed:welcome-to-lps` is run; not pushed or deployed. The story's pin was tested in Chrome's emulation, not on a real phone (below lg it is a swipe row, not a pin).
+- **Not done / open:** (done on 2026-11-05: pushed, deployed and seeded, see the entry above). The story's pin was tested in Chrome's emulation, not on a real phone (below lg it is a swipe row, not a pin).
 
 ## 2026-11-04 (later): Our Learning Journey is a swipe row on tablets and phones (LOCAL, not pushed)
 

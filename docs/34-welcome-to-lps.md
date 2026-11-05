@@ -106,6 +106,8 @@ As written in the design, including "others –friends" in the first value (no s
 
 ## Going live
 
+**Done on 2026-11-05 (the owner's word): pushed (`e67cd64`), deployed, and the production CMS seeded; the page is live.** What the steps were:
+
 1. **Deploy runs the migration** (`vercel-build` applies `src/migrations`): the tables and enums of this global (5 lists, the page, its versions); no existing table changes.
-2. **Production has no content for this page until it is seeded** (`SEED_PRODUCTION=1 npm run seed:welcome-to-lps`, only when the owner says; the recipe is in [10-payload-cms.md](10-payload-cms.md), "Seeding safely"). Until then the live page shows the defaults (the same text, the photos from `/public`).
+2. **Production had no content for this page until it was seeded** (`SEED_PRODUCTION=1 npm run seed:welcome-to-lps`, only when the owner says; the recipe is in [10-payload-cms.md](10-payload-cms.md), "Seeding safely"). Until then the live page shows the defaults (the same text, the photos from `/public`).
 3. Open: the "others –friends" and "dedicate pursue excellence" wording (the owner may want them corrected); the hero and wide photos are about 1x because of the 400 KB limit.
